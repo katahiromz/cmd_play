@@ -416,7 +416,7 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
 
         for (auto& note : m_notes) { // For each note
             if (note.m_key == KEY_TONE) { // Tone change?
-                const auto new_tone = note.m_tone_no;
+                const auto new_tone = note.m_data;
                 assert((0 <= new_tone) && (new_tone < NUM_TONES));
                 timbre.set(ym2203_tone_table[new_tone]);
                 ym.set_timbre(ch, &timbre);
@@ -499,7 +499,7 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
 
         for (auto& note : m_notes) {
             if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
-                schedule_special_action(note.m_gate, note.m_action_no);
+                schedule_special_action(note.m_gate, note.m_data);
                 continue;
             }
 

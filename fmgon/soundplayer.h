@@ -60,16 +60,13 @@ struct VskNote {
     float       m_volume;   // in 0 to 15
     int         m_quantity; // in 0 to 8
     bool        m_and;
-    int         m_action_no;
-    int         m_tone_no;
     int         m_reg;
     int         m_data;
 
     VskNote(int tempo, int octave, int note,
             bool dot = false, float length = 24, char sign = 0,
             float volume = 8, int quantity = 8,
-            bool and_ = false, int action_no = -1, int tone_no = -1,
-            int reg = -1, int data = -1)
+            bool and_ = false, int reg = -1, int data = -1)
     {
         m_tempo = tempo;
         m_octave = octave;
@@ -81,8 +78,6 @@ struct VskNote {
         m_volume = volume;
         m_quantity = quantity;
         m_and = and_;
-        m_action_no = action_no;
-        m_tone_no = tone_no;
         m_reg = reg;
         m_data = data;
     }
@@ -173,7 +168,7 @@ struct VskPhrase {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0, 0, m_setting.m_volume,
-            m_setting.m_quantity, false, action_no);
+            m_setting.m_quantity, false, -1, action_no);
     }
     void add_tone(char note, int tone_no) {
         m_notes.emplace_back(
@@ -185,19 +180,19 @@ struct VskPhrase {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0, 0, m_setting.m_volume,
-            m_setting.m_quantity, false, -1, -1, reg, data);
+            m_setting.m_quantity, false, reg, data);
     }
     void add_envelop_interval(char note, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0, 0, m_setting.m_volume,
-            m_setting.m_quantity, false, -1, -1, -1, data);
+            m_setting.m_quantity, false, -1, data);
     }
     void add_envelop_type(char note, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0, 0, m_setting.m_volume,
-            m_setting.m_quantity, false, -1, -1, -1, data);
+            m_setting.m_quantity, false, -1, data);
     }
     void add_key(int key) {
         add_key(key, false);
