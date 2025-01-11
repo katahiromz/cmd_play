@@ -146,9 +146,8 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
             if (!vsk_scan_play_param(pch, item))
                 return false;
             break;
-        case 'P': case 'R':
+        case 'R':
             // 休符
-            if (ch == 'P') ch = 'R';
             item.m_subcommand = {ch};
             // パラメータ
             if (!vsk_scan_play_param(pch, item))
@@ -353,10 +352,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             }
             continue;
         case 'C': case 'D': case 'E': case 'F': case 'G':
-        case 'A': case 'B': case 'R': case 'P':
-            if (ch == 'P') {
-                ch = 'R';
-            }
+        case 'A': case 'B': case 'R':
             length = phrase->m_setting.m_length;
             if (auto ast = vsk_get_play_param(item)) {
                 auto L = ast->to_sng();
