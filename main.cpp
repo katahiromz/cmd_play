@@ -186,7 +186,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             {
                 TCHAR text[256];
                 StringCchPrintf(text, _countof(text), get_text(7), arg);
-                _ftprintf(stderr, TEXT("%s"), text);
+                _ftprintf(stderr, TEXT("%ls"), text);
                 return 1;
             }
             auto var = str.substr(0, ich);
@@ -206,7 +206,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
             else
             {
-                _ftprintf(stderr, TEXT("%s"), get_text(6));
+                _ftprintf(stderr, TEXT("%ls"), get_text(6));
                 return 1;
             }
         }
@@ -215,7 +215,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         {
             TCHAR text[256];
             StringCchPrintf(text, _countof(text), get_text(3), arg);
-            _ftprintf(stderr, TEXT("%s"), text);
+            _ftprintf(stderr, TEXT("%ls"), text);
             return 1;
         }
 
@@ -224,7 +224,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             m_audio_mode = _wtoi(&arg[1]);
             if (!(0 <= m_audio_mode && m_audio_mode <= 4))
             {
-                _ftprintf(stderr, TEXT("%s"), get_text(4));
+                _ftprintf(stderr, TEXT("%ls"), get_text(4));
                 return 1;
             }
             continue;
@@ -264,7 +264,7 @@ int CMD_PLAY::run()
         case 0:
             if (!vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str()))
             {
-                _ftprintf(stderr, TEXT("%s"), get_text(5));
+                _ftprintf(stderr, TEXT("%ls"), get_text(5));
                 vsk_sound_exit();
                 return 1;
             }
@@ -274,7 +274,7 @@ int CMD_PLAY::run()
         case 4:
             if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str()))
             {
-                _ftprintf(stderr, TEXT("%s"), get_text(5));
+                _ftprintf(stderr, TEXT("%ls"), get_text(5));
                 vsk_sound_exit();
                 return 1;
             }
@@ -288,7 +288,7 @@ int CMD_PLAY::run()
     case 0:
         if (!vsk_sound_cmd_play_ssg(m_str_to_play))
         {
-            _ftprintf(stderr, TEXT("%s"), get_text(5));
+            _ftprintf(stderr, TEXT("%ls"), get_text(5));
             vsk_sound_exit();
             return 1;
         }
@@ -298,7 +298,7 @@ int CMD_PLAY::run()
     case 4:
         if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play))
         {
-            _ftprintf(stderr, TEXT("%s"), get_text(5));
+            _ftprintf(stderr, TEXT("%ls"), get_text(5));
             vsk_sound_exit();
             return 1;
         }
