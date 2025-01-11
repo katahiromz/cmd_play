@@ -365,7 +365,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             if ((item.m_plet_count > 1) && (item.m_plet_L != 0)) {
                 auto L = item.m_plet_L;
                 if ((1 <= L) && (L <= 64)) {
-                    length = float(24 * 4 / L);
+                    length = 24.0f * 4 / L;
                 } else {
                     return false;
                 }
@@ -391,9 +391,28 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                         continue;
                     }
                 }
-            } else if (item.m_subcommand == "@W") {
-                // TODO:
-                assert(0);
+            } else if (item.m_subcommand == "@W") { // 特殊な休符
+                length = phrase->m_setting.m_length;
+                if (auto ast = vsk_get_play_param(item)) {
+                    auto L = ast->to_int();
+                    // NOTE: 24 is the length of a quarter note
+                    if ((1 <= L) && (L <= 64)) {
+                        length = float(24 * 4 / L);
+                    } else {
+                        return false;
+                    }
+                }
+                if ((item.m_plet_count > 1) && (item.m_plet_L != 0)) {
+                    auto L = item.m_plet_L;
+                    if ((1 <= L) && (L <= 64)) {
+                        length = 24.0f * 4 / L;
+                    } else {
+                        return false;
+                    }
+                    length /= item.m_plet_count;
+                }
+                phrase->add_note('W', item.m_dot, length, item.m_sign);
+                phrase->m_notes.back().m_and = item.m_and;
                 continue;
             }
             return false;

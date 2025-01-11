@@ -196,6 +196,9 @@ void VskNote::set_key_from_char(char ch) {
     else if (ch == '@') {
         m_key = KEY_TONE;
     }
+    else if (ch == 'W') {
+        m_key = KEY_SPECIAL_REST;
+    }
     else if (ch == 'X') {
         m_key = KEY_SPECIAL_ACTION;
     } else {
@@ -403,7 +406,6 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
         VskLFOCtrl lc;
 
         for (auto& note : m_notes) { // For each note
-            // do key on
             if (note.m_key == KEY_TONE) { // Tone change?
                 const auto new_tone = note.m_tone_no;
                 assert((0 <= new_tone) && (new_tone < NUM_TONES));
@@ -412,13 +414,17 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
                 lc.init_for_timbre(&timbre);
                 continue;
             }
-            if (note.m_key != KEY_REST) { // Has key?
-                ym.set_pitch(ch, note.m_octave, note.m_key);
-                ym.set_volume(ch, int(note.m_volume));
-                ym.note_on(ch);
-            }
 
-            lc.init_for_keyon(&timbre);
+            if (note.m_key != KEY_SPECIAL_REST) { // Not special rest?
+                // do key on
+                if (note.m_key != KEY_REST) { // Has key?
+                    ym.set_pitch(ch, note.m_octave, note.m_key);
+                    ym.set_volume(ch, int(note.m_volume));
+                    ym.note_on(ch);
+                }
+
+                lc.init_for_keyon(&timbre);
+            }
 
             // render sound
             auto sec = note.m_sec * note.m_quantity / 8.0f;
@@ -431,7 +437,7 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
                 }
                 ym.mix(&data[isample * 2], unit);
                 isample += unit;
-                if (note.m_key != -1) {
+                if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST) {
                     lc.increment();
                     int adj[4] = {
                         int(lc.m_adj_v[0]), int(lc.m_adj_v[1]),
@@ -445,10 +451,12 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
             ym.count(uint32_t(sec * 1000 * 1000));
             isample += nsamples;
 
-            // do key off
             sec = note.m_sec * (8.0f - note.m_quantity) / 8.0f;
             nsamples = int(SAMPLERATE * sec);
-            ym.note_off(ch);
+            if (note.m_key != KEY_SPECIAL_REST) {
+                // do key off
+                ym.note_off(ch);
+            }
             unit = SAMPLERATE;
             if (unit > nsamples) {
                 unit = nsamples;

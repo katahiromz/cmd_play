@@ -42,6 +42,7 @@ enum SpecialKeys {
     KEY_REST = -1,           // 休符
     KEY_SPECIAL_ACTION = -2, // スペシャルアクション
     KEY_TONE = -3,           // トーン変更
+    KEY_SPECIAL_REST = -4,   // 特殊な休符
 };
 
 struct VskNote {
