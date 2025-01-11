@@ -479,13 +479,18 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
         ym.set_tone_or_noise(ch, TONE_MODE);
 
         for (auto& note : m_notes) {
-            if (note.m_key == KEY_SPECIAL_ACTION) {
+            if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
                 schedule_special_action(note.m_gate, note.m_action_no);
                 continue;
             }
 
+            if (note.m_key == KEY_REG) { // Register?
+                m_player->write_reg(note.m_reg, note.m_data);
+                continue;
+            }
+
             // do key on
-            if (note.m_key != KEY_REST) {
+            if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST) {
                 ym.set_pitch(ch, note.m_octave, note.m_key);
                 ym.set_volume(ch, int(note.m_volume));
                 ym.note_on(ch);
@@ -498,10 +503,12 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
             ym.count(uint32_t(sec * 1000 * 1000));
             isample += nsamples;
 
-            // do key off
             sec = note.m_sec * (8.0f - note.m_quantity) / 8.0f;
             nsamples = int(SAMPLERATE * sec);
-            ym.note_off(ch);
+            if (note.m_key != KEY_SPECIAL_REST) {
+                // do key off
+                ym.note_off(ch);
+            }
             ym.mix(&data[isample * 2], nsamples);
             ym.count(uint32_t(sec * 1000 * 1000));
             isample += nsamples;
