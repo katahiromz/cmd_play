@@ -268,6 +268,8 @@ int CMD_PLAY::run()
             }
             break;
         case 2:
+        case 3:
+        case 4:
             if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str()))
             {
                 _ftprintf(stderr, TEXT("%s"), get_text(5));
@@ -290,6 +292,8 @@ int CMD_PLAY::run()
         }
         break;
     case 2:
+    case 3:
+    case 4:
         if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play))
         {
             _ftprintf(stderr, TEXT("%s"), get_text(5));
