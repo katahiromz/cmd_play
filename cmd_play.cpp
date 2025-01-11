@@ -101,10 +101,13 @@ bool vsk_scan_play_param(const char *& pch, VskPlayItem& item)
     return true;
 } // vsk_scan_play_param
 
+std::string vsk_replace_placeholders2(const std::string& str);
+
 // 演奏項目を評価する
 bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& expr)
 {
-    const char *pch = expr.c_str();
+    VskString str = vsk_replace_placeholders2(expr);
+    const char *pch = str.c_str();
     items.clear();
 
     // MMLのパース

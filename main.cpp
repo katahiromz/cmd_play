@@ -38,7 +38,9 @@ LPCTSTR get_text(INT id)
                 TEXT("  -D変数名=値            変数に代入。\n")
                 TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
                 TEXT("  -help                  このメッセージを表示する。\n")
-                TEXT("  -version               バージョン情報を表示する。");
+                TEXT("  -version               バージョン情報を表示する。\n")
+                TEXT("\n")
+                TEXT("文字列変数は [ ] で囲えば展開できます。");
         case 2: return TEXT("エラー: 引数が多すぎます。\n");
         case 3: return TEXT("エラー: 演奏する文字列が未指定です。\n");
         case 4: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
@@ -62,7 +64,9 @@ LPCTSTR get_text(INT id)
                 TEXT("  -DVAR=VALUE            Assign to a variable.\n")
                 TEXT("  -save_wav output.wav   Save as WAV file.\n")
                 TEXT("  -help                  Display this message.\n")
-                TEXT("  -version               Display version info.");
+                TEXT("  -version               Display version info.\n")
+                TEXT("\n")
+                TEXT("String variables can be expanded by enclosing them in [ ].");
         case 2: return TEXT("ERROR: Too many arguments.\n");
         case 3: return TEXT("ERROR: No string to play specified.\n");
         case 4: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
@@ -128,6 +132,46 @@ std::string vsk_replace_placeholders(const std::string& str)
 {
     std::unordered_set<std::string> visited;
     return vsk_replace_placeholders(str, visited);
+}
+
+// 再帰的に「[変数名]」を変数の値に置き換える関数
+std::string
+vsk_replace_placeholders2(const std::string& str, std::unordered_set<std::string>& visited) {
+    std::string result = str;
+    size_t start_pos = 0;
+
+    while ((start_pos = result.find("[", start_pos)) != result.npos) {
+        size_t end_pos = result.find("]", start_pos);
+        if (end_pos == std::string::npos)
+            break; // 閉じカッコが見つからない場合は終了
+
+        std::string key = result.substr(start_pos + 1, end_pos - start_pos - 1);
+        if (visited.find(key) != visited.end()) {
+            // 循環参照を検出した場合はエラーとして処理する
+            throw std::runtime_error("Circular reference detected: " + key);
+        }
+        visited.insert(key);
+
+        auto it = g_variables.find(key);
+        if (it != g_variables.end()) {
+            // ここで再帰的に置き換えを行う
+            std::string value = vsk_replace_placeholders2(it->second, visited);
+            result.replace(start_pos, end_pos - start_pos + 1, value);
+            start_pos += value.length(); // 置き換えた後の新しい開始位置に移動
+        } else {
+            result.replace(start_pos, end_pos - start_pos + 1, "");
+        }
+        visited.erase(key);
+    }
+
+    return result;
+}
+
+// 再帰的に「[変数名]」を変数の値に置き換える関数
+std::string vsk_replace_placeholders2(const std::string& str)
+{
+    std::unordered_set<std::string> visited;
+    return vsk_replace_placeholders2(str, visited);
 }
 
 // ワイド文字列をSJIS文字列に変換
