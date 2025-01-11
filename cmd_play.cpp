@@ -158,9 +158,8 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
                 ++pch;
             }
             break;
-        case 'N': case 'K':
+        case 'N':
             // 指定された高さの音
-            if (ch == 'K') ch = 'N';
             item.m_subcommand = {ch};
             // パラメータ
             if (!vsk_scan_play_param(pch, item))
@@ -312,7 +311,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 continue;
             }
             return false;
-        case 'N': case 'K':
+        case 'N':
             length = phrase->m_setting.m_length;
             if (auto ast = vsk_get_play_param(item)) {
                 auto i0 = ast->to_int();
@@ -330,7 +329,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             if ((item.m_plet_count > 1) && (item.m_plet_L != 0)) {
                 auto L = item.m_plet_L;
                 if ((1 <= L) && (L <= 64)) {
-                    length = float(24 * 4 / L);
+                    length = 24.0f * 4 / L;
                 } else {
                     return false;
                 }
