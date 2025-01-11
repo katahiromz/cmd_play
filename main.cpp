@@ -35,6 +35,7 @@ LPCTSTR get_text(INT id)
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
                 TEXT("\n")
                 TEXT("オプション:\n")
+                TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
                 TEXT("  -help                  このメッセージを表示する。\n")
                 TEXT("  -version               バージョン情報を表示する。\n");
         case 2: return TEXT("エラー: 引数が多すぎます。\n");
@@ -55,6 +56,7 @@ LPCTSTR get_text(INT id)
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
                 TEXT("\n")
                 TEXT("Options:\n")
+                TEXT("  -save_wav output.wav   Save as WAV file.\n")
                 TEXT("  -help                  Display this message.\n")
                 TEXT("  -version               Display version info.\n");
         case 2: return TEXT("ERROR: Too many arguments.\n");
