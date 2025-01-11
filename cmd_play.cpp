@@ -256,9 +256,17 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             }
             return false;
         case 'S':
-            // TODO:
-            assert(0);
-            continue;
+            if (auto ast = vsk_get_play_param(item)) {
+                auto i0 = ast->to_int();
+                if (0 <= i0 && i0 <= 15) {
+                    phrase->add_envelop_type(ch, i0);
+                    continue;
+                }
+            } else {
+                phrase->add_envelop_type(ch, 1);
+                continue;
+            }
+            return false;
         case 'V':
             if (auto ast = vsk_get_play_param(item)) {
                 auto i0 = ast->to_int();

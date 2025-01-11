@@ -205,6 +205,9 @@ void VskNote::set_key_from_char(char ch) {
     else if (ch == 'M') {
         m_key = KEY_ENVELOP_INTERVAL;
     }
+    else if (ch == 'S') {
+        m_key = KEY_ENVELOP_TYPE;
+    }
     else if (ch == 'X') {
         m_key = KEY_SPECIAL_ACTION;
     } else {
@@ -433,6 +436,12 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
                 continue;
             }
 
+            if (note.m_key == KEY_ENVELOP_TYPE) {
+                auto type = note.m_data;
+                m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
+                continue;
+            }
+
             if (note.m_key != KEY_SPECIAL_REST) { // Not special rest?
                 // do key on
                 if (note.m_key != KEY_REST) { // Has key?
@@ -503,6 +512,12 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
                 auto interval = note.m_data;
                 m_player->write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
                 m_player->write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
+                continue;
+            }
+
+            if (note.m_key == KEY_ENVELOP_TYPE) {
+                auto type = note.m_data;
+                m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
                 continue;
             }
 
