@@ -239,7 +239,7 @@ VskAstPtr vsk_get_play_param(const VskPlayItem& item)
 {
     if (item.m_param.empty())
         return nullptr;
-    return vsk_eval_text(item.m_param);
+    return vsk_eval_cmd_play_text(item.m_param);
 } // vsk_get_play_param
 
 bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std::vector<VskPlayItem>& items)

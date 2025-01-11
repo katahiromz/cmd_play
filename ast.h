@@ -40,3 +40,11 @@ inline VskAstPtr vsk_eval_text(const VskString& str)
     }
     return std::make_shared<VskAst>(str);
 }
+
+inline VskAstPtr vsk_eval_cmd_play_text(const VskString& str)
+{
+    if (str.size() && !vsk_isdigit(str[0])) {
+        return std::make_shared<VskAst>(g_variables[str]);
+    }
+    return std::make_shared<VskAst>(str);
+}
