@@ -355,7 +355,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
         case 'A': case 'B': case 'R':
             length = phrase->m_setting.m_length;
             if (auto ast = vsk_get_play_param(item)) {
-                auto L = ast->to_sng();
+                auto L = ast->to_int();
                 // NOTE: 24 is the length of a quarter note
                 if ((1 <= L) && (L <= 64)) {
                     length = float(24 * 4 / L);
