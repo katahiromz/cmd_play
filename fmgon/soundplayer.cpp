@@ -199,6 +199,9 @@ void VskNote::set_key_from_char(char ch) {
     else if (ch == 'W') {
         m_key = KEY_SPECIAL_REST;
     }
+    else if (ch == 'Y') {
+        m_key = KEY_REG;
+    }
     else if (ch == 'X') {
         m_key = KEY_SPECIAL_ACTION;
     } else {
@@ -412,6 +415,11 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
                 timbre.set(ym2203_tone_table[new_tone]);
                 ym.set_timbre(ch, &timbre);
                 lc.init_for_timbre(&timbre);
+                continue;
+            }
+
+            if (note.m_key == KEY_REG) { // Register?
+                m_player->write_reg(note.m_reg, note.m_data);
                 continue;
             }
 

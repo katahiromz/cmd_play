@@ -43,6 +43,7 @@ enum SpecialKeys {
     KEY_SPECIAL_ACTION = -2, // スペシャルアクション
     KEY_TONE = -3,           // トーン変更
     KEY_SPECIAL_REST = -4,   // 特殊な休符
+    KEY_REG = -5,            // レジスタ書き込み
 };
 
 struct VskNote {
@@ -59,11 +60,14 @@ struct VskNote {
     bool        m_and;
     int         m_action_no;
     int         m_tone_no;
+    int         m_reg;
+    int         m_data;
 
     VskNote(int tempo, int octave, int note,
             bool dot = false, float length = 24, char sign = 0,
             float volume = 8, int quantity = 8,
-            bool and_ = false, int action_no = -1, int tone_no = -1)
+            bool and_ = false, int action_no = -1, int tone_no = -1,
+            int reg = -1, int data = -1)
     {
         m_tempo = tempo;
         m_octave = octave;
@@ -77,6 +81,8 @@ struct VskNote {
         m_and = and_;
         m_action_no = action_no;
         m_tone_no = tone_no;
+        m_reg = reg;
+        m_data = data;
     }
 
     float get_sec(int tempo, float length) const;
@@ -172,6 +178,12 @@ struct VskPhrase {
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, tone_no);
+    }
+    void add_reg(char note, int reg, int data) {
+        m_notes.emplace_back(
+            m_setting.m_tempo, m_setting.m_octave,
+            note, false, 0, 0, m_setting.m_volume,
+            m_setting.m_quantity, false, -1, -1, reg, data);
     }
     void add_key(int key) {
         add_key(key, false);
