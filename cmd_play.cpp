@@ -129,11 +129,11 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
             item.m_subcommand = {ch};
             break;
         case '{':
-            // 繰り返し始め
+            // n連符の始め
             item.m_subcommand = {ch};
             break;
         case '}':
-            // 繰り返し終わり
+            // n連符の終わり
             item.m_subcommand = {ch};
             // パラメータ
             if (!vsk_scan_play_param(pch, item))
