@@ -38,7 +38,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -D変数名=値            変数に代入。\n")
                 TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
                 TEXT("  -help                  このメッセージを表示する。\n")
-                TEXT("  -version               バージョン情報を表示する。\n");
+                TEXT("  -version               バージョン情報を表示する。");
         case 2: return TEXT("エラー: 引数が多すぎます。\n");
         case 3: return TEXT("エラー: 演奏する文字列が未指定です。\n");
         case 4: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
@@ -62,7 +62,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -DVAR=VALUE            Assign to a variable.\n")
                 TEXT("  -save_wav output.wav   Save as WAV file.\n")
                 TEXT("  -help                  Display this message.\n")
-                TEXT("  -version               Display version info.\n");
+                TEXT("  -version               Display version info.");
         case 2: return TEXT("ERROR: Too many arguments.\n");
         case 3: return TEXT("ERROR: No string to play specified.\n");
         case 4: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
