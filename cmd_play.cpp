@@ -1,4 +1,4 @@
-#include "types.h"
+ï»¿#include "types.h"
 #include "sound.h"
 #include "encoding.h"
 #include "ast.h"
@@ -6,20 +6,20 @@
 #include <cassert>
 
 #include "freealut/include/AL/alut.h"   // OpenAL utility
-#include "fmgon/soundplayer.h"          // ƒTƒEƒ“ƒhƒvƒŒ[ƒ„[
+#include "fmgon/soundplayer.h"          // ã‚µã‚¦ãƒ³ãƒ‰ãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼
 #include "scanner.h"                    // VskScanner
 
-// ƒTƒEƒ“ƒhƒvƒŒ[ƒ„[
+// ã‚µã‚¦ãƒ³ãƒ‰ãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼
 extern std::shared_ptr<VskSoundPlayer> vsk_sound_player;
 
 #define VSK_MAX_CHANNEL 6
 
-// CMD PLAY‚ÌŒ»İ‚Ìİ’è
+// CMD PLAYã®ç¾åœ¨ã®è¨­å®š
 VskSoundSetting vsk_fm_sound_settings[VSK_MAX_CHANNEL];
 VskSoundSetting vsk_ssg_sound_settings[VSK_MAX_CHANNEL];
 
 //////////////////////////////////////////////////////////////////////////////
-// VskPlayItem --- CMD PLAY —p‚Ì‰‰‘t€–Ú
+// VskPlayItem --- CMD PLAY ç”¨ã®æ¼”å¥é …ç›®
 
 struct VskPlayItem
 {
@@ -46,7 +46,7 @@ struct VskPlayItem
     }
 };
 
-// ‰‰‘t€–Ú‚ğÄƒXƒLƒƒƒ“ (Pass 2)
+// æ¼”å¥é …ç›®ã‚’å†ã‚¹ã‚­ãƒ£ãƒ³ (Pass 2)
 bool vsk_rescan_play_items(std::vector<VskPlayItem>& items)
 {
     size_t k = VskString::npos;
@@ -74,7 +74,7 @@ bool vsk_rescan_play_items(std::vector<VskPlayItem>& items)
     return true;
 } // vsk_rescan_play_items
 
-// ‰‰‘t€–Ú‚ğƒXƒLƒƒƒ“ (Pass 1)
+// æ¼”å¥é …ç›®ã‚’ã‚¹ã‚­ãƒ£ãƒ³ (Pass 1)
 bool vsk_scan_play_param(const char *& pch, VskPlayItem& item)
 {
     while (vsk_isblank(*pch)) ++pch;
@@ -101,13 +101,13 @@ bool vsk_scan_play_param(const char *& pch, VskPlayItem& item)
     return true;
 } // vsk_scan_play_param
 
-// ‰‰‘t€–Ú‚ğ•]‰¿‚·‚é
+// æ¼”å¥é …ç›®ã‚’è©•ä¾¡ã™ã‚‹
 bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& expr)
 {
     const char *pch = expr.c_str();
     items.clear();
 
-    // MML‚Ìƒp[ƒX
+    // MMLã®ãƒ‘ãƒ¼ã‚¹
     VskPlayItem item;
     while (*pch != 0) {
         char ch = vsk_toupper(*pch++);
@@ -119,79 +119,79 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
         case ' ': case '\t': // blank
             continue;
         case '!': case '*':
-            // TODO: LFOŒø‰Ê
+            // TODO: LFOåŠ¹æœ
             continue;
         case '_':
-            // TODO: ˆÚ’²
+            // TODO: ç§»èª¿
             continue;
         case '&': case '^':
-            // ƒ^ƒC
+            // ã‚¿ã‚¤
             if (items.size()) {
                 items.back().m_and = true;
             }
             continue;
         case '<': case '>':
-            // ƒIƒNƒ^[ƒu‚ğ‘Œ¸‚·‚é
+            // ã‚ªã‚¯ã‚¿ãƒ¼ãƒ–ã‚’å¢—æ¸›ã™ã‚‹
             item.m_subcommand = {ch};
             break;
         case '{':
-            // ŒJ‚è•Ô‚µn‚ß
+            // ç¹°ã‚Šè¿”ã—å§‹ã‚
             item.m_subcommand = {ch};
             break;
         case '}':
-            // ŒJ‚è•Ô‚µI‚í‚è
+            // ç¹°ã‚Šè¿”ã—çµ‚ã‚ã‚Š
             item.m_subcommand = {ch};
-            // ƒpƒ‰ƒ[ƒ^
+            // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
             if (!vsk_scan_play_param(pch, item))
                 return false;
             break;
         case 'Y': case ',':
-            // OPNƒŒƒWƒXƒ^
+            // OPNãƒ¬ã‚¸ã‚¹ã‚¿
             item.m_subcommand = {ch};
-            // ƒpƒ‰ƒ[ƒ^
+            // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
             if (!vsk_scan_play_param(pch, item))
                 return false;
             break;
         case 'P': case 'R':
-            // ‹x•„
+            // ä¼‘ç¬¦
             if (ch == 'P') ch = 'R';
             item.m_subcommand = {ch};
-            // ƒpƒ‰ƒ[ƒ^
+            // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
             if (!vsk_scan_play_param(pch, item))
                 return false;
-            // •t“_
+            // ä»˜ç‚¹
             if (*pch == '.') {
                 item.m_dot = true;
                 ++pch;
             }
             break;
         case 'N': case 'K':
-            // w’è‚³‚ê‚½‚‚³‚Ì‰¹
+            // æŒ‡å®šã•ã‚ŒãŸé«˜ã•ã®éŸ³
             if (ch == 'K') ch = 'N';
             item.m_subcommand = {ch};
-            // ƒpƒ‰ƒ[ƒ^
+            // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
             if (!vsk_scan_play_param(pch, item))
                 return false;
-            // •t“_
+            // ä»˜ç‚¹
             if (*pch == '.') {
                 item.m_dot = true;
                 ++pch;
             }
             break;
         case 'C': case 'D': case 'E': case 'F': case 'G': case 'A': case 'B':
-            // ‰¹•„
+            // éŸ³ç¬¦
             item.m_subcommand = {ch};
             while (vsk_isblank(*pch)) ++pch;
-            // ƒVƒƒ[ƒv‚Æƒtƒ‰ƒbƒg
+            // ã‚·ãƒ£ãƒ¼ãƒ—ã¨ãƒ•ãƒ©ãƒƒãƒˆ
             switch (*pch) {
             case '-': case '#': case '+':
                 item.m_sign = *pch++;
                 break;
             }
-            // ƒpƒ‰ƒ[ƒ^
+            // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
             if (!vsk_scan_play_param(pch, item))
                 return false;
-            // •t“_
+            // ä»˜ç‚¹
             if (*pch == '.') {
                 item.m_dot = true;
                 ++pch;
@@ -203,15 +203,15 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
             case 'V': case 'W':
                 // "@V", "@W"
                 item.m_subcommand = {'@', ch};
-                // ƒpƒ‰ƒ[ƒ^
+                // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
                 if (!vsk_scan_play_param(pch, item))
                     return false;
                 break;
             default:
-                // "@": ‰¹F‚ğ•Ï‚¦‚é
+                // "@": éŸ³è‰²ã‚’å¤‰ãˆã‚‹
                 --pch;
                 item.m_subcommand = "@";
-                // ƒpƒ‰ƒ[ƒ^
+                // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
                 if (!vsk_scan_play_param(pch, item))
                     return false;
                 break;
@@ -219,9 +219,9 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
             break;
         case 'M': case 'S': case 'V': case 'L': case 'Q':
         case 'O': case 'T': case 'Z':
-            // ‚»‚Ì‘¼‚ÌMML
+            // ãã®ä»–ã®MML
             item.m_subcommand = {ch};
-            // ƒpƒ‰ƒ[ƒ^
+            // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
             if (!vsk_scan_play_param(pch, item))
                 return false;
             break;
@@ -263,7 +263,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             if (auto ast = vsk_get_play_param(item)) {
                 auto i0 = ast->to_int();
                 if ((0 <= i0) && (i0 <= 15)) {
-                    phrase->m_setting.m_volume = i0;
+                    phrase->m_setting.m_volume = (float)i0;
                     continue;
                 }
                 return false;
@@ -423,7 +423,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
 
 //////////////////////////////////////////////////////////////////////////////
 
-// SSG‰¹Œ¹‚Å‰¹ŠyÄ¶
+// SSGéŸ³æºã§éŸ³æ¥½å†ç”Ÿ
 bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
@@ -462,7 +462,7 @@ bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs)
     return true;
 }
 
-// FM+SSG‰¹Œ¹‚Å‰¹ŠyÄ¶
+// FM+SSGéŸ³æºã§éŸ³æ¥½å†ç”Ÿ
 bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
@@ -507,7 +507,7 @@ bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs)
     return true;
 }
 
-// FM‰¹Œ¹‚Å‰¹ŠyÄ¶
+// FMéŸ³æºã§éŸ³æ¥½å†ç”Ÿ
 bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
@@ -539,6 +539,128 @@ bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs)
 
     // play now
     vsk_sound_player->play(block);
+
+    return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+// SSGéŸ³æºã§éŸ³æ¥½ä¿å­˜
+bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename)
+{
+    assert(strs.size() < VSK_MAX_CHANNEL);
+    size_t iChannel = 0;
+
+    // add phrases to block
+    VskScoreBlock block;
+    // for each channel strings
+    for (auto& str : strs) {
+        // get play items
+        std::vector<VskPlayItem> items;
+        if (!vsk_eval_cmd_play_items(items, str)) {
+            return false;
+        }
+
+        // create phrase
+        auto phrase = std::make_shared<VskPhrase>();
+        phrase->m_setting = vsk_ssg_sound_settings[iChannel];
+        phrase->m_setting.m_fm = false;
+        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
+            return false;
+        }
+        // apply settings
+        vsk_ssg_sound_settings[iChannel] = phrase->m_setting;
+        // add phrase
+        block.push_back(phrase);
+        // apply settings
+        vsk_ssg_sound_settings[iChannel] = phrase->m_setting;
+        // next channel
+        ++iChannel;
+    }
+
+    if (!vsk_sound_player->save_as_wav(block, filename))
+        return false; // å¤±æ•—
+
+    return true;
+}
+
+// FM+SSGéŸ³æºã§éŸ³æ¥½ä¿å­˜
+bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename)
+{
+    assert(strs.size() < VSK_MAX_CHANNEL);
+    size_t iChannel = 0;
+
+    // add phrases to block
+    VskScoreBlock block;
+    // for each channel strings
+    for (auto& str : strs) {
+        // get play items
+        std::vector<VskPlayItem> items;
+        if (!vsk_eval_cmd_play_items(items, str)) {
+            return false;
+        }
+        // create phrase
+        auto phrase = std::make_shared<VskPhrase>();
+        if (iChannel < 3) {
+            phrase->m_setting = vsk_fm_sound_settings[iChannel];
+            phrase->m_setting.m_fm = true;
+        } else {
+            phrase->m_setting = vsk_ssg_sound_settings[iChannel - 3];
+            phrase->m_setting.m_fm = false;
+        }
+        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
+            return false;
+        }
+        // apply settings
+        if (iChannel < 3) {
+            vsk_fm_sound_settings[iChannel] = phrase->m_setting;
+        } else {
+            vsk_ssg_sound_settings[iChannel] = phrase->m_setting;
+        }
+        // add phrase
+        block.push_back(phrase);
+        // next channel
+        ++iChannel;
+    }
+
+    if (!vsk_sound_player->save_as_wav(block, filename))
+        return false; // å¤±æ•—
+
+    return true;
+}
+
+// FMéŸ³æºã§éŸ³æ¥½ä¿å­˜
+bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename)
+{
+    assert(strs.size() < VSK_MAX_CHANNEL);
+    size_t iChannel = 0;
+
+    // add phrases to block
+    VskScoreBlock block;
+    // for each channel strings
+    for (auto& str : strs) {
+        // get play items
+        std::vector<VskPlayItem> items;
+        if (!vsk_eval_cmd_play_items(items, str)) {
+            return false;
+        }
+        // create phrase
+        auto phrase = std::make_shared<VskPhrase>();
+        phrase->m_setting = vsk_fm_sound_settings[iChannel];
+        phrase->m_setting.m_fm = true;
+        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
+            return false;
+        }
+        // apply settings
+        vsk_fm_sound_settings[iChannel] = phrase->m_setting;
+        // add phrase
+        block.push_back(phrase);
+        // next channel
+        ++iChannel;
+    }
+
+    if (!vsk_sound_player->save_as_wav(block, filename))
+        return false; // å¤±æ•—
 
     return true;
 }

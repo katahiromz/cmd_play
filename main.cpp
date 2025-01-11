@@ -10,6 +10,7 @@
 #include <cassert>
 #include <map>
 #include <unordered_set>
+#include <stdexcept>
 #include <windows.h>
 #include <tchar.h>
 #include <shlwapi.h>
@@ -40,6 +41,7 @@ LPCTSTR get_text(INT id)
         case 3: return TEXT("エラー: 演奏する文字列が未指定です。\n");
         case 4: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case 5: return TEXT("エラー: Illegal function call\n");
+        case 6: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
         }
     }
     else // The others are Let's la English
@@ -59,6 +61,7 @@ LPCTSTR get_text(INT id)
         case 3: return TEXT("ERROR: No string to play specified.\n");
         case 4: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
         case 5: return TEXT("ERROR: Illegal function call\n");
+        case 6: return TEXT("ERROR: Option -save_wav needs an operand.\n");
         }
     }
 
@@ -167,6 +170,20 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             return 1;
         }
 
+        if (_wcsicmp(arg, L"-save_wav") == 0 || _wcsicmp(arg, L"--save_wav") == 0)
+        {
+            if (iarg + 1 < argc)
+            {
+                m_output_file = argv[++iarg];
+                continue;
+            }
+            else
+            {
+                _ftprintf(stderr, TEXT("%s"), get_text(6));
+                return 1;
+            }
+        }
+
         if (arg[0] == '-')
         {
             TCHAR text[256];
@@ -211,6 +228,30 @@ int CMD_PLAY::run()
     {
         _ftprintf(stderr, get_text(5));
         return 1;
+    }
+
+    if (m_output_file.size())
+    {
+        switch (m_audio_mode)
+        {
+        case 0:
+            if (!vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str()))
+            {
+                _ftprintf(stderr, TEXT("%s"), get_text(5));
+                vsk_sound_exit();
+                return 1;
+            }
+            break;
+        case 2:
+            if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str()))
+            {
+                _ftprintf(stderr, TEXT("%s"), get_text(5));
+                vsk_sound_exit();
+                return 1;
+            }
+            break;
+        }
+        return 0;
     }
 
     switch (m_audio_mode)

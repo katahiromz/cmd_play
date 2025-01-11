@@ -8,6 +8,7 @@
 #include "AL/alut.h"
 #include <map>
 #include <cstdio>
+#include <limits>
 
 #define CLOCK       8000000
 #define SAMPLERATE  44100
@@ -273,7 +274,7 @@ void VskPhrase::execute_special_actions() {
                 auto action_numbers = pair2.second;
 
                 // 前のgateからの待機時間を計算して待機
-                if (!m_player->wait_for_stop((gate - last_gate) * 1000)) {
+                if (!m_player->wait_for_stop(uint32_t(gate - last_gate) * 1000)) {
                     // 待機中にstopされた場合、ループを抜ける
                     break;
                 }
@@ -531,18 +532,51 @@ bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds) 
 }
 
 bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) {
-    FM_SAMPLETYPE *data = nullptr;
-    size_t data_size;
+    std::vector<FM_SAMPLETYPE *> raw_data;
+    std::vector<size_t> data_sizes;
 
+    // realize phrases
     for (auto& phrase : block) {
         if (phrase) {
-            delete[] data;
+            FM_SAMPLETYPE *data;
+            size_t data_size;
             phrase->realize(this, data, data_size);
+            raw_data.push_back(data);
+            data_sizes.push_back(data_size);
         }
+    }
+
+    size_t data_size = 0;
+    for (size_t i = 0; i < raw_data.size(); ++i) {
+        if (data_size < data_sizes[i])
+            data_size = data_sizes[i];
+    }
+
+    size_t num_samples = data_size / sizeof(FM_SAMPLETYPE);
+    FM_SAMPLETYPE *data = new FM_SAMPLETYPE[num_samples];
+    for (size_t isample = 0; isample < num_samples; ++isample) {
+        // mixing
+        int32_t value = 0;
+        for (size_t i = 0; i < raw_data.size(); ++i) {
+            if (isample < data_sizes[i] / sizeof(FM_SAMPLETYPE))
+                value += raw_data[i][isample];
+        }
+        // clipping value
+        if (value < std::numeric_limits<FM_SAMPLETYPE>::min())
+            value = std::numeric_limits<FM_SAMPLETYPE>::min();
+        else if (value > std::numeric_limits<FM_SAMPLETYPE>::max())
+            value = std::numeric_limits<FM_SAMPLETYPE>::max();
+        if (isample < data_size)
+            data[isample] = value;
+        else
+            data[isample] = 0;
     }
 
     FILE *fout = _wfopen(filename, L"wb");
     if (!fout) {
+        for (auto entry : raw_data) {
+            delete[] entry;
+        }
         delete[] data;
         return false;
     }
@@ -551,6 +585,9 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) 
     std::fwrite(data, data_size, 1, fout);
     std::fclose(fout);
 
+    for (auto entry : raw_data) {
+        delete[] entry;
+    }
     delete[] data;
     return true;
 }
@@ -608,7 +645,7 @@ void VskSoundPlayer::play(VskScoreBlock& block) {
                     }
                 }
 
-                auto msec = uint32_t(goal * 1000.0);
+                auto msec = uint32_t(goal * 1000.0f);
                 if (m_stopping_event.wait_for_event(msec)) {
                     size_t remaining_actions;
                     do {
@@ -618,7 +655,7 @@ void VskSoundPlayer::play(VskScoreBlock& block) {
                                 remaining_actions += phrase->m_remaining_actions;
                             }
                         }
-                        alutSleep(remaining_actions * 0.005);
+                        alutSleep(remaining_actions * 0.005f);
                     } while (remaining_actions > 0);
                 }
 
@@ -629,14 +666,14 @@ void VskSoundPlayer::play(VskScoreBlock& block) {
                         do {
                             alGetSourcei(phrase->m_source, AL_SOURCE_STATE, &state);
                             // ループ回数を抑えるために少々間隔を入れる
-                            alutSleep(0.01);
+                            alutSleep(0.01f);
                         } while (state == AL_PLAYING);
                     }
                 }
             }
             if (m_playing_music) {
                 m_playing_music = false;
-                alutSleep(1.0);
+                alutSleep(1.0f);
             }
         },
         0

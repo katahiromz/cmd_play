@@ -39,8 +39,8 @@
 // VskNote
 
 enum SpecialKeys {
-    KEY_REST = -1,          // 休符のキー
-    KEY_SPECIAL_ACTION = -2 // スペシャルアクションのキー
+    KEY_REST = -1,          // 莨醍ｬｦ
+    KEY_SPECIAL_ACTION = -2 // 繧ｹ繝壹す繝｣繝ｫ繧｢繧ｯ繧ｷ繝ｧ繝ｳ
 };
 
 struct VskNote {

@@ -30,3 +30,6 @@ VSK_SOUND_ERR vsk_sound_cmd_sing_save(const wchar_t *wstr, const wchar_t *filena
 bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs);
 bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs);
 bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs);
+bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename);
+bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename);
+bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename);

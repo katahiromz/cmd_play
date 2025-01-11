@@ -1,4 +1,4 @@
-#include "types.h"
+ï»¿#include "types.h"
 #include "sound.h"
 #include "encoding.h"
 #include "ast.h"
@@ -6,15 +6,15 @@
 #include <cassert>
 
 #include "freealut/include/AL/alut.h"   // OpenAL utility
-#include "fmgon/soundplayer.h"          // ƒTƒEƒ“ƒhƒvƒŒ[ƒ„[
+#include "fmgon/soundplayer.h"          // ã‚µã‚¦ãƒ³ãƒ‰ãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼
 #include "scanner.h"                    // VskScanner
 
-// ƒTƒEƒ“ƒhƒvƒŒ[ƒ„[
+// ã‚µã‚¦ãƒ³ãƒ‰ãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼
 extern std::shared_ptr<VskSoundPlayer> vsk_sound_player;
-// CMD SING‚ÌŒ»İ‚Ìİ’è
+// CMD SINGã®ç¾åœ¨ã®è¨­å®š
 static VskSoundSetting vsk_cmd_sing_settings;
 
-// VskSingItem --- CMD SING —p‚Ì‰‰‘t€–Ú
+// VskSingItem --- CMD SING ç”¨ã®æ¼”å¥é …ç›®
 struct VskSingItem
 {
     VskString               m_subcommand;
@@ -31,7 +31,7 @@ struct VskSingItem
         m_dot = false;
     }
 
-    // ƒfƒoƒbƒO—p
+    // ãƒ‡ãƒãƒƒã‚°ç”¨
     VskString to_str() const {
         VskString ret = m_subcommand;
         if (m_sign)
@@ -43,7 +43,7 @@ struct VskSingItem
     }
 };
 
-// ƒfƒoƒbƒO—p
+// ãƒ‡ãƒãƒƒã‚°ç”¨
 VskString vsk_string_from_sing_items(const std::vector<VskSingItem>& items)
 {
     VskString ret;
@@ -52,7 +52,7 @@ VskString vsk_string_from_sing_items(const std::vector<VskSingItem>& items)
     return ret;
 }
 
-// CMD SING‚Ìƒpƒ‰ƒ[ƒ^‚ğæ“¾‚·‚é
+// CMD SINGã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’å–å¾—ã™ã‚‹
 VskAstPtr vsk_get_sing_param(const VskSingItem& item)
 {
     if (item.m_param.empty())
@@ -60,14 +60,14 @@ VskAstPtr vsk_get_sing_param(const VskSingItem& item)
     return vsk_eval_text(item.m_param);
 } // vsk_get_sing_param
 
-// CMD SING‚Ì€–ÚŒQ‚©‚çƒtƒŒ[ƒY‚ğì¬‚·‚é
+// CMD SINGã®é …ç›®ç¾¤ã‹ã‚‰ãƒ•ãƒ¬ãƒ¼ã‚ºã‚’ä½œæˆã™ã‚‹
 bool vsk_phrase_from_sing_items(std::shared_ptr<VskPhrase> phrase, const std::vector<VskSingItem>& items)
 {
     float length;
     for (auto& item : items) {
         char ch = item.m_subcommand[0];
         switch (ch) {
-        case 'T': // Tempo (ƒeƒ“ƒ|)
+        case 'T': // Tempo (ãƒ†ãƒ³ãƒ)
             if (auto ast = vsk_get_sing_param(item)) {
                 auto i0 = ast->to_int();
                 if ((48 <= i0) && (i0 <= 255)) {
@@ -76,7 +76,7 @@ bool vsk_phrase_from_sing_items(std::shared_ptr<VskPhrase> phrase, const std::ve
                 }
             }
             return false;
-        case 'O': // Octave (ƒIƒNƒ^[ƒu)
+        case 'O': // Octave (ã‚ªã‚¯ã‚¿ãƒ¼ãƒ–)
             if (auto ast = vsk_get_sing_param(item)) {
                 auto i0 = ast->to_int();
                 if ((3 <= i0) && (i0 <= 6)) {
@@ -85,7 +85,7 @@ bool vsk_phrase_from_sing_items(std::shared_ptr<VskPhrase> phrase, const std::ve
                 }
             }
             return false;
-        case 'L': // Length (‰¹•„E‹x•„‚Ì’·‚³)
+        case 'L': // Length (éŸ³ç¬¦ãƒ»ä¼‘ç¬¦ã®é•·ã•)
             if (auto ast = vsk_get_sing_param(item)) {
                 auto i0 = ast->to_int();
                 if ((1 <= i0) && (i0 <= 32)) {
@@ -95,12 +95,12 @@ bool vsk_phrase_from_sing_items(std::shared_ptr<VskPhrase> phrase, const std::ve
             }
             return false;
         case 'R':
-            if (item.m_subcommand == "RP") { // ŒJ‚è•Ô‚µH
+            if (item.m_subcommand == "RP") { // ç¹°ã‚Šè¿”ã—ï¼Ÿ
                 break;
             }
             // ...FALL THROUGH...
         case 'C': case 'D': case 'E': case 'F': case 'G': case 'A': case 'B':
-            // ‰¹•„(CDEFGAB)‚©‹x•„(Rest)
+            // éŸ³ç¬¦(CDEFGAB)ã‹ä¼‘ç¬¦(Rest)
             if (auto ast = vsk_get_sing_param(item)) {
                 auto L = ast->to_int();
                 // NOTE: 24 is the length of a quarter note
@@ -115,7 +115,7 @@ bool vsk_phrase_from_sing_items(std::shared_ptr<VskPhrase> phrase, const std::ve
             phrase->add_note(ch, item.m_dot, length, item.m_sign);
             continue;
         case 'X':
-            // ƒXƒyƒVƒƒƒ‹ƒAƒNƒVƒ‡ƒ“
+            // ã‚¹ãƒšã‚·ãƒ£ãƒ«ã‚¢ã‚¯ã‚·ãƒ§ãƒ³
             if (auto ast = vsk_get_sing_param(item)) {
                 int action_no = ast->to_int();
                 phrase->add_action_node(ch, action_no);
@@ -127,83 +127,83 @@ bool vsk_phrase_from_sing_items(std::shared_ptr<VskPhrase> phrase, const std::ve
     return true;
 } // vsk_phrase_from_sing_items
 
-// CMD SING‚Ì€–Ú‚ÌŒJ‚è•Ô‚µ(RP)‚ğ“WŠJ‚·‚éB
+// CMD SINGã®é …ç›®ã®ç¹°ã‚Šè¿”ã—(RP)ã‚’å±•é–‹ã™ã‚‹ã€‚
 bool vsk_expand_sing_items_repeat(std::vector<VskSingItem>& items)
 {
 retry:;
     int level = 0, repeat = 0;
     auto it_repeat = items.end();
     for (auto it = items.begin(); it != items.end(); ++it) {
-        if (it->m_subcommand == "RP") { // ŒJ‚è•Ô‚µirepeatj
-            if (auto ast = vsk_get_sing_param(*it)) { // RP‚Ìˆø”
+        if (it->m_subcommand == "RP") { // ç¹°ã‚Šè¿”ã—ï¼ˆrepeatï¼‰
+            if (auto ast = vsk_get_sing_param(*it)) { // RPã®å¼•æ•°
                 repeat = ast->to_int();
-                if (repeat < 0 || 255 < repeat) { // ŒJ‚è•Ô‚µ‚Ì‰ñ”‚ª•s³H
+                if (repeat < 0 || 255 < repeat) { // ç¹°ã‚Šè¿”ã—ã®å›æ•°ãŒä¸æ­£ï¼Ÿ
                     assert(0);
                     return false;
                 }
-                it_repeat = it; // RP‚Ì‚ ‚éˆÊ’u‚ğŠo‚¦‚Ä‚¨‚­
+                it_repeat = it; // RPã®ã‚ã‚‹ä½ç½®ã‚’è¦šãˆã¦ãŠã
                 ++it;
                 if (it == items.end()) {
                     assert(0);
-                    return false; // •¶–@ƒGƒ‰[
+                    return false; // æ–‡æ³•ã‚¨ãƒ©ãƒ¼
                 }
-                if (it->m_subcommand == "[") { // ŒJ‚è•Ô‚µ‚Ìn‚Ü‚è
+                if (it->m_subcommand == "[") { // ç¹°ã‚Šè¿”ã—ã®å§‹ã¾ã‚Š
                     ++level;
-                    if (level >= 8) { // ‘½dƒ‹[ƒv‚ªŒÀŠE‚ğ’´‚¦‚½H
+                    if (level >= 8) { // å¤šé‡ãƒ«ãƒ¼ãƒ—ãŒé™ç•Œã‚’è¶…ãˆãŸï¼Ÿ
                         assert(0);
-                        return false; // •s³
+                        return false; // ä¸æ­£
                     }
-                } else { // ŒJ‚è•Ô‚µ‚Ìn‚Ü‚è‚ª‚È‚©‚Á‚½H
+                } else { // ç¹°ã‚Šè¿”ã—ã®å§‹ã¾ã‚ŠãŒãªã‹ã£ãŸï¼Ÿ
                     assert(0);
-                    return false; // •¶–@ƒGƒ‰[
+                    return false; // æ–‡æ³•ã‚¨ãƒ©ãƒ¼
                 }
-            } else { // ˆø”‚ª‚È‚©‚Á‚½H
+            } else { // å¼•æ•°ãŒãªã‹ã£ãŸï¼Ÿ
                 assert(0);
-                return false; // •¶–@ƒGƒ‰[
+                return false; // æ–‡æ³•ã‚¨ãƒ©ãƒ¼
             }
             continue;
         }
-        if (it->m_subcommand == "]") { // ŒJ‚è•Ô‚µ‚ÌI‚í‚è
+        if (it->m_subcommand == "]") { // ç¹°ã‚Šè¿”ã—ã®çµ‚ã‚ã‚Š
             --level;
-            if (it_repeat == items.end()) { // ŒJ‚è•Ô‚µ‚Ìn‚Ü‚è‚ª‚È‚©‚Á‚½H
+            if (it_repeat == items.end()) { // ç¹°ã‚Šè¿”ã—ã®å§‹ã¾ã‚ŠãŒãªã‹ã£ãŸï¼Ÿ
                 assert(0);
-                return false; // •¶–@ƒGƒ‰[
+                return false; // æ–‡æ³•ã‚¨ãƒ©ãƒ¼
             }
             std::vector<VskSingItem> sub(it_repeat + 2, it);
             auto insert_position = items.erase(it_repeat, it + 1);
             for (int m = 0; m < repeat; ++m) {
                 insert_position = items.insert(insert_position, sub.begin(), sub.end());
             }
-            goto retry; // ˆê‰ñ“WŠJ‚µ‚½‚çÅ‰‚©‚ç‚â‚è’¼‚µ
+            goto retry; // ä¸€å›å±•é–‹ã—ãŸã‚‰æœ€åˆã‹ã‚‰ã‚„ã‚Šç›´ã—
         }
     }
-    return true; // ¬Œ÷
+    return true; // æˆåŠŸ
 } // vsk_expand_sing_items_repeat
 
-// •¶š—ñ‚©‚çCMD SING‚Ì€–Ú‚ğæ“¾‚·‚é
+// æ–‡å­—åˆ—ã‹ã‚‰CMD SINGã®é …ç›®ã‚’å–å¾—ã™ã‚‹
 bool vsk_sing_items_from_string(std::vector<VskSingItem>& items, const VskString& expr)
 {
-    // ‘å•¶š‚É‚·‚é
+    // å¤§æ–‡å­—ã«ã™ã‚‹
     auto str = expr;
     vsk_upper(str);
 
-    // ƒXƒLƒƒƒi[‚ğg‚Á‚Äš‹å‰ğÍ‚ğn‚ß‚é
+    // ã‚¹ã‚­ãƒ£ãƒŠãƒ¼ã‚’ä½¿ã£ã¦å­—å¥è§£æã‚’å§‹ã‚ã‚‹
     VskScanner scanner(str);
     items.clear();
     VskSingItem item;
     VskString subcommand;
-    while (!scanner.eof()) { // •¶š—ñ‚ÌI‚í‚è‚Ü‚Å
-        char ch = scanner.getch(); // ˆê•¶šæ“¾
-        if (vsk_isblank(ch)) continue; // ‹ó”’‚Í–³‹
+    while (!scanner.eof()) { // æ–‡å­—åˆ—ã®çµ‚ã‚ã‚Šã¾ã§
+        char ch = scanner.getch(); // ä¸€æ–‡å­—å–å¾—
+        if (vsk_isblank(ch)) continue; // ç©ºç™½ã¯ç„¡è¦–
         if (ch == ';') continue;
 
-        if (ch == '[') { // ŒJ‚è•Ô‚µ‚ÌƒJƒbƒR‚Í‚¶‚ßH
+        if (ch == '[') { // ç¹°ã‚Šè¿”ã—ã®ã‚«ãƒƒã‚³ã¯ã˜ã‚ï¼Ÿ
             item.m_subcommand = "[";
             items.push_back(item);
             item.clear();
             continue;
         }
-        if (ch == ']') { // ŒJ‚è•Ô‚µ‚ÌƒJƒbƒRI‚í‚èH
+        if (ch == ']') { // ç¹°ã‚Šè¿”ã—ã®ã‚«ãƒƒã‚³çµ‚ã‚ã‚Šï¼Ÿ
             item.m_subcommand = "]";
             items.push_back(item);
             item.clear();
@@ -218,11 +218,11 @@ bool vsk_sing_items_from_string(std::vector<VskSingItem>& items, const VskString
                 case 'T': case 'O': case 'L': 
                 case 'C': case 'D': case 'E': case 'F': case 'G': case 'A': case 'B':
                 case 'X':
-                    status = 1; // ˆø”‚ª‚P‚Â‚ ‚é‚©‚à‚µ‚ê‚È‚¢
+                    status = 1; // å¼•æ•°ãŒï¼‘ã¤ã‚ã‚‹ã‹ã‚‚ã—ã‚Œãªã„
                     break;
                 case 'R':
-                    status = 1; // ˆø”‚ª‚P‚Â‚ ‚é‚©‚à‚µ‚ê‚È‚¢
-                    if (scanner.peek() == 'P') { // "RP" (repeat)H
+                    status = 1; // å¼•æ•°ãŒï¼‘ã¤ã‚ã‚‹ã‹ã‚‚ã—ã‚Œãªã„
+                    if (scanner.peek() == 'P') { // "RP" (repeat)ï¼Ÿ
                         subcommand += scanner.getch();
                     }
                     break;
@@ -234,19 +234,19 @@ bool vsk_sing_items_from_string(std::vector<VskSingItem>& items, const VskString
             }
         }
         if (status == 0) {
-            return false; // ˆø”‚ª‚È‚¢‚Ì‚É‚±‚±‚É—ˆ‚é‚Ì‚Í‚¨‚©‚µ‚¢
+            return false; // å¼•æ•°ãŒãªã„ã®ã«ã“ã“ã«æ¥ã‚‹ã®ã¯ãŠã‹ã—ã„
         }
         item.m_subcommand = subcommand;
         subcommand.clear();
 
-        // ƒVƒƒ[ƒv‚©ƒtƒ‰ƒbƒg
+        // ã‚·ãƒ£ãƒ¼ãƒ—ã‹ãƒ•ãƒ©ãƒƒãƒˆ
         ch = scanner.peek();
         if ((ch == '+') || (ch == '#') || (ch == '-')) {
             item.m_sign = scanner.getch();
             ch = scanner.peek();
         }
 
-        // ƒpƒ‰ƒ[ƒ^‚ğæ“¾‚·‚é
+        // ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’å–å¾—ã™ã‚‹
         if (scanner.peek() == '(') {
             int level = 0;
             for (;;) {
@@ -284,72 +284,72 @@ bool vsk_sing_items_from_string(std::vector<VskSingItem>& items, const VskString
             }
         }
 
-        // •t“_iƒhƒbƒgj
+        // ä»˜ç‚¹ï¼ˆãƒ‰ãƒƒãƒˆï¼‰
         ch = scanner.peek();
         if (ch == '.') {
             item.m_dot = true;
             scanner.getch();
         }
 
-        // €–Ú‚ğ’Ç‰Á
+        // é …ç›®ã‚’è¿½åŠ 
         items.push_back(item);
         item.clear();
     }
 
-    // ŒJ‚è•Ô‚µ‚ğ“WŠJ‚·‚é
+    // ç¹°ã‚Šè¿”ã—ã‚’å±•é–‹ã™ã‚‹
     return vsk_expand_sing_items_repeat(items);
 } // vsk_sing_items_from_string
 
 VskString vsk_replace_placeholders(const VskString& str);
 
-// CMD SING•¶À‘•‚Ì–{‘Ì
+// CMD SINGæ–‡å®Ÿè£…ã®æœ¬ä½“
 VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str)
 {
-    VskString s = vsk_replace_placeholders(str); // {•¶š—ñ•Ï”–¼}‚ğ“WŠJ‚·‚é
+    VskString s = vsk_replace_placeholders(str); // {æ–‡å­—åˆ—å¤‰æ•°å}ã‚’å±•é–‹ã™ã‚‹
 
-    // •¶š—ñ‚©‚çCMD SING‚Ì€–Ú‚ğæ“¾‚·‚é
+    // æ–‡å­—åˆ—ã‹ã‚‰CMD SINGã®é …ç›®ã‚’å–å¾—ã™ã‚‹
     std::vector<VskSingItem> items;
     if (!vsk_sing_items_from_string(items, s))
-        return VSK_SOUND_ERR_ILLEGAL; // ¸”s
+        return VSK_SOUND_ERR_ILLEGAL; // å¤±æ•—
 
-    // ƒtƒŒ[ƒY‚ğì¬‚·‚é
+    // ãƒ•ãƒ¬ãƒ¼ã‚ºã‚’ä½œæˆã™ã‚‹
     auto phrase = std::make_shared<VskPhrase>();
     phrase->m_setting = vsk_cmd_sing_settings;
     phrase->m_setting.m_fm = false;
     if (!vsk_phrase_from_sing_items(phrase, items))
-        return VSK_SOUND_ERR_ILLEGAL; // ¸”s
+        return VSK_SOUND_ERR_ILLEGAL; // å¤±æ•—
 
-    // ƒtƒŒ[ƒY‚ğ‰‰‘t‚·‚é
+    // ãƒ•ãƒ¬ãƒ¼ã‚ºã‚’æ¼”å¥ã™ã‚‹
     VskScoreBlock block = { phrase };
     vsk_sound_player->play(block);
 
-    // İ’è‚ğ•Û‘¶‚·‚é
+    // è¨­å®šã‚’ä¿å­˜ã™ã‚‹
     vsk_cmd_sing_settings = phrase->m_setting;
 
-    return VSK_SOUND_ERR_SUCCESS; // ¬Œ÷
+    return VSK_SOUND_ERR_SUCCESS; // æˆåŠŸ
 }
 
-// CMD SING•¶‚Ìo—Í‚ğWAVƒtƒ@ƒCƒ‹‚É•Û‘¶‚·‚é
+// CMD SINGæ–‡ã®å‡ºåŠ›ã‚’WAVãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã™ã‚‹
 VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename)
 {
-    VskString s = vsk_replace_placeholders(str); // {•¶š—ñ•Ï”–¼}‚ğ“WŠJ‚·‚é
+    VskString s = vsk_replace_placeholders(str); // {æ–‡å­—åˆ—å¤‰æ•°å}ã‚’å±•é–‹ã™ã‚‹
 
-    // •¶š—ñ‚©‚çCMD SING‚Ì€–Ú‚ğæ“¾‚·‚é
+    // æ–‡å­—åˆ—ã‹ã‚‰CMD SINGã®é …ç›®ã‚’å–å¾—ã™ã‚‹
     std::vector<VskSingItem> items;
     if (!vsk_sing_items_from_string(items, s))
-        return VSK_SOUND_ERR_ILLEGAL; // ¸”s
+        return VSK_SOUND_ERR_ILLEGAL; // å¤±æ•—
 
-    // ƒtƒŒ[ƒY‚ğì¬‚·‚é
+    // ãƒ•ãƒ¬ãƒ¼ã‚ºã‚’ä½œæˆã™ã‚‹
     auto phrase = std::make_shared<VskPhrase>();
     phrase->m_setting = vsk_cmd_sing_settings;
     phrase->m_setting.m_fm = false;
     if (!vsk_phrase_from_sing_items(phrase, items))
-        return VSK_SOUND_ERR_ILLEGAL; // ¸”s
+        return VSK_SOUND_ERR_ILLEGAL; // å¤±æ•—
 
-    // ƒtƒŒ[ƒY‚ğ‰‰‘t‚·‚é
+    // ãƒ•ãƒ¬ãƒ¼ã‚ºã‚’æ¼”å¥ã™ã‚‹
     VskScoreBlock block = { phrase };
     if (!vsk_sound_player->save_as_wav(block, filename))
-        return VSK_SOUND_ERR_IO_ERROR; // ¸”s
+        return VSK_SOUND_ERR_IO_ERROR; // å¤±æ•—
 
     return VSK_SOUND_ERR_SUCCESS;
 }
