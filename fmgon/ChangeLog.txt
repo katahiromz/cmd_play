@@ -1,0 +1,72 @@
+(Japanese, Shift_JIS)
+
+2015年12月1日 片山博文MZ
+
+ファイル「readme.txt」を「OldReadMe.txt」に改名。
+型uintをuint32_tに変換。
+型uint8をuint8_tに変換。
+型uint16をuint16_tに変換。
+型uint32をuint32_tに変換。
+型int8をint8_tに変換。
+型int16をint16_tに変換。
+ファイル「types.h」を削除。
+ファイル「headers.h」をファイル「fmgon.h」に改名。
+「#include "headers.h"」を「#include "fmgon.h"」に書き換え。
+二重インクルード防止マクロの名前を改良する。
+タブをスペースに変換。
+ファイル「fmgon.h」の次のコード：
+    #ifdef _MSC_VER
+        #undef max
+        #define max _MAX
+        #undef min
+        #define min _MIN
+    #endif
+を
+    #undef max
+    #undef min
+にする。
+ファイル「fmgon.h」において、
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <math.h>
+    #include <string.h>
+    #include <assert.h>
+を
+    #include <cstdio>
+    #include <cstdlib>
+    #include <cmath>
+    #include <cstring>
+    #include <cassert>
+に変更。
+ファイル「file.h」とOPNA::LoadRhythmSampleのFileIOクラスの使用を単純化。
+ファイル「file.cpp」を削除。
+マクロ「MAX_PATH」が未定義のときに、ファイル「fmgon.h」で定義。
+ファイル「diag.h」を削除。
+ファイル「fmgon.h」の中の「#include <windows.h>」などを削除。
+マクロ「FM_SAMPLETYPE」を「int16_t」にする。
+マクロ「PSG_SAMPLETYPE」を「int16_t」にする。
+コード「#include "misc.h"」をファイル「fmgon.h」の中へ移動。
+コードの整形。
+
+2015年12月2日 片山博文MZ
+ファイル「YM2203.h」「YM2203.cpp」「YM2203_Timbre.h」
+「YM2203_Timbre.cpp」「sample.cpp」を追加。
+ファイル「pevent.h」「posix_pevent.cpp」「win32_pevent.h」を追加。
+
+2015年12月3日 片山博文MZ
+改良。
+
+2015年12月31日 片山博文MZ
+パッチを当てる。ビブラート・トレモロなどのLFO効果がばっちり。
+これは、私の掲示板（http://katahiromz.bbs.fc2.com/）で
+「書けるかな？」さんが作ってくれたものです。
+
+2016年1月1日 片山博文MZ
+ファイル「Makefile.g++」「Makefile.mingw32」「Makefile.mingw64」
+を追加。ソースの整形。
+Visual Studio 2015のプロジェクトファイルを追加。
+ファイル「fmgon_test.cpp」を追加。
+
+2016年1月9日 片山博文MZ
+初期化により警告を黙らせる。
+タイのサポート。

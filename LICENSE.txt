@@ -1,0 +1,36 @@
+Copyright (C) 2014-2024 Katayama Hirofumi MZ.
+Copyright (C) by cisc 1998, 2003.
+
+---
+(Japanese, UTF-8)
+
+fmgon ライセンス
+----------------
+
+・本ソースコードはcisc (cisc@retropc.net) が著作権を所有しています。
+・本ソースコードはあるがままに提供されるものであり，暗黙及び明示的な保証を一切含みません．
+・本ソースコードを利用したこと，利用しなかったこと，利用できなかったことに関して生じたあるいは生じると予測される損害について，作者は一切責任を負いません．
+・本ソースコードは，以下の制限を満たす限り自由に改変・組み込み・配布・利用することができます．
+  1. 本ソフトの由来(作者, 著作権)を明記すること.
+  2. 配布する際にはフリーソフトとすること．
+  3. 改変したソースコードを配布する際は改変内容を明示すること.
+  4. ソースコードを配布する際にはこのテキストを一切改変せずにそのまま添付すること．
+・公開の際に作者への連絡を頂ければ幸いです．
+・商用ソフト(シェアウェア含む) に本ソースコードの一部，または全部を組み込む際には，事前に作者の合意を得る必要があります．
+
+---
+(English)
+
+The fmgon License
+-----------------
+
+- This source code is copyrighted by cisc (cisc@retropc.net).
+- This source code is provided as is, without any implicit or explicit warranty.
+- The author assumes no responsibility for any damages that may arise or be expected to arise from the use, non-use, or inability to use this source code.
+- This source code may be freely modified, incorporated, distributed, and used, as long as the following restrictions are met.
+    1. The origin of this software (author, copyright) must be clearly stated.
+    2. When distributing, it must be considered free software.
+    3. When distributing modified source code, the changes must be clearly stated.
+    4. When distributing the source code, this text must be included as is, without any modifications.
+- We would appreciate it if you could contact the author when releasing it.
+- When incorporating part or all of this source code into commercial software (including shareware), the author's consent must be obtained in advance.

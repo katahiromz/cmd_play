@@ -1,0 +1,22 @@
+LIBRARY libalut.dll
+EXPORTS
+alutCreateBufferFromFile
+alutCreateBufferFromFileImage
+alutCreateBufferHelloWorld
+alutCreateBufferWaveform
+alutExit
+alutGetError
+alutGetErrorString
+alutGetMIMETypes
+alutGetMajorVersion
+alutGetMinorVersion
+alutInit
+alutInitWithoutContext
+alutLoadMemoryFromFile
+alutLoadMemoryFromFileImage
+alutLoadMemoryHelloWorld
+alutLoadMemoryWaveform
+alutLoadWAVFile
+alutLoadWAVMemory
+alutSleep
+alutUnloadWAV
