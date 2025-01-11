@@ -1,4 +1,4 @@
-﻿# cmd_sing のビルド方法
+﻿# cmd_play のビルド方法
 
 ## Visual Studio Community 2019の場合
 
@@ -6,10 +6,10 @@
 2. OpenAL Core SDK ( https://www.openal.org/downloads/ ) をダウンロード＆インストール
 3. OPENALDIR環境変数を OpenAL のある場所に設定
 4. スタートメニューからVisual Studio コマンドプロンプトを開く
-5. CDコマンドで cmd_sing のあるフォルダに移動
+5. CDコマンドで cmd_play のあるフォルダに移動
 6. 「"C:\Program Files\CMake\bin\cmake.exe" -A Win32 -DBUILD_SHARED_LIBS=OFF .」を実行
-7. ソリューションファイル「cmd_sing.sln」を開く
-8. プロジェクト「cmd_sing」をスタートアップ プロジェクトに設定
+7. ソリューションファイル「cmd_play.sln」を開く
+8. プロジェクト「cmd_play」をスタートアップ プロジェクトに設定
 9. 「ビルド」メニューの「ソリューションのビルド」を選ぶ
 
 ## RosBE (ReactOS Build Environment) の場合
@@ -18,6 +18,6 @@
 2. OpenAL Core SDK ( https://www.openal.org/downloads/ ) をダウンロード＆インストール
 3. OPENALDIR環境変数を OpenAL のある場所に設定
 4. RosBE を開く
-5. CDコマンドで cmd_sing のあるフォルダに移動
+5. CDコマンドで cmd_play のあるフォルダに移動
 6. 「cmake -G Ninja -DBUILD_SHARED_LIBS=OFF .」を実行
 7. 「ninja」を実行

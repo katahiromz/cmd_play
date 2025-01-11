@@ -28,24 +28,18 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case 0: return TEXT("cmd_sing バージョン 1.0 by 片山博文MZ");
+        case 0: return TEXT("cmd_play バージョン 0.0 by 片山博文MZ");
         case 1:
-            return TEXT("使い方: cmd_sing [オプション] 文字列\n")
-                   TEXT("\n")
-                   TEXT("オプション:\n")
-                   TEXT("  -D変数名=値            変数に代入。\n")
-                   TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
-                   TEXT("  -help                  このメッセージを表示する。\n")
-                   TEXT("  -version               バージョン情報を表示する。\n")
-                   TEXT("\n")
-                   TEXT("文字列変数は、{変数名} で展開できます。");
-        case 2: return TEXT("エラー: オプション -save_as_wav は引数が必要です。\n");
-        case 3: return TEXT("エラー: 「%ls」は、無効なオプションです。\n");
-        case 4: return TEXT("エラー: 引数が多すぎます。\n");
-        case 5: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
-        case 6: return TEXT("エラー: 演奏する文字列が未指定です。\n");
-        case 7: return TEXT("エラー: ファイル「%ls」が開けません。\n");
-        case 8: return TEXT("エラー: Illegal function call\n");
+            return
+                TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
+                TEXT("\n")
+                TEXT("オプション:\n")
+                TEXT("  -help                  このメッセージを表示する。\n")
+                TEXT("  -version               バージョン情報を表示する。\n");
+        case 2: return TEXT("エラー: 引数が多すぎます。\n");
+        case 3: return TEXT("エラー: 演奏する文字列が未指定です。\n");
+        case 4: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
+        case 5: return TEXT("エラー: Illegal function call\n");
         }
     }
     else // The others are Let's la English
@@ -53,24 +47,18 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case 0: return TEXT("cmd_sing version 1.0 by katahiromz");
+        case 0: return TEXT("cmd_play version 0.0 by katahiromz");
         case 1:
-            return TEXT("Usage: cmd_sing [Options] string\n")
-                   TEXT("\n")
-                   TEXT("Options:\n")
-                   TEXT("  -DVAR=VALUE            Assign to a variable.\n")
-                   TEXT("  -save_wav output.wav   Save as WAV file.\n")
-                   TEXT("  -help                  Display this message.\n")
-                   TEXT("  -version               Display version info.\n")
-                   TEXT("\n")
-                   TEXT("String variables can be expanded with {variable name}.");
-        case 2: return TEXT("ERROR: Option -save_wav needs an operand.\n");
-        case 3: return TEXT("ERROR: '%ls' is an invalid option.\n");
-        case 4: return TEXT("ERROR: Too many arguments.\n");
-        case 5: return TEXT("ERROR: vsk_sound_init failed.\n");
-        case 6: return TEXT("ERROR: No string to play specified.\n");
-        case 7: return TEXT("ERROR: Unable to open file '%ls'.\n");
-        case 8: return TEXT("ERROR: Illegal function call\n");
+            return
+                TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
+                TEXT("\n")
+                TEXT("Options:\n")
+                TEXT("  -help                  Display this message.\n")
+                TEXT("  -version               Display version info.\n");
+        case 2: return TEXT("ERROR: Too many arguments.\n");
+        case 3: return TEXT("ERROR: No string to play specified.\n");
+        case 4: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
+        case 5: return TEXT("ERROR: Illegal function call\n");
         }
     }
 
@@ -143,26 +131,19 @@ std::string vsk_sjis_from_wide(const wchar_t *wide)
     return str;
 }
 
-VSK_SOUND_ERR vsk_sound_cmd_sing(const wchar_t *wstr)
-{
-    return vsk_sound_cmd_sing(vsk_sjis_from_wide(wstr).c_str());
-}
+#define VSK_MAX_CHANNEL 6
 
-VSK_SOUND_ERR vsk_sound_cmd_sing_save(const wchar_t *wstr, const wchar_t *filename)
+struct CMD_PLAY
 {
-    return vsk_sound_cmd_sing_save(vsk_sjis_from_wide(wstr).c_str(), filename);
-}
-
-struct CMD_SING
-{
-    std::wstring m_str_to_play;
+    std::vector<std::string> m_str_to_play;
     std::wstring m_output_file;
+    int m_audio_mode = 2;
 
     int parse_cmd_line(int argc, wchar_t **argv);
     int run();
 };
 
-int CMD_SING::parse_cmd_line(int argc, wchar_t **argv)
+int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 {
     if (argc <= 1)
     {
@@ -186,41 +167,6 @@ int CMD_SING::parse_cmd_line(int argc, wchar_t **argv)
             return 1;
         }
 
-        if (_wcsicmp(arg, L"-save_wav") == 0 || _wcsicmp(arg, L"--save_wav") == 0)
-        {
-            if (iarg + 1 < argc)
-            {
-                m_output_file = argv[++iarg];
-                continue;
-            }
-            else
-            {
-                _ftprintf(stderr, get_text(2));
-                return 1;
-            }
-        }
-
-        if (arg[0] == '-' && (arg[1] == 'd' || arg[1] == 'D'))
-        {
-            char text[256];
-            WideCharToMultiByte(932, 0, &arg[2], -1, text, _countof(text), nullptr, nullptr);
-            VskString str = text;
-            auto ich = str.find('=');
-            if (ich == str.npos)
-            {
-                TCHAR text[256];
-                StringCchPrintf(text, _countof(text), get_text(3), arg);
-                _ftprintf(stderr, TEXT("%s"), text);
-                return 1;
-            }
-            auto var = str.substr(0, ich);
-            auto value = str.substr(ich + 1);
-            CharUpperA(&var[0]);
-            CharUpperA(&value[0]);
-            g_variables[var] = value;
-            continue;
-        }
-
         if (arg[0] == '-')
         {
             TCHAR text[256];
@@ -229,68 +175,78 @@ int CMD_SING::parse_cmd_line(int argc, wchar_t **argv)
             return 1;
         }
 
-        if (m_str_to_play.empty())
+        if (arg[0] == '#')
         {
-            m_str_to_play = arg;
+            m_audio_mode = _wtoi(&arg[1]);
+            if (!(0 <= m_audio_mode && m_audio_mode <= 4))
+            {
+                _ftprintf(stderr, TEXT("%s"), get_text(4));
+                return 1;
+            }
             continue;
         }
 
-        _ftprintf(stderr, get_text(4));
+        if (m_str_to_play.size() < VSK_MAX_CHANNEL)
+        {
+            m_str_to_play.push_back(vsk_sjis_from_wide(arg).c_str());
+            continue;
+        }
+
+        _ftprintf(stderr, get_text(2));
         return 1;
     }
 
     if (m_str_to_play.empty())
     {
-        _ftprintf(stderr, get_text(6));
+        _ftprintf(stderr, get_text(3));
         return 1;
     }
 
     return 0;
 }
 
-int wmain(int argc, wchar_t **argv)
+int CMD_PLAY::run()
 {
-    CMD_SING sing;
-    if (int ret = sing.parse_cmd_line(argc, argv))
-        return ret;
-
     if (!vsk_sound_init())
     {
         _ftprintf(stderr, get_text(5));
         return 1;
     }
 
-    if (sing.m_output_file.size())
+    switch (m_audio_mode)
     {
-        if (VSK_SOUND_ERR ret = vsk_sound_cmd_sing_save(sing.m_str_to_play.c_str(), sing.m_output_file.c_str()))
+    case 0:
+        if (!vsk_sound_cmd_play_ssg(m_str_to_play))
         {
-            switch (ret)
-            {
-            case 1: _ftprintf(stderr, get_text(8)); break;
-            case 2: _ftprintf(stderr, get_text(7), sing.m_output_file.c_str()); break;
-            default: assert(0);
-            }
+            _ftprintf(stderr, TEXT("%s"), get_text(5));
             vsk_sound_exit();
             return 1;
         }
-        vsk_sound_exit();
-        return 0;
-    }
-
-    if (VSK_SOUND_ERR ret = vsk_sound_cmd_sing(sing.m_str_to_play.c_str()))
-    {
-        switch (ret)
+        break;
+    case 2:
+        if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play))
         {
-        case 1: _ftprintf(stderr, get_text(8)); break;
-        case 2: _ftprintf(stderr, get_text(7)); break;
-        default: assert(0);
+            _ftprintf(stderr, TEXT("%s"), get_text(5));
+            vsk_sound_exit();
+            return 1;
         }
-        vsk_sound_exit();
-        return 1;
+        break;
     }
 
     vsk_sound_wait(-1);
     vsk_sound_exit();
+
+    return 0;
+}
+
+int wmain(int argc, wchar_t **argv)
+{
+    CMD_PLAY play;
+    if (int ret = play.parse_cmd_line(argc, argv))
+        return ret;
+
+    if (int ret = play.run())
+        return ret;
 
     return 0;
 }
