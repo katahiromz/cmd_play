@@ -118,12 +118,6 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
         switch (ch) {
         case ' ': case '\t': // blank
             continue;
-        case '!': case '*':
-            // TODO: LFO効果
-            continue;
-        case '_':
-            // TODO: 移調
-            continue;
         case '&': case '^':
             // タイ
             if (items.size()) {
