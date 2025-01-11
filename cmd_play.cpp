@@ -390,7 +390,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 if (auto ast = vsk_get_play_param(item)) {
                     auto i0 = ast->to_int();
                     if ((0 <= i0) && (i0 <= 61)) {
-                        phrase->m_setting.m_tone = i0;
+                        phrase->add_tone(ch, i0);
                         continue;
                     }
                 }

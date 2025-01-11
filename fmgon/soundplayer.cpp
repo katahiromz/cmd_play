@@ -193,6 +193,9 @@ void VskNote::set_key_from_char(char ch) {
     if (ch == 'R' || ch == 0) {
         m_key = KEY_REST;
     }
+    else if (ch == '@') {
+        m_key = KEY_TONE;
+    }
     else if (ch == 'X') {
         m_key = KEY_SPECIAL_ACTION;
     } else {
@@ -394,23 +397,22 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
     if (m_setting.m_fm) { // FM sound?
         int ch = FM_CH1;
 
-        int tone = -1;
+        auto& timbre = m_setting.m_timbre;
+        timbre.set(ym2203_tone_table[0]);
+        ym.set_timbre(ch, &timbre);
         VskLFOCtrl lc;
 
         for (auto& note : m_notes) { // For each note
             // do key on
-            auto& timbre = m_setting.m_timbre;
-            if (note.m_key != -1) { // Has key?
-                // change tone if necessary
-                if (tone != note.m_tone) {
-                    const auto new_tone = note.m_tone;
-                    assert((0 <= new_tone) && (new_tone < NUM_TONES));
-                    timbre.set(ym2203_tone_table[new_tone]);
-                    ym.set_timbre(ch, &timbre);
-                    lc.init_for_timbre(&timbre);
-                    tone = new_tone;
-                }
-
+            if (note.m_key == KEY_TONE) { // Tone change?
+                const auto new_tone = note.m_tone_no;
+                assert((0 <= new_tone) && (new_tone < NUM_TONES));
+                timbre.set(ym2203_tone_table[new_tone]);
+                ym.set_timbre(ch, &timbre);
+                lc.init_for_timbre(&timbre);
+                continue;
+            }
+            if (note.m_key != KEY_REST) { // Has key?
                 ym.set_pitch(ch, note.m_octave, note.m_key);
                 ym.set_volume(ch, int(note.m_volume));
                 ym.note_on(ch);
