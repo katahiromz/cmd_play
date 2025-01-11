@@ -106,6 +106,7 @@ vsk_replace_placeholders(const std::string& str, std::unordered_set<std::string>
             break; // 閉じカッコが見つからない場合は終了
 
         std::string key = result.substr(start_pos + 1, end_pos - start_pos - 1);
+        CharUpperA(&key[0]);
         if (visited.find(key) != visited.end()) {
             // 循環参照を検出した場合はエラーとして処理する
             throw std::runtime_error("Circular reference detected: " + key);
@@ -146,6 +147,7 @@ vsk_replace_placeholders2(const std::string& str, std::unordered_set<std::string
             break; // 閉じカッコが見つからない場合は終了
 
         std::string key = result.substr(start_pos + 1, end_pos - start_pos - 1);
+        CharUpperA(&key[0]);
         if (visited.find(key) != visited.end()) {
             // 循環参照を検出した場合はエラーとして処理する
             throw std::runtime_error("Circular reference detected: " + key);
