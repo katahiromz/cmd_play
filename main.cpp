@@ -45,6 +45,7 @@ LPCTSTR get_text(INT id)
         case 5: return TEXT("エラー: Illegal function call\n");
         case 6: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
         case 7: return TEXT("エラー: 「%ls」は、無効なオプションです。\n");
+        case 8: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
         }
     }
     else // The others are Let's la English
@@ -68,6 +69,7 @@ LPCTSTR get_text(INT id)
         case 5: return TEXT("ERROR: Illegal function call\n");
         case 6: return TEXT("ERROR: Option -save_wav needs an operand.\n");
         case 7: return TEXT("ERROR: '%ls' is an invalid option.\n");
+        case 8: return TEXT("ERROR: vsk_sound_init failed.\n");
         }
     }
 
@@ -251,7 +253,7 @@ int CMD_PLAY::run()
 {
     if (!vsk_sound_init())
     {
-        _ftprintf(stderr, get_text(5));
+        _ftprintf(stderr, get_text(8));
         return 1;
     }
 
