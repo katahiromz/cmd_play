@@ -35,6 +35,7 @@ LPCTSTR get_text(INT id)
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
                 TEXT("\n")
                 TEXT("オプション:\n")
+                TEXT("  -D変数名=値            変数に代入。\n")
                 TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
                 TEXT("  -help                  このメッセージを表示する。\n")
                 TEXT("  -version               バージョン情報を表示する。\n");
@@ -43,6 +44,7 @@ LPCTSTR get_text(INT id)
         case 4: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case 5: return TEXT("エラー: Illegal function call\n");
         case 6: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
+        case 7: return TEXT("エラー: 「%ls」は、無効なオプションです。\n");
         }
     }
     else // The others are Let's la English
@@ -56,6 +58,7 @@ LPCTSTR get_text(INT id)
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
                 TEXT("\n")
                 TEXT("Options:\n")
+                TEXT("  -DVAR=VALUE            Assign to a variable.\n")
                 TEXT("  -save_wav output.wav   Save as WAV file.\n")
                 TEXT("  -help                  Display this message.\n")
                 TEXT("  -version               Display version info.\n");
@@ -64,6 +67,7 @@ LPCTSTR get_text(INT id)
         case 4: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
         case 5: return TEXT("ERROR: Illegal function call\n");
         case 6: return TEXT("ERROR: Option -save_wav needs an operand.\n");
+        case 7: return TEXT("ERROR: '%ls' is an invalid option.\n");
         }
     }
 
@@ -170,6 +174,25 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         {
             version();
             return 1;
+        }
+
+        if (arg[0] == '-' && (arg[1] == 'd' || arg[1] == 'D'))
+        {
+            VskString str = vsk_sjis_from_wide(&arg[2]);
+            auto ich = str.find('=');
+            if (ich == str.npos)
+            {
+                TCHAR text[256];
+                StringCchPrintf(text, _countof(text), get_text(7), arg);
+                _ftprintf(stderr, TEXT("%s"), text);
+                return 1;
+            }
+            auto var = str.substr(0, ich);
+            auto value = str.substr(ich + 1);
+            CharUpperA(&var[0]);
+            CharUpperA(&value[0]);
+            g_variables[var] = value;
+            continue;
         }
 
         if (_wcsicmp(arg, L"-save_wav") == 0 || _wcsicmp(arg, L"--save_wav") == 0)
