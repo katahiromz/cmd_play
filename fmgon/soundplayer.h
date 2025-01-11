@@ -39,11 +39,12 @@
 // VskNote
 
 enum SpecialKeys {
-    KEY_REST = -1,           // 休符
-    KEY_SPECIAL_ACTION = -2, // スペシャルアクション
-    KEY_TONE = -3,           // トーン変更
-    KEY_SPECIAL_REST = -4,   // 特殊な休符
-    KEY_REG = -5,            // レジスタ書き込み
+    KEY_REST = -1,             // 休符
+    KEY_SPECIAL_ACTION = -2,   // スペシャルアクション
+    KEY_TONE = -3,             // トーン変更
+    KEY_SPECIAL_REST = -4,     // 特殊な休符
+    KEY_REG = -5,              // レジスタ書き込み
+    KEY_ENVELOP_INTERVAL = -6, // エンベロープ周期
 };
 
 struct VskNote {
@@ -184,6 +185,12 @@ struct VskPhrase {
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, -1, reg, data);
+    }
+    void add_envelop_interval(char note, int data) {
+        m_notes.emplace_back(
+            m_setting.m_tempo, m_setting.m_octave,
+            note, false, 0, 0, m_setting.m_volume,
+            m_setting.m_quantity, false, -1, -1, -1, data);
     }
     void add_key(int key) {
         add_key(key, false);

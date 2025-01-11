@@ -244,9 +244,17 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
         case ' ': case '\t': // blank
             continue;
         case 'M':
-            // TODO:
-            assert(0);
-            continue;
+            if (auto ast = vsk_get_play_param(item)) {
+                auto i0 = ast->to_int();
+                if (1 <= i0 && i0 <= 65535) {
+                    phrase->add_envelop_interval(ch, i0);
+                    continue;
+                }
+            } else {
+                phrase->add_envelop_interval(ch, 255);
+                continue;
+            }
+            return false;
         case 'S':
             // TODO:
             assert(0);
