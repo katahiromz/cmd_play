@@ -549,8 +549,6 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
 
 //////////////////////////////////////////////////////////////////////////////
 
-/*static*/ int VskSoundPlayer::m_next_async_sound_id = 0;
-
 #define WAV_HEADER_SIZE    44
 
 static uint8_t* get_wav_header(uint32_t data_size, uint32_t clock, uint32_t sample_rate) {

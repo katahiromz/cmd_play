@@ -243,7 +243,6 @@ struct VskSoundPlayer {
     unboost::mutex                              m_play_lock;
     std::vector<std::shared_ptr<VskNote>>       m_notes;
     YM2203                                      m_ym;
-    static int                                  m_next_async_sound_id;
     std::unordered_map<int, VskSpecialActionFn> m_action_no_to_special_action;
 
     VskSoundPlayer() : m_playing_music(false),
