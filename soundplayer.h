@@ -244,9 +244,9 @@ struct VskSoundPlayer {
     std::vector<std::shared_ptr<VskNote>>       m_notes;
     YM2203                                      m_ym;
     std::unordered_map<int, VskSpecialActionFn> m_action_no_to_special_action;
+    std::vector<FM_SAMPLETYPE>                  m_samples;
 
-    VskSoundPlayer() : m_playing_music(false),
-                       m_stopping_event(false, false) { }
+    VskSoundPlayer() : m_playing_music(false), m_stopping_event(false, false) { }
     virtual ~VskSoundPlayer() { }
 
     void play(VskScoreBlock& block);

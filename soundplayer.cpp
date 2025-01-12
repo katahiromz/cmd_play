@@ -5,6 +5,7 @@
 
 #include "fmgon/fmgon.h"
 #include "soundplayer.h"
+#include "sound.h"
 #include <map>
 #include <cstdio>
 #include <limits>
@@ -651,91 +652,8 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) 
 }
 
 void VskSoundPlayer::play(VskScoreBlock& block) {
-    for (auto& phrase : block) {
-        if (phrase) {
-            phrase->realize(this);
-        }
-    }
-
-    m_play_lock.lock();
-    m_melody_line.push_back(block);
-    m_play_lock.unlock();
-
-    if (m_playing_music) {
-        return;
-    }
-
-    m_playing_music = false;
-    m_stopping_event.pulse();
-    m_playing_music = true;
-
-    unboost::thread(
-        [this](int dummy) {
-            VskScoreBlock phrases;
-            for (;;) {
-                // get the next block
-                m_play_lock.lock();
-                if (m_melody_line.empty()) {
-                    m_play_lock.unlock();
-                    stop();
-                    m_stopping_event.pulse();
-                    break;
-                }
-                phrases = m_melody_line.front();
-                m_melody_line.pop_front();
-                m_play_lock.unlock();
-
-                // get the goal
-                float goal = 0;
-                for (auto& phrase : phrases) {
-                    if (phrase) {
-                        if (goal < phrase->m_goal) {
-                            goal = phrase->m_goal;
-                        }
-                    }
-                }
-
-                // play phrases
-                for (auto& phrase : phrases) {
-                    if (phrase) {
-                        alSourcePlay(phrase->m_source);
-                        phrase->execute_special_actions();
-                    }
-                }
-
-                auto msec = uint32_t(goal * 1000.0f);
-                if (m_stopping_event.wait_for_event(msec)) {
-                    size_t remaining_actions;
-                    do {
-                        remaining_actions = 0;
-                        for (auto& phrase : phrases) {
-                            if (phrase) {
-                                remaining_actions += phrase->m_remaining_actions;
-                            }
-                        }
-                        Sleep(remaining_actions * 5);
-                    } while (remaining_actions > 0);
-                }
-
-                // 最後の音が途切れないようにOpenALの再生終了まで待機
-                ALint state;
-                for (auto& phrase : phrases) {
-                    if (phrase) {
-                        do {
-                            alGetSourcei(phrase->m_source, AL_SOURCE_STATE, &state);
-                            // ループ回数を抑えるために少々間隔を入れる
-                            Sleep(10);
-                        } while (state == AL_PLAYING);
-                    }
-                }
-            }
-            if (m_playing_music) {
-                m_playing_music = false;
-                Sleep(1000);
-            }
-        },
-        0
-    ).detach();
+    generate_pcm_raw(block, m_samples);
+    vsk_sound_play(m_samples.data(), m_samples.size() * sizeof(FM_SAMPLETYPE));
 } // VskSoundPlayer::play
 
 void VskSoundPlayer::stop() {

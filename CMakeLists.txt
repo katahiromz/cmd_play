@@ -63,6 +63,6 @@ message(STATUS "BUILD_TESTS: ${BUILD_TESTS}")
 # cmd_play.exe
 add_executable(cmd_play cmd_play.cpp cmd_sing.cpp sound.cpp main.cpp soundplayer.cpp)
 target_compile_definitions(cmd_play PRIVATE UNICODE _UNICODE JAPAN CMD_PLAY_EXE _CRT_SECURE_NO_WARNINGS)
-target_link_libraries(cmd_play fmgon alut shlwapi ${OPENAL_LIBRARY})
+target_link_libraries(cmd_play fmgon alut shlwapi winmm ${OPENAL_LIBRARY})
 
 ##############################################################################

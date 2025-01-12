@@ -4,6 +4,7 @@
 
 bool vsk_sound_init(void);
 void vsk_sound_exit(void);
+void vsk_sound_play(const void *data, size_t data_size);
 bool vsk_sound_is_playing(void);
 bool vsk_sound_wait(VskDword milliseconds);
 void vsk_sound_stop(void);
