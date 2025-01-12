@@ -5,7 +5,6 @@
 
 #include "fmgon/fmgon.h"
 #include "soundplayer.h"
-#include "AL/alut.h"
 #include <map>
 #include <cstdio>
 #include <limits>
