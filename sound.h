@@ -8,8 +8,6 @@ void vsk_sound_play(const void *data, size_t data_size);
 bool vsk_sound_is_playing(void);
 bool vsk_sound_wait(VskDword milliseconds);
 void vsk_sound_stop(void);
-const char *vsk_get_openal_error(int error);
-void vsk_print_openal_error(int error);
 bool vsk_sound_voice_reg(int addr, int data);
 
 enum VSK_SOUND_ERR

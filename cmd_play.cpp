@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <cassert>
 
-#include "freealut/include/AL/alut.h"   // OpenAL utility
 #include "soundplayer.h"                // サウンドプレーヤー
 #include "scanner.h"                    // VskScanner
 

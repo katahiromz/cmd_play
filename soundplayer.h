@@ -21,11 +21,6 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
-// OpenAL --- portable audio library
-
-#include "al.h"
-
-//////////////////////////////////////////////////////////////////////////////
 // pevent --- portable event objects
 
 #include "pevent/pevent.h"
@@ -127,8 +122,6 @@ struct VskSoundPlayer;
 
 struct VskPhrase {
     float                               m_goal = 0;
-    ALuint                              m_buffer = -1;
-    ALuint                              m_source = -1;
     VskSoundSetting                     m_setting;
     std::vector<VskNote>                m_notes;
 
@@ -221,9 +214,7 @@ struct VskPhrase {
 
     void rescan_notes();
     void calc_total();
-    void realize(VskSoundPlayer *player);
     void realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& data_size);
-    bool gen_source_and_buffer(const FM_SAMPLETYPE *data, size_t data_size);
     void destroy();
 }; // struct VskPhrase
 

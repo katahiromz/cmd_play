@@ -242,14 +242,6 @@ void VskNote::set_key_from_char(char ch) {
 //////////////////////////////////////////////////////////////////////////////
 
 void VskPhrase::destroy() {
-    if (m_buffer != ALuint(-1)) {
-        alDeleteBuffers(1, &m_buffer);
-        m_buffer = ALuint(-1);
-    }
-    if (m_source != ALuint(-1)) {
-        alDeleteSources(1, &m_source);
-        m_source = ALuint(-1);
-    }
 } // VskPhrase::destroy
 
 void VskPhrase::schedule_special_action(float gate, int action_no) {
@@ -347,43 +339,6 @@ void VskPhrase::calc_total() {
     }
     m_goal = gate;
 } // VskPhrase::calc_total
-
-bool VskPhrase::gen_source_and_buffer(const FM_SAMPLETYPE *data, size_t data_size) {
-    ALenum error;
-
-    // generate an OpenAL buffer
-    alGetError(); // clear error
-    alGenBuffers(1, &m_buffer);
-    assert(m_buffer != ALuint(-1));
-    error = alGetError();
-    assert(error == 0);
-
-    alGetError(); // clear error
-    alBufferData(m_buffer, AL_FORMAT_STEREO16, &data[0], data_size, SAMPLERATE);
-    error = alGetError();
-    assert(error == 0);
-
-    // generate an OpenAL source
-    alGetError(); // clear error
-    alGenSources(1, &m_source);
-    assert(m_source != ALuint(-1));
-    error = alGetError();
-    assert(error == 0);
-
-    alGetError(); // clear error
-    alSourcei(m_source, AL_BUFFER, m_buffer);
-    error = alGetError();
-    assert(error == 0);
-    return true;
-}
-
-void VskPhrase::realize(VskSoundPlayer *player) {
-    FM_SAMPLETYPE *data;
-    size_t data_size;
-    realize(player, data, data_size);
-    gen_source_and_buffer(data, data_size);
-    delete[] data;
-}
 
 void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& data_size) {
     destroy();

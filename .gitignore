@@ -35,13 +35,5 @@ a.*
 .ninja*
 lib*.a
 *.dll
-lexer.h
-lexer.cpp
-parser.h
-parser.cpp
-parser.output
 *.tmp
-freealut/DartConfiguration.tcl
 *.aps
-!OpenAL32.dll
-!libalut.dll

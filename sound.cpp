@@ -4,7 +4,6 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#include "freealut/include/AL/alut.h"   // OpenAL utility
 #include "soundplayer.h"                // サウンドプレーヤー
 
 // サウンドプレーヤー
@@ -33,12 +32,6 @@ waveOutProc(
 // 音源を初期化する
 bool vsk_sound_init(void)
 {
-    if (!alutInit(NULL, NULL))
-    {
-        ALenum error = alutGetError();
-        std::fprintf(stderr, "%s\n", alutGetErrorString(error));
-        return false;
-    }
     vsk_sound_player = std::make_shared<VskSoundPlayer>();
 
     ZeroMemory(&vsk_wfx, sizeof(vsk_wfx));
@@ -86,7 +79,8 @@ void vsk_sound_exit(void)
     vsk_sound_stop();
     waveOutUnprepareHeader(vsk_hWaveOut, &vsk_waveHdr, sizeof(WAVEHDR));
     waveOutClose(vsk_hWaveOut);
-    alutExit();
+    vsk_hWaveOut = nullptr;
+
     vsk_sound_player = nullptr;
 }
 
@@ -102,27 +96,6 @@ bool vsk_sound_wait(VskDword milliseconds)
     if (vsk_sound_is_playing())
         return vsk_sound_player->wait_for_stop(milliseconds);
     return false;
-}
-
-// OpenALのエラー文字列を取得する
-const char *vsk_get_openal_error(int error)
-{
-    switch (error)
-    {
-    case AL_NO_ERROR:           return "No Error";
-    case AL_INVALID_NAME:       return "Invalid Name";
-    case AL_INVALID_ENUM:       return "Invalid Enum";
-    case AL_INVALID_VALUE:      return "Invalid Value";
-    case AL_INVALID_OPERATION:  return "Invalid Operation";
-    case AL_OUT_OF_MEMORY:      return "Out of Memory";
-    default:                    return "Unknown Error";
-    }
-}
-
-// OpenALのエラー文字列を出力する
-void vsk_print_openal_error(int error)
-{
-    std::printf(vsk_get_openal_error(error));
 }
 
 // OPNのレジスタにデータを設定する
