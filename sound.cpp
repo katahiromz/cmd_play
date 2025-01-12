@@ -3,7 +3,7 @@
 #include <cstdio>
 
 #include "freealut/include/AL/alut.h"   // OpenAL utility
-#include "fmgon/soundplayer.h"          // サウンドプレーヤー
+#include "soundplayer.h"                // サウンドプレーヤー
 
 // サウンドプレーヤー
 std::shared_ptr<VskSoundPlayer> vsk_sound_player;

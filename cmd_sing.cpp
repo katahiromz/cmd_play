@@ -6,7 +6,7 @@
 #include <cassert>
 
 #include "freealut/include/AL/alut.h"   // OpenAL utility
-#include "fmgon/soundplayer.h"          // サウンドプレーヤー
+#include "soundplayer.h"                // サウンドプレーヤー
 #include "scanner.h"                    // VskScanner
 
 // サウンドプレーヤー

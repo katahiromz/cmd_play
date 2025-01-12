@@ -3,7 +3,7 @@
 // Copyright (C) 2015 Katayama Hirofumi MZ. All Rights Reserved.
 //////////////////////////////////////////////////////////////////////////////
 
-#include "fmgon.h"
+#include "fmgon/fmgon.h"
 #include "soundplayer.h"
 #include "AL/alut.h"
 #include <map>

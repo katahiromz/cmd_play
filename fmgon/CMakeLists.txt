@@ -19,11 +19,6 @@ if (MSVC)
 endif()
 
 ##############################################################################
-# pevent
-
-add_subdirectory(pevent)
-
-##############################################################################
 # fmgon
 
 # libfmgon.a
@@ -33,7 +28,6 @@ add_library(fmgon STATIC
     opm.cpp
     opna.cpp
     psg.cpp
-    soundplayer.cpp
     YM2203.cpp
     YM2203_Timbre.cpp)
 target_include_directories(fmgon PUBLIC ../freealut/include)
