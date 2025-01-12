@@ -249,11 +249,8 @@ struct VskSoundPlayer {
     std::unordered_map<int, VskSpecialActionFn> m_action_no_to_special_action;
 
     VskSoundPlayer() : m_playing_music(false),
-                       m_stopping_event(false, false) { init_beep(); }
-
-    virtual ~VskSoundPlayer() {
-        free_beep();
-    }
+                       m_stopping_event(false, false) { }
+    virtual ~VskSoundPlayer() { }
 
     void play(VskScoreBlock& block);
     void play_async(VskScoreBlock& block);
@@ -262,22 +259,12 @@ struct VskSoundPlayer {
     void stop();
     bool save_as_wav(VskScoreBlock& block, const wchar_t *filename);
 
-    void beep(int i);
-    bool is_beeping();
-
     void register_special_action(int action_no, VskSpecialActionFn fn = nullptr);
     void do_special_action(int action_no);
 
     void write_reg(uint32_t addr, uint32_t data) {
         m_ym.write_reg(addr, data);
     }
-
-protected:
-    ALuint  m_beep_buffer;
-    ALuint  m_beep_source;
-
-    void init_beep();
-    void free_beep();
 }; // struct VskSoundPlayer
 
 //////////////////////////////////////////////////////////////////////////////

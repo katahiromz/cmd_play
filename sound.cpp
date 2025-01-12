@@ -52,21 +52,6 @@ bool vsk_sound_wait(VskDword milliseconds)
     return false;
 }
 
-// BEEP音を出す
-void vsk_sound_beep(int i)
-{
-    assert(vsk_sound_player);
-    if (vsk_sound_player) {
-        vsk_sound_player->beep(i);
-    }
-}
-
-// BEEP音を出しているか？
-bool vsk_sound_is_beeping(void)
-{
-    return vsk_sound_player && vsk_sound_player->is_beeping();
-}
-
 // OpenALのエラー文字列を取得する
 const char *vsk_get_openal_error(int error)
 {
