@@ -712,7 +712,7 @@ void VskSoundPlayer::play(VskScoreBlock& block) {
                                 remaining_actions += phrase->m_remaining_actions;
                             }
                         }
-                        alutSleep(remaining_actions * 0.005f);
+                        Sleep(remaining_actions * 5);
                     } while (remaining_actions > 0);
                 }
 
@@ -723,14 +723,14 @@ void VskSoundPlayer::play(VskScoreBlock& block) {
                         do {
                             alGetSourcei(phrase->m_source, AL_SOURCE_STATE, &state);
                             // ループ回数を抑えるために少々間隔を入れる
-                            alutSleep(0.01f);
+                            Sleep(10);
                         } while (state == AL_PLAYING);
                     }
                 }
             }
             if (m_playing_music) {
                 m_playing_music = false;
-                alutSleep(1.0f);
+                Sleep(1000);
             }
         },
         0
@@ -785,7 +785,7 @@ void VskSoundPlayer::play_async(VskScoreBlock& block) {
 
             auto msec = uint32_t(goal * 1000.0);
             if (m_stopping_event.wait_for_event(msec)) {
-                alutSleep(1.0);
+                Sleep(1000);
             }
 
             m_play_async_lock.lock();
