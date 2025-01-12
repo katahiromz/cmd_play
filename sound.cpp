@@ -23,7 +23,7 @@ waveOutProc(
 {
     if (uMsg == WOM_DONE) {
         // バッファの再生が完了したときの処理
-        vsk_sound_player->m_stopping_event.pulse();
+        vsk_sound_player->m_stopping_event.set();
     }
 }
 
@@ -55,13 +55,14 @@ void vsk_sound_stop(void)
 {
     vsk_waveHdr.dwFlags |= WHDR_DONE;
     waveOutReset(vsk_hWaveOut);
-    vsk_sound_player->m_stopping_event.pulse();
+    vsk_sound_player->m_stopping_event.set();
 }
 
 // 音声を再生する
 void vsk_sound_play(const void *data, size_t data_size)
 {
     vsk_sound_stop();
+    vsk_sound_player->m_stopping_event.reset();
 
     ZeroMemory(&vsk_waveHdr, sizeof(vsk_waveHdr));
     vsk_waveHdr.lpData = (LPSTR)data;
