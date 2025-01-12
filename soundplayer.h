@@ -243,8 +243,6 @@ struct VskSoundPlayer {
     unboost::mutex                              m_play_lock;
     std::vector<std::shared_ptr<VskNote>>       m_notes;
     YM2203                                      m_ym;
-    unboost::mutex                              m_play_async_lock;
-    std::unordered_map<int, VskScoreBlock>      m_async_sound_map;
     static int                                  m_next_async_sound_id;
     std::unordered_map<int, VskSpecialActionFn> m_action_no_to_special_action;
 
@@ -253,7 +251,6 @@ struct VskSoundPlayer {
     virtual ~VskSoundPlayer() { }
 
     void play(VskScoreBlock& block);
-    void play_async(VskScoreBlock& block);
     bool wait_for_stop(uint32_t milliseconds = -1);
     bool play_and_wait(VskScoreBlock& block, uint32_t milliseconds = -1);
     void stop();

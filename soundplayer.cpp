@@ -743,57 +743,7 @@ void VskSoundPlayer::stop() {
     m_play_lock.lock();
     m_melody_line.clear();
     m_play_lock.unlock();
-
-    m_play_async_lock.lock();
-    m_async_sound_map.clear();
-    m_play_async_lock.unlock();
 } // VskSoundPlayer::stop
-
-void VskSoundPlayer::play_async(VskScoreBlock& block) {
-    for (auto& phrase : block) {
-        if (phrase) {
-            phrase->realize(this);
-        }
-    }
-
-    unboost::thread(
-        [this, block](int dummy) {
-            int id;
-
-            m_play_async_lock.lock();
-            id = m_next_async_sound_id++;
-            m_async_sound_map[id] = block;
-            m_play_async_lock.unlock();
-
-            // get the goal
-            float goal = 0;
-            for (auto& phrase : block) {
-                if (phrase) {
-                    if (goal < phrase->m_goal) {
-                        goal = phrase->m_goal;
-                    }
-                }
-            }
-
-            // play phrases
-            for (auto& phrase : block) {
-                if (phrase) {
-                    alSourcePlay(phrase->m_source);
-                }
-            }
-
-            auto msec = uint32_t(goal * 1000.0);
-            if (m_stopping_event.wait_for_event(msec)) {
-                Sleep(1000);
-            }
-
-            m_play_async_lock.lock();
-            m_async_sound_map.erase(id);
-            m_play_async_lock.unlock();
-        },
-        0
-    ).detach();
-} // VskSoundPlayer::play_async
 
 void VskSoundPlayer::register_special_action(int action_no, VskSpecialActionFn fn)
 {
