@@ -585,7 +585,7 @@ bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds) 
     return wait_for_stop(milliseconds);
 }
 
-bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) {
+bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<FM_SAMPLETYPE>& samples) {
     std::vector<FM_SAMPLETYPE *> raw_data;
     std::vector<size_t> data_sizes;
 
@@ -607,7 +607,7 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) 
     }
 
     size_t num_samples = data_size / sizeof(FM_SAMPLETYPE);
-    FM_SAMPLETYPE *data = new FM_SAMPLETYPE[num_samples];
+    samples.resize(num_samples);
     for (size_t isample = 0; isample < num_samples; ++isample) {
         // mixing
         int32_t value = 0;
@@ -621,28 +621,32 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) 
         else if (value > std::numeric_limits<FM_SAMPLETYPE>::max())
             value = std::numeric_limits<FM_SAMPLETYPE>::max();
         if (isample < data_size)
-            data[isample] = value;
+            samples[isample] = value;
         else
-            data[isample] = 0;
+            samples[isample] = 0;
     }
-
-    FILE *fout = _wfopen(filename, L"wb");
-    if (!fout) {
-        for (auto entry : raw_data) {
-            delete[] entry;
-        }
-        delete[] data;
-        return false;
-    }
-    auto wav_header = get_wav_header(data_size, CLOCK, SAMPLERATE);
-    std::fwrite(wav_header, WAV_HEADER_SIZE, 1, fout);
-    std::fwrite(data, data_size, 1, fout);
-    std::fclose(fout);
 
     for (auto entry : raw_data) {
         delete[] entry;
     }
-    delete[] data;
+
+    return true;
+}
+
+bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) {
+
+    std::vector<FM_SAMPLETYPE> samples;
+    generate_pcm_raw(block, samples);
+    size_t data_size = samples.size() * sizeof(FM_SAMPLETYPE);
+
+    FILE *fout = _wfopen(filename, L"wb");
+    if (!fout)
+        return false;
+    auto wav_header = get_wav_header(data_size, CLOCK, SAMPLERATE);
+    std::fwrite(wav_header, WAV_HEADER_SIZE, 1, fout);
+    std::fwrite(samples.data(), data_size, 1, fout);
+    std::fclose(fout);
+
     return true;
 }
 
