@@ -4,8 +4,8 @@
 # CMake minimum version
 cmake_minimum_required(VERSION 3.6)
 
-# project name and languages
-project(cmd_play VERSION 0.0 LANGUAGES CXX)
+# project name, version, and languages
+project(cmd_play VERSION 1.2 LANGUAGES CXX RC)
 
 # UTF-8
 if(MSVC)
@@ -26,7 +26,7 @@ add_subdirectory(fmgon)
 # cmd_play
 
 # cmd_play.exe
-add_executable(cmd_play cmd_play.cpp cmd_sing.cpp sound.cpp main.cpp soundplayer.cpp)
+add_executable(cmd_play cmd_play.cpp cmd_sing.cpp sound.cpp main.cpp soundplayer.cpp cmd_play_res.rc)
 target_compile_definitions(cmd_play PRIVATE UNICODE _UNICODE JAPAN CMD_PLAY_EXE _CRT_SECURE_NO_WARNINGS)
 target_link_libraries(cmd_play fmgon shlwapi winmm)
 
