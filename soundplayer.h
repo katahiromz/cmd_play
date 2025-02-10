@@ -95,6 +95,7 @@ struct VskSoundSetting {
     bool                m_fm;       // whether it is FM or not?
     float               m_volume;   // in 0 to 15
     int                 m_quantity; // in 0 to 8
+    int                 m_tone;
 
     VskSoundSetting(int tempo = 120, int octave = 4 - 1, float length = 24,
                     int tone = 0, bool fm = false) :
@@ -103,6 +104,7 @@ struct VskSoundSetting {
     {
         m_volume = 8;
         m_quantity = 8;
+        m_tone = tone;
     }
 
     void reset() {
@@ -112,6 +114,7 @@ struct VskSoundSetting {
         m_fm = false;
         m_volume = 8;
         m_quantity = 8;
+        m_tone = 0;
     }
 }; // struct VskSoundSetting
 

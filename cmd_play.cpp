@@ -17,6 +17,47 @@ extern std::shared_ptr<VskSoundPlayer> vsk_sound_player;
 VskSoundSetting vsk_fm_sound_settings[VSK_MAX_CHANNEL];
 VskSoundSetting vsk_ssg_sound_settings[VSK_MAX_CHANNEL];
 
+// 設定のサイズ
+size_t vsk_cmd_play_get_setting_size(void)
+{
+    return sizeof(VskSoundSetting);
+}
+
+// 設定の取得
+bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data)
+{
+    data.resize(sizeof(VskSoundSetting));
+    switch (ch)
+    {
+    case 0: case 1: case 2:
+        std::memcpy(data.data(), &vsk_fm_sound_settings[ch], sizeof(VskSoundSetting));
+        return true;
+    case 3: case 4: case 5:
+        std::memcpy(data.data(), &vsk_ssg_sound_settings[ch - 3], sizeof(VskSoundSetting));
+        return true;
+    default:
+        return false;
+    }
+}
+
+// 設定の設定
+bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data)
+{
+    if (data.size() != sizeof(VskSoundSetting))
+        return false;
+    switch (ch)
+    {
+    case 0: case 1: case 2:
+        std::memcpy(&vsk_fm_sound_settings[ch], data.data(), sizeof(VskSoundSetting));
+        return true;
+    case 3: case 4: case 5:
+        std::memcpy(&vsk_ssg_sound_settings[ch - 3], data.data(), sizeof(VskSoundSetting));
+        return true;
+    default:
+        return false;
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // VskPlayItem --- CMD PLAY 用の演奏項目
 
@@ -398,6 +439,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                     auto i0 = ast->to_int();
                     if ((0 <= i0) && (i0 <= 61)) {
                         phrase->add_tone(ch, i0);
+                        phrase->m_setting.m_tone = i0;
                         continue;
                     }
                 }

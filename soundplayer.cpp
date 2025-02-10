@@ -350,7 +350,6 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
     // Initialize YM2203
     YM2203& ym = player->m_ym;
     ym.init(CLOCK, SAMPLERATE);
-    ym.reset();
 
     // Allocate the wave data
     uint32_t isample = 0;
@@ -365,7 +364,7 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
         int ch = FM_CH1;
 
         auto& timbre = m_setting.m_timbre;
-        timbre.set(ym2203_tone_table[0]);
+        timbre.set(ym2203_tone_table[m_setting.m_tone]);
         ym.set_timbre(ch, &timbre);
         VskLFOCtrl lc;
 

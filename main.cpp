@@ -198,7 +198,64 @@ struct CMD_PLAY
 
     int parse_cmd_line(int argc, wchar_t **argv);
     int run();
+    bool load_settings();
+    bool save_settings();
 };
+
+static LPCWSTR s_setting_key[] = {
+    L"setting0",
+    L"setting1",
+    L"setting2",
+    L"setting3",
+    L"setting4",
+    L"setting5",
+};
+
+bool CMD_PLAY::load_settings()
+{
+    HKEY hKey;
+
+    LSTATUS error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Katayama Hirofumi MZ\\cmd_play", 0,
+                                  KEY_READ, &hKey);
+    if (error)
+        return false;
+
+    size_t size = vsk_cmd_play_get_setting_size();
+
+    std::vector<uint8_t> setting[6];
+    for (int ch = 0; ch < 6; ++ch)
+    {
+        setting[ch].resize(size);
+
+        DWORD cbValue = size;
+        error = RegQueryValueExW(hKey, s_setting_key[ch], NULL, NULL, setting[ch].data(), &cbValue);
+        if (!error)
+            vsk_cmd_play_set_setting(ch, setting[ch]);
+    }
+
+    RegCloseKey(hKey);
+
+    return true;
+}
+
+bool CMD_PLAY::save_settings()
+{
+    HKEY hKey;
+    LSTATUS error = RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Katayama Hirofumi MZ\\cmd_play", 0,
+                                    NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+    if (error)
+        return false;
+
+    for (int ch = 0; ch < 6; ++ch)
+    {
+        std::vector<uint8_t> setting;
+        vsk_cmd_play_get_setting(ch, setting);
+        RegSetValueExW(hKey, s_setting_key[ch], 0, REG_BINARY, setting.data(), (DWORD)setting.size());
+    }
+    RegCloseKey(hKey);
+
+    return true;
+}
 
 int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 {
@@ -303,6 +360,8 @@ int CMD_PLAY::run()
         return 1;
     }
 
+    load_settings();
+
     if (m_output_file.size())
     {
         switch (m_audio_mode)
@@ -352,6 +411,9 @@ int CMD_PLAY::run()
     }
 
     vsk_sound_wait(-1);
+
+    save_settings();
+
     vsk_sound_exit();
 
     return 0;
