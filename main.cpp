@@ -37,6 +37,7 @@ LPCTSTR get_text(INT id)
                 TEXT("オプション:\n")
                 TEXT("  -D変数名=値            変数に代入。\n")
                 TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
+                TEXT("  -reset                 設定をリセット。\n")
                 TEXT("  -help                  このメッセージを表示する。\n")
                 TEXT("  -version               バージョン情報を表示する。\n")
                 TEXT("\n")
@@ -63,6 +64,7 @@ LPCTSTR get_text(INT id)
                 TEXT("Options:\n")
                 TEXT("  -DVAR=VALUE            Assign to a variable.\n")
                 TEXT("  -save_wav output.wav   Save as WAV file.\n")
+                TEXT("  -reset                 Reset settings.\n")
                 TEXT("  -help                  Display this message.\n")
                 TEXT("  -version               Display version info.\n")
                 TEXT("\n")
@@ -195,6 +197,7 @@ struct CMD_PLAY
     std::vector<std::string> m_str_to_play;
     std::wstring m_output_file;
     int m_audio_mode = 2;
+    bool m_reset = false;
 
     int parse_cmd_line(int argc, wchar_t **argv);
     int run();
@@ -314,6 +317,12 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
         }
 
+        if (_wcsicmp(arg, L"-reset") == 0 || _wcsicmp(arg, L"--reset") == 0)
+        {
+            m_reset = true;
+            continue;
+        }
+
         if (arg[0] == '-')
         {
             TCHAR text[256];
@@ -360,7 +369,8 @@ int CMD_PLAY::run()
         return 1;
     }
 
-    load_settings();
+    if (!m_reset)
+        load_settings();
 
     if (m_output_file.size())
     {
