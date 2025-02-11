@@ -507,7 +507,7 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
 #define WAV_HEADER_SIZE    44
 
 // TODO: stereo
-static uint8_t* get_wav_header(uint32_t data_size, uint32_t clock, uint32_t sample_rate, bool stereo = false)
+static uint8_t* get_wav_header(uint32_t data_size, uint32_t clock, uint32_t sample_rate, bool stereo)
 {
     // リニアPCM16ビット
     static uint8_t wav_header_template[WAV_HEADER_SIZE] = {
