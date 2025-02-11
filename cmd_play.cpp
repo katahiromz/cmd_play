@@ -29,11 +29,11 @@ bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data)
     data.resize(sizeof(VskSoundSetting));
     switch (ch)
     {
-    case 0: case 1: case 2:
+    case 0: case 1: case 2: case 3: case 4: case 5:
         std::memcpy(data.data(), &vsk_fm_sound_settings[ch], sizeof(VskSoundSetting));
         return true;
-    case 3: case 4: case 5:
-        std::memcpy(data.data(), &vsk_ssg_sound_settings[ch - 3], sizeof(VskSoundSetting));
+    case 6: case 7: case 8: case 9: case 10: case 11:
+        std::memcpy(data.data(), &vsk_ssg_sound_settings[ch - 6], sizeof(VskSoundSetting));
         return true;
     default:
         return false;
@@ -47,11 +47,11 @@ bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data)
         return false;
     switch (ch)
     {
-    case 0: case 1: case 2:
+    case 0: case 1: case 2: case 3: case 4: case 5:
         std::memcpy(&vsk_fm_sound_settings[ch], data.data(), sizeof(VskSoundSetting));
         return true;
-    case 3: case 4: case 5:
-        std::memcpy(&vsk_ssg_sound_settings[ch - 3], data.data(), sizeof(VskSoundSetting));
+    case 6: case 7: case 8: case 9: case 10: case 11:
+        std::memcpy(&vsk_ssg_sound_settings[ch - 6], data.data(), sizeof(VskSoundSetting));
         return true;
     default:
         return false;

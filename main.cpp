@@ -29,7 +29,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case 0: return TEXT("cmd_play バージョン 1.3 by 片山博文MZ");
+        case 0: return TEXT("cmd_play バージョン 1.4 by 片山博文MZ");
         case 1:
             return
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
@@ -56,7 +56,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case 0: return TEXT("cmd_play version 1.3 by katahiromz");
+        case 0: return TEXT("cmd_play version 1.4 by katahiromz");
         case 1:
             return
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
@@ -205,13 +205,11 @@ struct CMD_PLAY
     bool save_settings();
 };
 
-static LPCWSTR s_setting_key[] = {
-    L"setting0",
-    L"setting1",
-    L"setting2",
-    L"setting3",
-    L"setting4",
-    L"setting5",
+#define NUM_SETTINGS 12
+
+static LPCWSTR s_setting_key[NUM_SETTINGS] = {
+    L"setting0", L"setting1", L"setting2", L"setting3", L"setting4", L"setting5",
+    L"setting6", L"setting7", L"setting8", L"setting9", L"setting10", L"setting11",
 };
 
 bool CMD_PLAY::load_settings()
@@ -225,8 +223,8 @@ bool CMD_PLAY::load_settings()
 
     size_t size = vsk_cmd_play_get_setting_size();
 
-    std::vector<uint8_t> setting[6];
-    for (int ch = 0; ch < 6; ++ch)
+    std::vector<uint8_t> setting[NUM_SETTINGS];
+    for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
         setting[ch].resize(size);
 
@@ -249,7 +247,7 @@ bool CMD_PLAY::save_settings()
     if (error)
         return false;
 
-    for (int ch = 0; ch < 6; ++ch)
+    for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
         std::vector<uint8_t> setting;
         vsk_cmd_play_get_setting(ch, setting);
