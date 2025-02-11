@@ -243,12 +243,12 @@ struct VskSoundPlayer {
     VskSoundPlayer() : m_playing_music(false), m_stopping_event(false, false) { }
     virtual ~VskSoundPlayer() { }
 
-    void play(VskScoreBlock& block);
+    void play(VskScoreBlock& block, bool stereo = false);
     bool wait_for_stop(uint32_t milliseconds = -1);
-    bool play_and_wait(VskScoreBlock& block, uint32_t milliseconds = -1);
+    bool play_and_wait(VskScoreBlock& block, uint32_t milliseconds = -1, bool stereo = false);
     void stop();
-    bool save_as_wav(VskScoreBlock& block, const wchar_t *filename);
-    bool generate_pcm_raw(VskScoreBlock& block, std::vector<FM_SAMPLETYPE>& samples);
+    bool save_as_wav(VskScoreBlock& block, const wchar_t *filename, bool stereo = false);
+    bool generate_pcm_raw(VskScoreBlock& block, std::vector<FM_SAMPLETYPE>& samples, bool stereo = false);
 
     void register_special_action(int action_no, VskSpecialActionFn fn = nullptr);
     void do_special_action(int action_no);

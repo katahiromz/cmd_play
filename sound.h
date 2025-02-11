@@ -2,9 +2,9 @@
 
 #include "types.h"
 
-bool vsk_sound_init(void);
+bool vsk_sound_init(bool stereo = false);
 void vsk_sound_exit(void);
-void vsk_sound_play(const void *data, size_t data_size);
+void vsk_sound_play(const void *data, size_t data_size, bool stereo = false);
 bool vsk_sound_is_playing(void);
 bool vsk_sound_wait(VskDword milliseconds);
 void vsk_sound_stop(void);
@@ -18,21 +18,21 @@ enum VSK_SOUND_ERR
 };
 
 // CMD SING
-VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str);
-VSK_SOUND_ERR vsk_sound_cmd_sing(const wchar_t *str);
-VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename);
-VSK_SOUND_ERR vsk_sound_cmd_sing_save(const wchar_t *wstr, const wchar_t *filename);
+VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str, bool stereo = false);
+VSK_SOUND_ERR vsk_sound_cmd_sing(const wchar_t *str, bool stereo = false);
+VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename, bool stereo = false);
+VSK_SOUND_ERR vsk_sound_cmd_sing_save(const wchar_t *wstr, const wchar_t *filename, bool stereo = false);
 size_t vsk_cmd_sing_get_setting_size(void);
 bool vsk_cmd_sing_get_setting(std::vector<uint8_t>& data);
 bool vsk_cmd_sing_set_setting(const std::vector<uint8_t>& data);
 
 // CMD PLAY
-bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs);
-bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs);
-bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs);
-bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename);
-bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename);
-bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename);
+bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool stereo = false);
+bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool stereo = false);
+bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool stereo = false);
+bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo = false);
+bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo = false);
+bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo = false);
 size_t vsk_cmd_play_get_setting_size(void);
 bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data);
 bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data);

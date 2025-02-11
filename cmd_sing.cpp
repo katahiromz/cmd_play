@@ -325,7 +325,7 @@ bool vsk_sing_items_from_string(std::vector<VskSingItem>& items, const VskString
 VskString vsk_replace_placeholders(const VskString& str);
 
 // CMD SING文実装の本体
-VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str)
+VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str, bool stereo)
 {
     VskString s = vsk_replace_placeholders(str); // {文字列変数名}を展開する
 
@@ -343,7 +343,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str)
 
     // フレーズを演奏する
     VskScoreBlock block = { phrase };
-    vsk_sound_player->play(block);
+    vsk_sound_player->play(block, stereo);
 
     // 設定を保存する
     vsk_cmd_sing_settings = phrase->m_setting;
@@ -352,7 +352,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str)
 }
 
 // CMD SING文の出力をWAVファイルに保存する
-VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename)
+VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename, bool stereo)
 {
     VskString s = vsk_replace_placeholders(str); // {文字列変数名}を展開する
 
@@ -370,7 +370,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename)
 
     // フレーズを演奏する
     VskScoreBlock block = { phrase };
-    if (!vsk_sound_player->save_as_wav(block, filename))
+    if (!vsk_sound_player->save_as_wav(block, filename, stereo))
         return VSK_SOUND_ERR_IO_ERROR; // 失敗
 
     return VSK_SOUND_ERR_SUCCESS;

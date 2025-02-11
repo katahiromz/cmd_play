@@ -507,7 +507,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
 //////////////////////////////////////////////////////////////////////////////
 
 // SSG音源で音楽再生
-bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs)
+bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -540,13 +540,13 @@ bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs)
     }
 
     // play now
-    vsk_sound_player->play(block);
+    vsk_sound_player->play(block, stereo);
 
     return true;
 }
 
 // FM+SSG音源で音楽再生
-bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs)
+bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -585,13 +585,13 @@ bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs)
     }
 
     // play now
-    vsk_sound_player->play(block);
+    vsk_sound_player->play(block, stereo);
 
     return true;
 }
 
 // FM音源で音楽再生
-bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs)
+bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -621,7 +621,7 @@ bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs)
     }
 
     // play now
-    vsk_sound_player->play(block);
+    vsk_sound_player->play(block, stereo);
 
     return true;
 }
@@ -629,7 +629,7 @@ bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs)
 //////////////////////////////////////////////////////////////////////////////
 
 // SSG音源で音楽保存
-bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename)
+bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -661,14 +661,14 @@ bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar
         ++iChannel;
     }
 
-    if (!vsk_sound_player->save_as_wav(block, filename))
+    if (!vsk_sound_player->save_as_wav(block, filename, stereo))
         return false; // 失敗
 
     return true;
 }
 
 // FM+SSG音源で音楽保存
-bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename)
+bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -706,14 +706,14 @@ bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, cons
         ++iChannel;
     }
 
-    if (!vsk_sound_player->save_as_wav(block, filename))
+    if (!vsk_sound_player->save_as_wav(block, filename, stereo))
         return false; // 失敗
 
     return true;
 }
 
 // FM音源で音楽保存
-bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename)
+bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -742,7 +742,7 @@ bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_
         ++iChannel;
     }
 
-    if (!vsk_sound_player->save_as_wav(block, filename))
+    if (!vsk_sound_player->save_as_wav(block, filename, stereo))
         return false; // 失敗
 
     return true;

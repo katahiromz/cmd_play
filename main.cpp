@@ -198,6 +198,7 @@ struct CMD_PLAY
     std::wstring m_output_file;
     int m_audio_mode = 2;
     bool m_reset = false;
+    bool m_stereo = false;
 
     int parse_cmd_line(int argc, wchar_t **argv);
     int run();
@@ -321,6 +322,12 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             continue;
         }
 
+        if (_wcsicmp(arg, L"-stereo") == 0 || _wcsicmp(arg, L"--stereo") == 0)
+        {
+            m_stereo = true;
+            continue;
+        }
+
         if (arg[0] == '-')
         {
             TCHAR text[256];
@@ -361,7 +368,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 
 int CMD_PLAY::run()
 {
-    if (!vsk_sound_init())
+    if (!vsk_sound_init(m_stereo))
     {
         _ftprintf(stderr, get_text(8));
         return 1;
@@ -375,7 +382,7 @@ int CMD_PLAY::run()
         switch (m_audio_mode)
         {
         case 0:
-            if (!vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str()))
+            if (!vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
                 _ftprintf(stderr, TEXT("%ls"), get_text(5));
                 vsk_sound_exit();
@@ -385,7 +392,7 @@ int CMD_PLAY::run()
         case 2:
         case 3:
         case 4:
-            if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str()))
+            if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
                 _ftprintf(stderr, TEXT("%ls"), get_text(5));
                 vsk_sound_exit();
@@ -399,7 +406,7 @@ int CMD_PLAY::run()
     switch (m_audio_mode)
     {
     case 0:
-        if (!vsk_sound_cmd_play_ssg(m_str_to_play))
+        if (!vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo))
         {
             _ftprintf(stderr, TEXT("%ls"), get_text(5));
             vsk_sound_exit();
@@ -409,7 +416,7 @@ int CMD_PLAY::run()
     case 2:
     case 3:
     case 4:
-        if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play))
+        if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo))
         {
             _ftprintf(stderr, TEXT("%ls"), get_text(5));
             vsk_sound_exit();

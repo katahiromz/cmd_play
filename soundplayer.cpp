@@ -506,8 +506,10 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
 
 #define WAV_HEADER_SIZE    44
 
-static uint8_t* get_wav_header(uint32_t data_size, uint32_t clock, uint32_t sample_rate) {
-    // リニアPCM16ビット（モノラル）
+// TODO: stereo
+static uint8_t* get_wav_header(uint32_t data_size, uint32_t clock, uint32_t sample_rate, bool stereo = false)
+{
+    // リニアPCM16ビット
     static uint8_t wav_header_template[WAV_HEADER_SIZE] = {
         0x52, 0x49, 0x46, 0x46,  // 'RIFF'
         0x00, 0x00, 0x00, 0x00,  // RIFFチャンクのサイズ(size + 12 + 16 + 8)
@@ -515,7 +517,7 @@ static uint8_t* get_wav_header(uint32_t data_size, uint32_t clock, uint32_t samp
         0x66, 0x6D, 0x74, 0x20,  // 'fmt'
         0x10, 0x00, 0x00, 0x00,  // fmtチャンクのバイト数 = 16(リニアPCM)
         0x01, 0x00,              // フォーマット = 1(非圧縮PCM)
-        0x01, 0x00,              // チャネル数 = 1 (モノラル) 
+        0x01, 0x00,              // チャネル数
         0x00, 0x00, 0x00, 0x00,  // サンプリング周波数 = sample_rate
         0x00, 0x7D, 0x00, 0x00,  // バイト/秒 = 32000
         0x02, 0x00,              // ブロックサイズ = 16bit x 1(モノラル) = 2byte
@@ -525,6 +527,7 @@ static uint8_t* get_wav_header(uint32_t data_size, uint32_t clock, uint32_t samp
     };
     uint32_t riff_size = data_size + WAV_HEADER_SIZE - 8;
     (uint32_t&)(wav_header_template[4]) = riff_size;
+    (uint32_t&)(wav_header_template[22]) = (stereo ? 2 : 1);
     (uint32_t&)(wav_header_template[24]) = sizeof(uint16_t) * sample_rate;
     (uint32_t&)(wav_header_template[28]) = clock;
     (uint32_t&)(wav_header_template[40]) = data_size;
@@ -535,12 +538,12 @@ bool VskSoundPlayer::wait_for_stop(uint32_t milliseconds) {
     return m_stopping_event.wait_for_event(milliseconds);
 }
 
-bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds) {
-    play(block);
+bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds, bool stereo) {
+    play(block, stereo);
     return wait_for_stop(milliseconds);
 }
 
-bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<FM_SAMPLETYPE>& samples) {
+bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<FM_SAMPLETYPE>& samples, bool stereo) {
     std::vector<FM_SAMPLETYPE *> raw_data;
     std::vector<size_t> data_sizes;
 
@@ -581,6 +584,11 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<FM_SAMPL
             samples[isample] = 0;
     }
 
+    if (stereo)
+    {
+        // TODO: samples を疑似ステレオ化
+    }
+
     for (auto entry : raw_data) {
         delete[] entry;
     }
@@ -588,16 +596,16 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<FM_SAMPL
     return true;
 }
 
-bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) {
+bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename, bool stereo) {
 
     std::vector<FM_SAMPLETYPE> samples;
-    generate_pcm_raw(block, samples);
+    generate_pcm_raw(block, samples, stereo);
     size_t data_size = samples.size() * sizeof(FM_SAMPLETYPE);
 
     FILE *fout = _wfopen(filename, L"wb");
     if (!fout)
         return false;
-    auto wav_header = get_wav_header(data_size, CLOCK, SAMPLERATE);
+    auto wav_header = get_wav_header(data_size, CLOCK, SAMPLERATE, stereo);
     std::fwrite(wav_header, WAV_HEADER_SIZE, 1, fout);
     std::fwrite(samples.data(), data_size, 1, fout);
     std::fclose(fout);
@@ -605,9 +613,9 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename) 
     return true;
 }
 
-void VskSoundPlayer::play(VskScoreBlock& block) {
-    generate_pcm_raw(block, m_samples);
-    vsk_sound_play(m_samples.data(), m_samples.size() * sizeof(FM_SAMPLETYPE));
+void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
+    generate_pcm_raw(block, m_samples, stereo);
+    vsk_sound_play(m_samples.data(), m_samples.size() * sizeof(FM_SAMPLETYPE), stereo);
 } // VskSoundPlayer::play
 
 void VskSoundPlayer::stop() {

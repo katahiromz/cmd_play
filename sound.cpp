@@ -30,13 +30,13 @@ waveOutProc(
 //////////////////////////////////////////////////////////////////////////////
 
 // 音源を初期化する
-bool vsk_sound_init(void)
+bool vsk_sound_init(bool stereo)
 {
     vsk_sound_player = std::make_shared<VskSoundPlayer>();
 
     ZeroMemory(&vsk_wfx, sizeof(vsk_wfx));
     vsk_wfx.wFormatTag = WAVE_FORMAT_PCM;
-    vsk_wfx.nChannels = 1; // モノラル
+    vsk_wfx.nChannels = (stereo ? 2 : 1);
     vsk_wfx.nSamplesPerSec = 44100 * 2; // サンプリングレート
     vsk_wfx.wBitsPerSample = 16; // ビット深度
     vsk_wfx.nBlockAlign = (vsk_wfx.nChannels * vsk_wfx.wBitsPerSample) / 8;
@@ -59,7 +59,7 @@ void vsk_sound_stop(void)
 }
 
 // 音声を再生する
-void vsk_sound_play(const void *data, size_t data_size)
+void vsk_sound_play(const void *data, size_t data_size, bool stereo)
 {
     vsk_sound_stop();
     vsk_sound_player->m_stopping_event.reset();
