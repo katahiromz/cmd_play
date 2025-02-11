@@ -39,7 +39,7 @@ bool vsk_sound_init(bool stereo)
     vsk_wfx.nChannels = (stereo ? 2 : 1);
     vsk_wfx.nSamplesPerSec = 44100 * 2; // サンプリングレート
     vsk_wfx.wBitsPerSample = 16; // ビット深度
-    vsk_wfx.nBlockAlign = (vsk_wfx.nChannels * vsk_wfx.wBitsPerSample) / 8;
+    vsk_wfx.nBlockAlign = (vsk_wfx.nChannels * vsk_wfx.wBitsPerSample) / CHAR_BIT;
     vsk_wfx.nAvgBytesPerSec = vsk_wfx.nSamplesPerSec * vsk_wfx.nBlockAlign;
     vsk_wfx.cbSize = 0;
 
