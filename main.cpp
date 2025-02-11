@@ -29,7 +29,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case 0: return TEXT("cmd_play バージョン 1.2 by 片山博文MZ");
+        case 0: return TEXT("cmd_play バージョン 1.3 by 片山博文MZ");
         case 1:
             return
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
@@ -56,7 +56,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case 0: return TEXT("cmd_play version 1.2 by katahiromz");
+        case 0: return TEXT("cmd_play version 1.3 by katahiromz");
         case 1:
             return
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
@@ -326,7 +326,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         if (arg[0] == '-')
         {
             TCHAR text[256];
-            StringCchPrintf(text, _countof(text), get_text(3), arg);
+            StringCchPrintf(text, _countof(text), get_text(7), arg);
             _ftprintf(stderr, TEXT("%ls"), text);
             return 1;
         }
