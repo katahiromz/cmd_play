@@ -96,7 +96,7 @@ LPCTSTR get_text(INT id)
                 TEXT("文字列変数は [ ] で囲えば展開できます。\n");
         case IDT_TOO_MANY_ARGS: return TEXT("エラー: 引数が多すぎます。\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
-        case IDT_BAD_CALL: return TEXT("エラー: Illegal function call\n");
+        case IDT_BAD_CALL: return TEXT("エラー: 不正な関数呼び出しです。\n");
         case IDT_NEEDS_OPERAND: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
         case IDT_INVALID_OPTION: return TEXT("エラー: 「%s」は、無効なオプションです。\n");
         case IDT_SOUND_INIT_FAILED: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
