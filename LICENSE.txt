@@ -1,4 +1,4 @@
-Copyright (C) 2014-2025 Katayama Hirofumi MZ.
+﻿Copyright (C) 2014-2025 Katayama Hirofumi MZ.
 Copyright (C) by cisc 1998, 2003.
 
 ---
