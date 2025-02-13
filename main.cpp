@@ -16,6 +16,17 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 
+enum RET { // exit code of this program
+    RET_SUCCESS = 0,
+    RET_BAD_CALL = 2,
+    RET_BAD_CMDLINE = 3,
+    RET_CANT_OPEN_FILE = 4,
+    RET_BAD_SOUND_INIT = 5,
+    RET_CANCELED = 6,
+};
+
+bool g_canceled = false;
+
 inline WORD get_lang_id(void)
 {
     return PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale()));
@@ -245,8 +256,8 @@ struct CMD_PLAY
     bool m_reset = false;
     bool m_stereo = false;
 
-    int parse_cmd_line(int argc, wchar_t **argv);
-    int run();
+    RET parse_cmd_line(int argc, wchar_t **argv);
+    RET run();
     bool load_settings();
     bool save_settings();
 };
@@ -304,12 +315,12 @@ bool CMD_PLAY::save_settings()
     return true;
 }
 
-int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
+RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 {
     if (argc <= 1)
     {
         m_help = true;
-        return 0;
+        return RET_SUCCESS;
     }
 
     for (int iarg = 1; iarg < argc; ++iarg)
@@ -319,13 +330,13 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         if (_wcsicmp(arg, L"-help") == 0 || _wcsicmp(arg, L"--help") == 0)
         {
             m_help = true;
-            return 0;
+            return RET_SUCCESS;
         }
 
         if (_wcsicmp(arg, L"-version") == 0 || _wcsicmp(arg, L"--version") == 0)
         {
             m_version = true;
-            return 0;
+            return RET_SUCCESS;
         }
 
         if (arg[0] == '-' && (arg[1] == 'd' || arg[1] == 'D'))
@@ -335,7 +346,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             if (ich == str.npos)
             {
                 my_printf(stderr, get_text(IDT_INVALID_OPTION), arg);
-                return 1;
+                return RET_BAD_CMDLINE;
             }
             auto var = str.substr(0, ich);
             auto value = str.substr(ich + 1);
@@ -355,7 +366,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             else
             {
                 my_puts(get_text(IDT_NEEDS_OPERAND), stderr);
-                return 1;
+                return RET_BAD_CMDLINE;
             }
         }
 
@@ -380,7 +391,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         if (arg[0] == '-')
         {
             my_printf(stderr, get_text(IDT_INVALID_OPTION), arg);
-            return 1;
+            return RET_BAD_CMDLINE;
         }
 
         if (arg[0] == '#')
@@ -389,7 +400,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             if (!(0 <= m_audio_mode && m_audio_mode <= 4))
             {
                 my_puts(get_text(IDT_MODE_OUT_OF_RANGE), stderr);
-                return 1;
+                return RET_BAD_CMDLINE;
             }
             continue;
         }
@@ -401,30 +412,30 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         }
 
         my_puts(get_text(IDT_TOO_MANY_ARGS), stderr);
-        return 1;
+        return RET_BAD_CMDLINE;
     }
 
-    return 0;
+    return RET_SUCCESS;
 }
 
-int CMD_PLAY::run()
+RET CMD_PLAY::run()
 {
     if (m_help)
     {
         usage();
-        return 0;
+        return RET_SUCCESS;
     }
 
     if (m_version)
     {
         version();
-        return 0;
+        return RET_SUCCESS;
     }
 
     if (!vsk_sound_init(m_stereo))
     {
         my_puts(get_text(IDT_SOUND_INIT_FAILED), stderr);
-        return 1;
+        return RET_BAD_SOUND_INIT;
     }
 
     if (!m_reset)
@@ -440,7 +451,7 @@ int CMD_PLAY::run()
                 my_puts(get_text(IDT_BAD_CALL), stderr);
                 do_beep();
                 vsk_sound_exit();
-                return 1;
+                return RET_BAD_CALL;
             }
             break;
         case 2:
@@ -451,11 +462,11 @@ int CMD_PLAY::run()
                 my_puts(get_text(IDT_BAD_CALL), stderr);
                 do_beep();
                 vsk_sound_exit();
-                return 1;
+                return RET_BAD_CALL;
             }
             break;
         }
-        return 0;
+        return RET_SUCCESS;
     }
 
     switch (m_audio_mode)
@@ -466,7 +477,7 @@ int CMD_PLAY::run()
             my_puts(get_text(IDT_BAD_CALL), stderr);
             do_beep();
             vsk_sound_exit();
-            return 1;
+            return RET_BAD_CALL;
         }
         break;
     case 2:
@@ -477,7 +488,7 @@ int CMD_PLAY::run()
             my_puts(get_text(IDT_BAD_CALL), stderr);
             do_beep();
             vsk_sound_exit();
-            return 1;
+            return RET_BAD_CALL;
         }
         break;
     }
@@ -488,7 +499,7 @@ int CMD_PLAY::run()
 
     vsk_sound_exit();
 
-    return 0;
+    return RET_SUCCESS;
 }
 
 static BOOL WINAPI HandlerRoutine(DWORD signal)
@@ -497,10 +508,12 @@ static BOOL WINAPI HandlerRoutine(DWORD signal)
     {
     case CTRL_C_EVENT: // Ctrl+C
     case CTRL_BREAK_EVENT: // Ctrl+Break
-        vsk_sound_exit();
+        g_canceled = true;
+        vsk_sound_stop();
         std::printf("^C\nBreak\nOk\n");
         std::fflush(stdout);
-        Beep(1000, 750);
+        do_beep();
+        return TRUE;
     }
     return FALSE;
 }
@@ -510,16 +523,16 @@ int wmain(int argc, wchar_t **argv)
     SetConsoleCtrlHandler(HandlerRoutine, TRUE); // Ctrl+C
 
     CMD_PLAY play;
-    if (int ret = play.parse_cmd_line(argc, argv))
+    if (RET ret = play.parse_cmd_line(argc, argv))
     {
         do_beep();
         return ret;
     }
 
-    if (int ret = play.run())
+    if (RET ret = play.run())
         return ret;
 
-    return 0;
+    return RET_SUCCESS;
 }
 
 #include <clocale>
@@ -544,7 +557,8 @@ int main(void)
         } else {
             printf("ERROR: %s\n", what.c_str());
         }
-        ret = -1;
+        ret = RET_BAD_CALL;
+        exit(ret);
     }
 
     // Detect handle leaks (for Debug)
@@ -560,6 +574,9 @@ int main(void)
 #if defined(_MSC_VER) && !defined(NDEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
+
+    if (g_canceled)
+        return RET_CANCELED;
 
     return ret;
 }
