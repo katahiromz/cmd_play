@@ -73,7 +73,7 @@ LPCTSTR get_text(INT id)
         case 4: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case 5: return TEXT("エラー: Illegal function call\n");
         case 6: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
-        case 7: return TEXT("エラー: 「%ls」は、無効なオプションです。\n");
+        case 7: return TEXT("エラー: 「%s」は、無効なオプションです。\n");
         case 8: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
         }
     }
@@ -99,7 +99,7 @@ LPCTSTR get_text(INT id)
         case 4: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
         case 5: return TEXT("ERROR: Illegal function call\n");
         case 6: return TEXT("ERROR: Option -save_wav needs an operand.\n");
-        case 7: return TEXT("ERROR: '%ls' is an invalid option.\n");
+        case 7: return TEXT("ERROR: '%s' is an invalid option.\n");
         case 8: return TEXT("ERROR: vsk_sound_init failed.\n");
         }
     }
