@@ -24,7 +24,7 @@ inline WORD get_lang_id(void)
 void do_beep(void)
 {
 #ifdef ENABLE_BEEP
-    Beep(1000, 750);
+    Beep(2000, 500);
 #endif
 }
 
