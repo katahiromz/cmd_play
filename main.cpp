@@ -21,10 +21,13 @@ inline WORD get_lang_id(void)
     return PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale()));
 }
 
+bool g_no_beep = false;
+
 void do_beep(void)
 {
 #ifdef ENABLE_BEEP
-    Beep(2000, 500);
+    if (!g_no_beep)
+        Beep(2000, 500);
 #endif
 }
 
@@ -365,6 +368,12 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         if (_wcsicmp(arg, L"-stereo") == 0 || _wcsicmp(arg, L"--stereo") == 0)
         {
             m_stereo = true;
+            continue;
+        }
+
+        if (_wcsicmp(arg, L"-no-beep") == 0 || _wcsicmp(arg, L"--no-beep") == 0)
+        {
+            g_no_beep = true;
             continue;
         }
 
