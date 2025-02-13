@@ -531,6 +531,7 @@ int main(void)
         std::string what = e.what();
         if (what == "circular reference detected") {
             my_puts(get_text(IDT_CIRCULAR_REFERENCE), stderr);
+            do_beep();
         } else {
             printf("ERROR: %s\n", what.c_str());
         }
