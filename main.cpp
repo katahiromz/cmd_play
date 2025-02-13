@@ -512,7 +512,7 @@ static BOOL WINAPI HandlerRoutine(DWORD signal)
         vsk_sound_stop();
         std::printf("^C\nBreak\nOk\n");
         std::fflush(stdout);
-        do_beep();
+        //do_beep(); // このハンドラで時間を掛けちゃダメだ。
         return TRUE;
     }
     return FALSE;
@@ -576,7 +576,10 @@ int main(void)
 #endif
 
     if (g_canceled)
+    {
+        do_beep();
         return RET_CANCELED;
+    }
 
     return ret;
 }
