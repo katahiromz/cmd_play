@@ -48,6 +48,18 @@ void my_printf(FILE *fout, LPCTSTR  fmt, ...)
     va_end(va);
 }
 
+// Text ID
+enum TEXT_ID {
+    IDT_VERSION,
+    IDT_HELP,
+    IDT_TOO_MANY_ARGS,
+    IDT_MODE_OUT_OF_RANGE,
+    IDT_BAD_CALL,
+    IDT_NEEDS_OPERAND,
+    IDT_INVALID_OPTION,
+    IDT_SOUND_INIT_FAILED,
+};
+
 // localization
 LPCTSTR get_text(INT id)
 {
@@ -56,8 +68,8 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case 0: return TEXT("cmd_play バージョン 1.4 by 片山博文MZ");
-        case 1:
+        case IDT_VERSION: return TEXT("cmd_play バージョン 1.4 by 片山博文MZ");
+        case IDT_HELP:
             return
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
                 TEXT("\n")
@@ -69,12 +81,12 @@ LPCTSTR get_text(INT id)
                 TEXT("  -version               バージョン情報を表示する。\n")
                 TEXT("\n")
                 TEXT("文字列変数は [ ] で囲えば展開できます。");
-        case 2: return TEXT("エラー: 引数が多すぎます。\n");
-        case 4: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
-        case 5: return TEXT("エラー: Illegal function call\n");
-        case 6: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
-        case 7: return TEXT("エラー: 「%s」は、無効なオプションです。\n");
-        case 8: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
+        case IDT_TOO_MANY_ARGS: return TEXT("エラー: 引数が多すぎます。\n");
+        case IDT_MODE_OUT_OF_RANGE: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
+        case IDT_BAD_CALL: return TEXT("エラー: Illegal function call\n");
+        case IDT_NEEDS_OPERAND: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
+        case IDT_INVALID_OPTION: return TEXT("エラー: 「%s」は、無効なオプションです。\n");
+        case IDT_SOUND_INIT_FAILED: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
         }
     }
     else // The others are Let's la English
@@ -82,8 +94,8 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case 0: return TEXT("cmd_play version 1.4 by katahiromz");
-        case 1:
+        case IDT_VERSION: return TEXT("cmd_play version 1.4 by katahiromz");
+        case IDT_HELP:
             return
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
                 TEXT("\n")
@@ -95,12 +107,12 @@ LPCTSTR get_text(INT id)
                 TEXT("  -version               Display version info.\n")
                 TEXT("\n")
                 TEXT("String variables can be expanded by enclosing them in [ ].");
-        case 2: return TEXT("ERROR: Too many arguments.\n");
-        case 4: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
-        case 5: return TEXT("ERROR: Illegal function call\n");
-        case 6: return TEXT("ERROR: Option -save_wav needs an operand.\n");
-        case 7: return TEXT("ERROR: '%s' is an invalid option.\n");
-        case 8: return TEXT("ERROR: vsk_sound_init failed.\n");
+        case IDT_TOO_MANY_ARGS: return TEXT("ERROR: Too many arguments.\n");
+        case IDT_MODE_OUT_OF_RANGE: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
+        case IDT_BAD_CALL: return TEXT("ERROR: Illegal function call\n");
+        case IDT_NEEDS_OPERAND: return TEXT("ERROR: Option -save_wav needs an operand.\n");
+        case IDT_INVALID_OPTION: return TEXT("ERROR: '%s' is an invalid option.\n");
+        case IDT_SOUND_INIT_FAILED: return TEXT("ERROR: vsk_sound_init failed.\n");
         }
     }
 
@@ -110,12 +122,12 @@ LPCTSTR get_text(INT id)
 
 void version(void)
 {
-    _putts(get_text(0));
+    _putts(get_text(IDT_VERSION));
 }
 
 void usage(void)
 {
-    _putts(get_text(1));
+    _putts(get_text(IDT_HELP));
 }
 
 // 変数
@@ -316,7 +328,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             auto ich = str.find('=');
             if (ich == str.npos)
             {
-                my_printf(stderr, get_text(7), arg);
+                my_printf(stderr, get_text(IDT_INVALID_OPTION), arg);
                 return 1;
             }
             auto var = str.substr(0, ich);
@@ -336,7 +348,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
             else
             {
-                my_puts(get_text(6), stderr);
+                my_puts(get_text(IDT_NEEDS_OPERAND), stderr);
                 return 1;
             }
         }
@@ -355,7 +367,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 
         if (arg[0] == '-')
         {
-            my_printf(stderr, get_text(7), arg);
+            my_printf(stderr, get_text(IDT_INVALID_OPTION), arg);
             return 1;
         }
 
@@ -364,7 +376,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             m_audio_mode = _wtoi(&arg[1]);
             if (!(0 <= m_audio_mode && m_audio_mode <= 4))
             {
-                my_puts(get_text(4), stderr);
+                my_puts(get_text(IDT_MODE_OUT_OF_RANGE), stderr);
                 return 1;
             }
             continue;
@@ -376,7 +388,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             continue;
         }
 
-        my_puts(get_text(2), stderr);
+        my_puts(get_text(IDT_TOO_MANY_ARGS), stderr);
         return 1;
     }
 
@@ -399,7 +411,7 @@ int CMD_PLAY::run()
 
     if (!vsk_sound_init(m_stereo))
     {
-        my_puts(get_text(8), stderr);
+        my_puts(get_text(IDT_SOUND_INIT_FAILED), stderr);
         return 1;
     }
 
@@ -413,7 +425,7 @@ int CMD_PLAY::run()
         case 0:
             if (!vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
-                my_puts(get_text(5), stderr);
+                my_puts(get_text(IDT_BAD_CALL), stderr);
                 do_beep();
                 vsk_sound_exit();
                 return 1;
@@ -424,7 +436,7 @@ int CMD_PLAY::run()
         case 4:
             if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
-                my_puts(get_text(5), stderr);
+                my_puts(get_text(IDT_BAD_CALL), stderr);
                 do_beep();
                 vsk_sound_exit();
                 return 1;
@@ -439,7 +451,7 @@ int CMD_PLAY::run()
     case 0:
         if (!vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo))
         {
-            my_puts(get_text(5), stderr);
+            my_puts(get_text(IDT_BAD_CALL), stderr);
             do_beep();
             vsk_sound_exit();
             return 1;
@@ -450,7 +462,7 @@ int CMD_PLAY::run()
     case 4:
         if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo))
         {
-            my_puts(get_text(5), stderr);
+            my_puts(get_text(IDT_BAD_CALL), stderr);
             do_beep();
             vsk_sound_exit();
             return 1;
