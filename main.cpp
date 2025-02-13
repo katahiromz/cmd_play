@@ -25,8 +25,6 @@ enum RET { // exit code of this program
     RET_CANCELED = 6,
 };
 
-static bool g_canceled = false;
-
 inline WORD get_lang_id(void)
 {
     return PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale()));
@@ -501,6 +499,8 @@ RET CMD_PLAY::run()
 
     return RET_SUCCESS;
 }
+
+static bool g_canceled = false; // Ctrl+Cなどが押されたか？
 
 static BOOL WINAPI HandlerRoutine(DWORD signal)
 {
