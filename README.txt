@@ -134,6 +134,8 @@
 ## 使用許諾
 
 - 本ソフトウェアの使用においては、LICENSE.txtに記載されている「fmgon ライセンス」の使用条件に従ってください。
+- 本ソフトウェアのソースコードは https://github.com/katahiromz/cmd_play からダウンロードできます。
+- 本ソフトウェアの一部は、cisc さん (cisc@retropc.net) が著作権を所有しています。
 
 ## 連絡先
 
