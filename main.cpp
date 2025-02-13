@@ -436,8 +436,10 @@ int CMD_PLAY::run()
 
 static BOOL WINAPI HandlerRoutine(DWORD signal)
 {
-    if (signal == CTRL_C_EVENT) // Ctrl+C
+    switch (signal)
     {
+    case CTRL_C_EVENT: // Ctrl+C
+    case CTRL_BREAK_EVENT: // Ctrl+Break
         vsk_sound_exit();
         std::printf("^C\nBreak\nOk\n");
         std::fflush(stdout);
