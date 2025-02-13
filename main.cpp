@@ -21,6 +21,13 @@ inline WORD get_lang_id(void)
     return PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale()));
 }
 
+void do_beep(void)
+{
+#ifdef ENABLE_BEEP
+    Beep(1000, 750);
+#endif
+}
+
 // localization
 LPCTSTR get_text(INT id)
 {
@@ -385,6 +392,7 @@ int CMD_PLAY::run()
             if (!vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
                 _ftprintf(stderr, TEXT("%ls"), get_text(5));
+                do_beep();
                 vsk_sound_exit();
                 return 1;
             }
@@ -395,6 +403,7 @@ int CMD_PLAY::run()
             if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
                 _ftprintf(stderr, TEXT("%ls"), get_text(5));
+                do_beep();
                 vsk_sound_exit();
                 return 1;
             }
@@ -409,6 +418,7 @@ int CMD_PLAY::run()
         if (!vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo))
         {
             _ftprintf(stderr, TEXT("%ls"), get_text(5));
+            do_beep();
             vsk_sound_exit();
             return 1;
         }
@@ -419,6 +429,7 @@ int CMD_PLAY::run()
         if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo))
         {
             _ftprintf(stderr, TEXT("%ls"), get_text(5));
+            do_beep();
             vsk_sound_exit();
             return 1;
         }
@@ -454,7 +465,10 @@ int wmain(int argc, wchar_t **argv)
 
     CMD_PLAY play;
     if (int ret = play.parse_cmd_line(argc, argv))
+    {
+        do_beep();
         return ret;
+    }
 
     if (int ret = play.run())
         return ret;

@@ -13,6 +13,11 @@ if(MSVC)
 endif()
 
 ##############################################################################
+# CMake options
+
+option(ENABLE_BEEP "Enable beep" ON)
+
+##############################################################################
 # pevent
 
 add_subdirectory(pevent)
@@ -29,5 +34,8 @@ add_subdirectory(fmgon)
 add_executable(cmd_play cmd_play.cpp cmd_sing.cpp sound.cpp main.cpp soundplayer.cpp cmd_play_res.rc)
 target_compile_definitions(cmd_play PRIVATE UNICODE _UNICODE JAPAN CMD_PLAY_EXE _CRT_SECURE_NO_WARNINGS)
 target_link_libraries(cmd_play fmgon shlwapi winmm)
+if(ENABLE_BEEP)
+    target_compile_definitions(cmd_play PRIVATE ENABLE_BEEP)
+endif()
 
 ##############################################################################
