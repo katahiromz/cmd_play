@@ -510,7 +510,7 @@ static BOOL WINAPI HandlerRoutine(DWORD signal)
     case CTRL_BREAK_EVENT: // Ctrl+Break
         g_canceled = true;
         vsk_sound_stop();
-        std::printf("^C\nBreak\nOk\n");
+        //std::printf("^C\nBreak\nOk\n"); // このハンドラで時間を掛けちゃダメだ。
         //std::fflush(stdout); // このハンドラで時間を掛けちゃダメだ。
         //do_beep(); // このハンドラで時間を掛けちゃダメだ。
         return TRUE;
@@ -577,6 +577,7 @@ int main(void)
 
     if (g_canceled)
     {
+        std::printf("^C\nBreak\nOk\n");
         std::fflush(stdout);
         do_beep();
         return RET_CANCELED;
