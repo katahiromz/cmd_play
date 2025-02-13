@@ -369,6 +369,11 @@ void VskPhrase::realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& da
         VskLFOCtrl lc;
 
         for (auto& note : m_notes) { // For each note
+            if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
+                schedule_special_action(note.m_gate, note.m_data);
+                continue;
+            }
+
             if (note.m_key == KEY_TONE) { // Tone change?
                 const auto new_tone = note.m_data;
                 assert((0 <= new_tone) && (new_tone < NUM_TONES));
@@ -615,6 +620,11 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename, 
 
 void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
     generate_pcm_raw(block, m_samples, stereo);
+
+    for (auto& phrase : block) {
+        phrase->execute_special_actions();
+    }
+
     vsk_sound_play(m_samples.data(), m_samples.size() * sizeof(FM_SAMPLETYPE), stereo);
 } // VskSoundPlayer::play
 
