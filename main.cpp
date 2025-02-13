@@ -583,5 +583,6 @@ int main(void)
         return RET_CANCELED;
     }
 
+    std::printf("Ok\n");
     return ret;
 }
