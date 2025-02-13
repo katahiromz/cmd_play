@@ -648,7 +648,7 @@ void VskSoundPlayer::do_special_action(int action_no)
     if (fn)
         (*fn)(action_no);
     else
-        std::printf("special action %d\n", action_no);
+        std::printf("special action X%d\n", action_no);
 }
 
 //////////////////////////////////////////////////////////////////////////////
