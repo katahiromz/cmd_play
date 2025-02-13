@@ -68,7 +68,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case IDT_VERSION: return TEXT("cmd_play バージョン 1.4 by 片山博文MZ");
+        case IDT_VERSION: return TEXT("cmd_play バージョン 1.4 by 片山博文MZ\n");
         case IDT_HELP:
             return
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
@@ -80,7 +80,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -help                  このメッセージを表示する。\n")
                 TEXT("  -version               バージョン情報を表示する。\n")
                 TEXT("\n")
-                TEXT("文字列変数は [ ] で囲えば展開できます。");
+                TEXT("文字列変数は [ ] で囲えば展開できます。\n");
         case IDT_TOO_MANY_ARGS: return TEXT("エラー: 引数が多すぎます。\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case IDT_BAD_CALL: return TEXT("エラー: Illegal function call\n");
@@ -94,7 +94,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case IDT_VERSION: return TEXT("cmd_play version 1.4 by katahiromz");
+        case IDT_VERSION: return TEXT("cmd_play version 1.4 by katahiromz\n");
         case IDT_HELP:
             return
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
@@ -106,7 +106,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -help                  Display this message.\n")
                 TEXT("  -version               Display version info.\n")
                 TEXT("\n")
-                TEXT("String variables can be expanded by enclosing them in [ ].");
+                TEXT("String variables can be expanded by enclosing them in [ ].\n");
         case IDT_TOO_MANY_ARGS: return TEXT("ERROR: Too many arguments.\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
         case IDT_BAD_CALL: return TEXT("ERROR: Illegal function call\n");
@@ -122,12 +122,12 @@ LPCTSTR get_text(INT id)
 
 void version(void)
 {
-    _putts(get_text(IDT_VERSION));
+    my_puts(get_text(IDT_VERSION), stdout);
 }
 
 void usage(void)
 {
-    _putts(get_text(IDT_HELP));
+    my_puts(get_text(IDT_HELP), stdout);
 }
 
 // 変数
