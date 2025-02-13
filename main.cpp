@@ -517,10 +517,17 @@ int main(void)
     // Unicode console output support
     std::setlocale(LC_ALL, "");
 
-    int argc;
-    LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    int ret = wmain(argc, argv);
-    LocalFree(argv);
+    int ret;
+    try
+    {
+        int argc;
+        LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+        ret = wmain(argc, argv);
+        LocalFree(argv);
+    } catch (const std::exception& e) {
+        printf("ERROR: %s\n", e.what());
+        ret = -1;
+    }
 
     // Detect handle leaks (for Debug)
 #if (_WIN32_WINNT >= 0x0500) && !defined(NDEBUG)
