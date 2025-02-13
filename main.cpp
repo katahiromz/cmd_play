@@ -25,14 +25,14 @@ enum RET { // exit code of this program
     RET_CANCELED = 6,
 };
 
-bool g_canceled = false;
+static bool g_canceled = false;
 
 inline WORD get_lang_id(void)
 {
     return PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale()));
 }
 
-bool g_no_beep = false;
+static bool g_no_beep = false;
 
 void do_beep(void)
 {
