@@ -219,6 +219,8 @@ std::string vsk_sjis_from_wide(const wchar_t *wide)
 
 struct CMD_PLAY
 {
+    bool m_help = false;
+    bool m_version = false;
     std::vector<std::string> m_str_to_play;
     std::wstring m_output_file;
     int m_audio_mode = 2;
@@ -288,8 +290,8 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 {
     if (argc <= 1)
     {
-        usage();
-        return 1;
+        m_help = true;
+        return 0;
     }
 
     for (int iarg = 1; iarg < argc; ++iarg)
@@ -298,14 +300,14 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 
         if (_wcsicmp(arg, L"-help") == 0 || _wcsicmp(arg, L"--help") == 0)
         {
-            usage();
-            return 1;
+            m_help = true;
+            return 0;
         }
 
         if (_wcsicmp(arg, L"-version") == 0 || _wcsicmp(arg, L"--version") == 0)
         {
-            version();
-            return 1;
+            m_version = true;
+            return 0;
         }
 
         if (arg[0] == '-' && (arg[1] == 'd' || arg[1] == 'D'))
@@ -383,6 +385,18 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 
 int CMD_PLAY::run()
 {
+    if (m_help)
+    {
+        usage();
+        return 0;
+    }
+
+    if (m_version)
+    {
+        version();
+        return 0;
+    }
+
     if (!vsk_sound_init(m_stereo))
     {
         my_puts(get_text(8), stderr);
