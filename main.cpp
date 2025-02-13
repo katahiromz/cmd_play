@@ -33,7 +33,7 @@ void my_puts(LPCTSTR pszText, FILE *fout)
 #ifdef UNICODE
     _ftprintf(fout, _T("%ls"), pszText);
 #else
-    _ftprintf(fout, _T("%s"), pszText);
+    fputs(pszText, fout);
 #endif
 }
 
