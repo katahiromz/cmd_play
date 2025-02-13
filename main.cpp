@@ -97,7 +97,7 @@ LPCTSTR get_text(INT id)
         case IDT_TOO_MANY_ARGS: return TEXT("エラー: 引数が多すぎます。\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case IDT_BAD_CALL: return TEXT("エラー: 不正な関数呼び出しです。\n");
-        case IDT_NEEDS_OPERAND: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
+        case IDT_NEEDS_OPERAND: return TEXT("エラー: オプション「%s」は引数が必要です。\n");
         case IDT_INVALID_OPTION: return TEXT("エラー: 「%s」は、無効なオプションです。\n");
         case IDT_SOUND_INIT_FAILED: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
         case IDT_CIRCULAR_REFERENCE: return TEXT("エラー: 変数の循環参照を検出しました。\n");
@@ -124,7 +124,7 @@ LPCTSTR get_text(INT id)
         case IDT_TOO_MANY_ARGS: return TEXT("ERROR: Too many arguments.\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
         case IDT_BAD_CALL: return TEXT("ERROR: Illegal function call\n");
-        case IDT_NEEDS_OPERAND: return TEXT("ERROR: Option -save_wav needs an operand.\n");
+        case IDT_NEEDS_OPERAND: return TEXT("ERROR: Option '%s' needs an operand.\n");
         case IDT_INVALID_OPTION: return TEXT("ERROR: '%s' is an invalid option.\n");
         case IDT_SOUND_INIT_FAILED: return TEXT("ERROR: vsk_sound_init failed.\n");
         case IDT_CIRCULAR_REFERENCE: return TEXT("ERROR: Circular variable reference detected.\n");
@@ -363,7 +363,7 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
             else
             {
-                my_puts(get_text(IDT_NEEDS_OPERAND), stderr);
+                my_printf(stderr, get_text(IDT_NEEDS_OPERAND), arg);
                 return RET_BAD_CMDLINE;
             }
         }
