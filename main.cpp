@@ -28,6 +28,26 @@ void do_beep(void)
 #endif
 }
 
+void my_puts(LPCTSTR pszText, FILE *fout)
+{
+#ifdef UNICODE
+    _ftprintf(fout, L"%ls", pszText);
+#else
+    _ftprintf(fout, L"%s", pszText);
+#endif
+}
+
+void my_printf(FILE *fout, LPCTSTR  fmt, ...)
+{
+    static TCHAR szText[2048];
+    va_list va;
+
+    va_start(va, fmt);
+    StringCchVPrintf(szText, _countof(szText), fmt, va);
+    my_puts(szText, fout);
+    va_end(va);
+}
+
 // localization
 LPCTSTR get_text(INT id)
 {
@@ -50,7 +70,6 @@ LPCTSTR get_text(INT id)
                 TEXT("\n")
                 TEXT("文字列変数は [ ] で囲えば展開できます。");
         case 2: return TEXT("エラー: 引数が多すぎます。\n");
-        case 3: return TEXT("エラー: 演奏する文字列が未指定です。\n");
         case 4: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case 5: return TEXT("エラー: Illegal function call\n");
         case 6: return TEXT("エラー: オプション -save_wav は引数が必要です。\n");
@@ -77,7 +96,6 @@ LPCTSTR get_text(INT id)
                 TEXT("\n")
                 TEXT("String variables can be expanded by enclosing them in [ ].");
         case 2: return TEXT("ERROR: Too many arguments.\n");
-        case 3: return TEXT("ERROR: No string to play specified.\n");
         case 4: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
         case 5: return TEXT("ERROR: Illegal function call\n");
         case 6: return TEXT("ERROR: Option -save_wav needs an operand.\n");
@@ -296,9 +314,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             auto ich = str.find('=');
             if (ich == str.npos)
             {
-                TCHAR text[256];
-                StringCchPrintf(text, _countof(text), get_text(7), arg);
-                _ftprintf(stderr, TEXT("%ls"), text);
+                my_printf(stderr, get_text(7), arg);
                 return 1;
             }
             auto var = str.substr(0, ich);
@@ -318,7 +334,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
             else
             {
-                _ftprintf(stderr, TEXT("%ls"), get_text(6));
+                my_puts(get_text(6), stderr);
                 return 1;
             }
         }
@@ -337,9 +353,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
 
         if (arg[0] == '-')
         {
-            TCHAR text[256];
-            StringCchPrintf(text, _countof(text), get_text(7), arg);
-            _ftprintf(stderr, TEXT("%ls"), text);
+            my_printf(stderr, get_text(7), arg);
             return 1;
         }
 
@@ -348,7 +362,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             m_audio_mode = _wtoi(&arg[1]);
             if (!(0 <= m_audio_mode && m_audio_mode <= 4))
             {
-                _ftprintf(stderr, TEXT("%ls"), get_text(4));
+                my_puts(get_text(4), stderr);
                 return 1;
             }
             continue;
@@ -360,13 +374,7 @@ int CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             continue;
         }
 
-        _ftprintf(stderr, get_text(2));
-        return 1;
-    }
-
-    if (m_str_to_play.empty())
-    {
-        _ftprintf(stderr, get_text(3));
+        my_puts(get_text(2), stderr);
         return 1;
     }
 
@@ -377,7 +385,7 @@ int CMD_PLAY::run()
 {
     if (!vsk_sound_init(m_stereo))
     {
-        _ftprintf(stderr, get_text(8));
+        my_puts(get_text(8), stderr);
         return 1;
     }
 
@@ -391,7 +399,7 @@ int CMD_PLAY::run()
         case 0:
             if (!vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
-                _ftprintf(stderr, TEXT("%ls"), get_text(5));
+                my_puts(get_text(5), stderr);
                 do_beep();
                 vsk_sound_exit();
                 return 1;
@@ -402,7 +410,7 @@ int CMD_PLAY::run()
         case 4:
             if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
-                _ftprintf(stderr, TEXT("%ls"), get_text(5));
+                my_puts(get_text(5), stderr);
                 do_beep();
                 vsk_sound_exit();
                 return 1;
@@ -417,7 +425,7 @@ int CMD_PLAY::run()
     case 0:
         if (!vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo))
         {
-            _ftprintf(stderr, TEXT("%ls"), get_text(5));
+            my_puts(get_text(5), stderr);
             do_beep();
             vsk_sound_exit();
             return 1;
@@ -428,7 +436,7 @@ int CMD_PLAY::run()
     case 4:
         if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo))
         {
-            _ftprintf(stderr, TEXT("%ls"), get_text(5));
+            my_puts(get_text(5), stderr);
             do_beep();
             vsk_sound_exit();
             return 1;
