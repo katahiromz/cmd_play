@@ -434,8 +434,22 @@ int CMD_PLAY::run()
     return 0;
 }
 
+static BOOL WINAPI HandlerRoutine(DWORD signal)
+{
+    if (signal == CTRL_C_EVENT) // Ctrl+C
+    {
+        vsk_sound_exit();
+        std::printf("^C\nBreak\nOk\n");
+        std::fflush(stdout);
+        Beep(1000, 750);
+    }
+    return FALSE;
+}
+
 int wmain(int argc, wchar_t **argv)
 {
+    SetConsoleCtrlHandler(HandlerRoutine, TRUE); // Ctrl+C
+
     CMD_PLAY play;
     if (int ret = play.parse_cmd_line(argc, argv))
         return ret;
