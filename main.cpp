@@ -31,9 +31,9 @@ void do_beep(void)
 void my_puts(LPCTSTR pszText, FILE *fout)
 {
 #ifdef UNICODE
-    _ftprintf(fout, L"%ls", pszText);
+    _ftprintf(fout, _T("%ls"), pszText);
 #else
-    _ftprintf(fout, L"%s", pszText);
+    _ftprintf(fout, _T("%s"), pszText);
 #endif
 }
 
