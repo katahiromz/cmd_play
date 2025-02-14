@@ -93,16 +93,35 @@ private:
 // VskSoundSetting - 音声の設定
 
 struct VskSoundSetting {
-    int                 m_tempo         = 120;      // テンポ
-    int                 m_octave        = 4 - 1;    // オクターブ
-    float               m_length        = 24.0f;    // 音符の長さ（4分音符の長さは24）
-    int                 m_tone          = 0;        // 音色
-    bool                m_fm            = false;    // FMかどうか
-    float               m_volume        = 8.0f;     // 音量（0～15）
-    int                 m_quantity      = 8;        // 音符の長さの割合 (0～8)
-    YM2203_Timbre       m_timbre;                   // YM2203_Timbreを参照
-    void reset() { *this = VskSoundSetting(); }
-}; // struct VskSoundSetting
+    int                 m_tempo;    // テンポ
+    int                 m_octave;   // オクターブ
+    float               m_length;   // 音符の長さ (24は四分音符の長さ)
+    bool                m_fm;       // FMかどうか
+    float               m_volume;   // 音量 (0～15)
+    int                 m_quantity; // 音符の長さの割合 (0～8)
+    int                 m_tone;     // 音色
+    YM2203_Timbre       m_timbre;   // see YM2203_Timbre
+
+    VskSoundSetting(int tempo = 120, int octave = 4 - 1, float length = 24,
+                    int tone = 0, bool fm = false) :
+        m_tempo(tempo), m_octave(octave), m_length(length),
+        m_fm(fm)
+    {
+        m_volume = 8;
+        m_quantity = 8;
+        m_tone = tone;
+    }
+
+    void reset() {
+        m_tempo = 120;
+        m_octave = 4 - 1;
+        m_length = 24;
+        m_fm = false;
+        m_volume = 8;
+        m_quantity = 8;
+        m_tone = 0;
+    }
+};
 
 //////////////////////////////////////////////////////////////////////////////
 // VskPhrase - フレーズ
