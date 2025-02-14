@@ -88,7 +88,7 @@ struct YM2203 {
     YM2203();
     ~YM2203() { }
 
-    void init(uint32_t clock, uint32_t rate);
+    void init(uint32_t clock, uint32_t rate, const char* rhythmpath);
     void set_pitch(int ch, int octave, int key, int adj = 0);
 
     // assert((0 <= volume) && (volume <= 15));

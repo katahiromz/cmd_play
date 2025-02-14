@@ -63,8 +63,8 @@ struct VskNote {
     int         m_data;
 
     VskNote(int tempo, int octave, int note,
-            bool dot = false, float length = 24, char sign = 0,
-            float volume = 8, int quantity = 8,
+            bool dot = false, float length = 24.0f, char sign = 0,
+            float volume = 8.0f, int quantity = 8,
             bool and_ = false, int reg = -1, int data = -1)
     {
         m_tempo = tempo;
@@ -101,12 +101,12 @@ struct VskSoundSetting {
     int                 m_quantity; // in 0 to 8
     int                 m_tone;
 
-    VskSoundSetting(int tempo = 120, int octave = 4 - 1, float length = 24,
+    VskSoundSetting(int tempo = 120, int octave = 4 - 1, float length = 24.0f,
                     int tone = 0, bool fm = false) :
         m_tempo(tempo), m_octave(octave), m_length(length),
         m_fm(fm)
     {
-        m_volume = 8;
+        m_volume = 8.0f;
         m_quantity = 8;
         m_tone = tone;
     }
@@ -114,7 +114,7 @@ struct VskSoundSetting {
     void reset() {
         m_tempo = 120;
         m_octave = 4 - 1;
-        m_length = 24;
+        m_length = 24.0f;
         m_fm = false;
         m_volume = 8;
         m_quantity = 8;
@@ -167,31 +167,31 @@ struct VskPhrase {
     void add_action_node(char note, int action_no) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
-            note, false, 0, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, action_no);
     }
     void add_tone(char note, int tone_no) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
-            note, false, 0, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, tone_no);
     }
     void add_reg(char note, int reg, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
-            note, false, 0, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, reg, data);
     }
     void add_envelop_interval(char note, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
-            note, false, 0, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, data);
     }
     void add_envelop_type(char note, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
-            note, false, 0, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, data);
     }
     void add_key(int key) {
@@ -244,7 +244,7 @@ struct VskSoundPlayer {
     std::unordered_map<int, VskSpecialActionFn> m_action_no_to_special_action;
     std::vector<VSK_PCM16_VALUE>                m_pcm_values;
 
-    VskSoundPlayer() : m_playing_music(false), m_stopping_event(false, false) { }
+    VskSoundPlayer();
     virtual ~VskSoundPlayer() { }
 
     void play(VskScoreBlock& block, bool stereo);
@@ -260,6 +260,8 @@ struct VskSoundPlayer {
     void write_reg(uint32_t addr, uint32_t data) {
         m_ym.write_reg(addr, data);
     }
+
+    void get_rythm_path(char *path, size_t path_max);
 }; // struct VskSoundPlayer
 
 //////////////////////////////////////////////////////////////////////////////

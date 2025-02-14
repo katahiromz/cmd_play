@@ -9,6 +9,7 @@
 #include <map>
 #include <cstdio>
 #include <limits>
+#include <shlwapi.h>
 
 #define CLOCK       8000000
 #define SAMPLERATE  44100
@@ -349,7 +350,6 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t& 
 
     // Initialize YM2203
     YM2203& ym = player->m_ym;
-    ym.init(CLOCK, SAMPLERATE);
 
     // Allocate the wave data
     auto count = uint32_t((m_goal + 1) * SAMPLERATE * 2); // stereo
@@ -539,6 +539,46 @@ get_wav_header(uint32_t data_size, uint32_t sample_rate, uint16_t bit_depth, boo
     std::memcpy(&wav_header[40], &data_size, 4);
 
     return wav_header;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+VskSoundPlayer::VskSoundPlayer()
+    : m_playing_music(false)
+    , m_stopping_event(false, false)
+{
+    // リズムデータのある場所を取得
+    char path[MAX_PATH];
+    get_rythm_path(path, _countof(path));
+
+    // YMを初期化
+    m_ym.init(CLOCK, SAMPLERATE, path);
+}
+
+void VskSoundPlayer::get_rythm_path(char *path, size_t path_max)
+{
+    GetModuleFileNameA(NULL, path, path_max); // EXEファイルのパスファイル名を取得
+    PathRemoveFileSpecA(path); // パスの最後の項目を削除
+    PathAppendA(path, "data\\");
+
+    // dataフォルダを探す
+    if (!PathIsDirectoryA(path))
+    {
+        PathRemoveFileSpecA(path);
+        PathRemoveFileSpecA(path);
+        PathAppendA(path, "data\\");
+
+        if (!PathIsDirectoryA(path))
+        {
+            PathRemoveFileSpecA(path);
+            PathRemoveFileSpecA(path);
+            PathRemoveFileSpecA(path);
+            PathAppendA(path, "data\\");
+
+            if (!PathIsDirectoryA(path))
+                path[0] = 0; // 見つからなかった
+        }
+    }
 }
 
 bool VskSoundPlayer::wait_for_stop(uint32_t milliseconds) {

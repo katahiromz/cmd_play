@@ -34,8 +34,8 @@ YM2203::YM2203() {
     m_ssg_tone_noise[SSG_CH_C - SSG_CH_A] = 0x04;
 }
 
-void YM2203::init(uint32_t clock, uint32_t rate) {
-    m_opna.Init(clock, rate);
+void YM2203::init(uint32_t clock, uint32_t rate, const char* rhythmpath) {
+    m_opna.Init(clock, rate, false, rhythmpath);
     m_opna.Reset();
     m_ssg_key_on = 0x3F;
     uint32_t addr = ADDR_SSG_MIXING;
