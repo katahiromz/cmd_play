@@ -177,17 +177,17 @@ protected:
 
 //////////////////////////////////////////////////////////////////////////////
 
-float VskNote::get_sec(int tempo, float length) const {
+float VskNote::get_sec(int tempo, float length, bool dot) {
     float sec;
     assert(tempo != 0);
     // NOTE: 24 is the length of a quarter note
-    if (m_dot) {
+    if (dot) {
         sec = length * (60.0f * 1.5f / 24.0f) / tempo;
     } else {
         sec = length * (60.0f / 24.0f) / tempo;
     }
     return sec;
-} // VskNote::get_sec
+}
 
 int VskNote::get_key_from_char(char ch, bool sign) {
     if (ch == 'R' || ch == 0)

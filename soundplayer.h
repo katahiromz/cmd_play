@@ -73,7 +73,7 @@ struct VskNote {
         m_dot = dot;
         m_length = length;
         m_sign = sign;
-        m_sec = get_sec(m_tempo, m_length);
+        m_sec = get_sec(tempo, length, dot);
         m_key = get_key_from_char(note, sign);
         m_volume = volume;
         m_quantity = quantity;
@@ -82,7 +82,7 @@ struct VskNote {
         m_data = data;
     }
 
-    float get_sec(int tempo, float length) const;
+    static float get_sec(int tempo, float length, bool dot);
     static int get_key_from_char(char note, bool sign);
 
 private:
@@ -90,7 +90,7 @@ private:
 }; // struct VskNote
 
 //////////////////////////////////////////////////////////////////////////////
-// VskSoundSetting
+// VskSoundSetting - 音声の設定
 
 struct VskSoundSetting {
     int                 m_tempo         = 120;      // テンポ
