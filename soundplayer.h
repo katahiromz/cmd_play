@@ -92,34 +92,15 @@ private:
 // VskSoundSetting
 
 struct VskSoundSetting {
-    int                 m_tempo;    // tempo
-    int                 m_octave;   // octave
-    float               m_length;   // 24 is the length of a quarter note
-    YM2203_Timbre       m_timbre;   // see YM2203_Timbre
-    bool                m_fm;       // whether it is FM or not?
-    float               m_volume;   // in 0 to 15
-    int                 m_quantity; // in 0 to 8
-    int                 m_tone;
-
-    VskSoundSetting(int tempo = 120, int octave = 4 - 1, float length = 24.0f,
-                    int tone = 0, bool fm = false) :
-        m_tempo(tempo), m_octave(octave), m_length(length),
-        m_fm(fm)
-    {
-        m_volume = 8.0f;
-        m_quantity = 8;
-        m_tone = tone;
-    }
-
-    void reset() {
-        m_tempo = 120;
-        m_octave = 4 - 1;
-        m_length = 24.0f;
-        m_fm = false;
-        m_volume = 8;
-        m_quantity = 8;
-        m_tone = 0;
-    }
+    int                 m_tempo         = 120;      // テンポ
+    int                 m_octave        = 4 - 1;    // オクターブ
+    float               m_length        = 24.0f;    // 音符の長さ（4分音符の長さは24）
+    int                 m_tone          = 0;        // 音色
+    bool                m_fm            = false;    // FMかどうか
+    float               m_volume        = 8.0f;     // 音量（0～15）
+    int                 m_quantity      = 8;        // 音符の長さの割合 (0～8)
+    YM2203_Timbre       m_timbre;                   // YM2203_Timbreを参照
+    void reset() { *this = VskSoundSetting(); }
 }; // struct VskSoundSetting
 
 //////////////////////////////////////////////////////////////////////////////
