@@ -244,7 +244,7 @@ struct VskSoundPlayer {
     std::unordered_map<int, VskSpecialActionFn> m_action_no_to_special_action;
     std::vector<VSK_PCM16_VALUE>                m_pcm_values;
 
-    VskSoundPlayer();
+    VskSoundPlayer(const char *rhythm_path = NULL);
     virtual ~VskSoundPlayer() { }
 
     void play(VskScoreBlock& block, bool stereo);
@@ -260,8 +260,6 @@ struct VskSoundPlayer {
     void write_reg(uint32_t addr, uint32_t data) {
         m_ym.write_reg(addr, data);
     }
-
-    void get_rythm_path(char *path, size_t path_max);
 }; // struct VskSoundPlayer
 
 //////////////////////////////////////////////////////////////////////////////
