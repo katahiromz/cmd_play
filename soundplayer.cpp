@@ -191,7 +191,7 @@ float VskNote::get_sec(int tempo, float length, bool dot) {
 }
 
 // 文字からキーを取得
-int VskNote::get_key_from_char(char ch, bool sign) {
+int VskNote::get_key_from_char(char ch, char sign) {
     if (ch == 'R' || ch == 0)
         return KEY_REST;
     if (ch == '@')

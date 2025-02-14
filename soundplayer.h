@@ -83,7 +83,7 @@ struct VskNote {
     }
 
     static float get_sec(int tempo, float length, bool dot);
-    static int get_key_from_char(char note, bool sign);
+    static int get_key_from_char(char note, char sign);
 
 private:
     VskNote();
@@ -205,7 +205,7 @@ struct VskPhrase {
         if (key == 96) {
             key = 0;
         }
-        VskNote note(m_setting.m_tempo, 0.0f, 0, dot, length, sign,
+        VskNote note(m_setting.m_tempo, 0, 0, dot, length, sign,
                      m_setting.m_volume, quantity);
         note.m_key = key;
         m_notes.push_back(note);
@@ -213,11 +213,11 @@ struct VskPhrase {
 
     void schedule_special_action(float gate, int action_no);
     void execute_special_actions();
+    void realize(VskSoundPlayer* player, VSK_PCM16_VALUE*& data, size_t& data_size);
 
 protected:
     void rescan_notes();
     void calc_total();
-    void realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& data_size);
     void destroy();
 }; // struct VskPhrase
 
