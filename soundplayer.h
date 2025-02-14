@@ -216,7 +216,7 @@ struct VskPhrase {
 
 protected:
     void rescan_notes();
-    void calc_total();
+    void calc_gate_and_goal();
 }; // struct VskPhrase
 
 //////////////////////////////////////////////////////////////////////////////

@@ -307,50 +307,55 @@ void VskPhrase::execute_special_actions() {
 void VskPhrase::rescan_notes() {
     std::vector<VskNote> new_notes;
     for (size_t i = 0; i < m_notes.size(); ++i) {
-        if (m_notes[i].m_and) {
-            size_t k = 0;
-            float length = 0, sec = 0;
-            do {
-                length += m_notes[i + k].m_length;
-                sec += m_notes[i + k].m_sec;
-                ++k;
-            } while (m_notes[i + k].m_and);
+        if (!m_notes[i].m_and) {
+            new_notes.push_back(m_notes[i]);
+            continue;
+        }
+
+        // タイがあった。長さと秒数を再計算
+        size_t k = 0;
+        float length = 0, sec = 0;
+        do {
             length += m_notes[i + k].m_length;
             sec += m_notes[i + k].m_sec;
-            m_notes[i].m_length = length;
-            m_notes[i].m_sec = sec;
-            new_notes.push_back(m_notes[i]);
-            i += k;
-        } else {
-            new_notes.push_back(m_notes[i]);
-        }
+            ++k;
+        } while (m_notes[i + k].m_and);
+        length += m_notes[i + k].m_length;
+        sec += m_notes[i + k].m_sec;
+
+        // 新しい長さと秒数を格納
+        m_notes[i].m_length = length;
+        m_notes[i].m_sec = sec;
+
+        new_notes.push_back(m_notes[i]);
+        i += k; // 次の場所へ
     }
 
     m_notes = std::move(new_notes);
 } // VskPhrase::rescan_notes
 
 // 音符再生の時刻とゴール（演奏終了）の時刻を更新する
-void VskPhrase::calc_total() {
+void VskPhrase::calc_gate_and_goal() {
     float gate = 0;
     for (auto& note : m_notes) {
         note.m_gate = gate;
         gate += note.m_sec;
     }
     m_goal = gate;
-} // VskPhrase::calc_total
+}
 
 // 波形を実現する（ステレオ）
 void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *pdata_size) {
-    calc_total();
+    calc_gate_and_goal();
     rescan_notes();
 
     m_player = player;
     YM2203& ym = player->m_ym;
 
     // Allocate the wave data
-    auto count = uint32_t((m_goal + 1) * SAMPLERATE * 2); // stereo
+    auto count = uint32_t(m_goal * SAMPLERATE * 2); // stereo
     *pdata_size = count * sizeof(VSK_PCM16_VALUE);
-    data = new VSK_PCM16_VALUE[count];
+    data = new VSK_PCM16_VALUE[count + SAMPLERATE * 2];
     std::memset(&data[0], 0, *pdata_size);
 
     uint32_t isample = 0;
