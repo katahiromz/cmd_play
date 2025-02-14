@@ -35,11 +35,11 @@ bool vsk_sound_init(bool stereo)
     vsk_sound_player = std::make_shared<VskSoundPlayer>();
 
     ZeroMemory(&vsk_wfx, sizeof(vsk_wfx));
-    vsk_wfx.wFormatTag = WAVE_FORMAT_PCM;
-    vsk_wfx.nChannels = (stereo ? 2 : 1);
-    vsk_wfx.nSamplesPerSec = 44100 * 2; // サンプリングレート
+    vsk_wfx.wFormatTag = WAVE_FORMAT_PCM; // PCM
+    vsk_wfx.nChannels = (stereo ? 2 : 1); // チャンネル数
+    vsk_wfx.nSamplesPerSec = 44100; // サンプリングレート
     vsk_wfx.wBitsPerSample = 16; // ビット深度
-    vsk_wfx.nBlockAlign = (vsk_wfx.nChannels * vsk_wfx.wBitsPerSample) / CHAR_BIT;
+    vsk_wfx.nBlockAlign = (vsk_wfx.nChannels * vsk_wfx.wBitsPerSample) / 8;
     vsk_wfx.nAvgBytesPerSec = vsk_wfx.nSamplesPerSec * vsk_wfx.nBlockAlign;
     vsk_wfx.cbSize = 0;
 

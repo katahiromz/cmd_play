@@ -507,7 +507,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
 //////////////////////////////////////////////////////////////////////////////
 
 // SSG音源で音楽再生
-bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool stereo)
+VSK_SOUND_ERR vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -518,17 +518,16 @@ bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool stereo)
     for (auto& str : strs) {
         // get play items
         std::vector<VskPlayItem> items;
-        if (!vsk_eval_cmd_play_items(items, str)) {
-            return false;
-        }
+        if (!vsk_eval_cmd_play_items(items, str))
+            return VSK_SOUND_ERR_ILLEGAL;
 
         // create phrase
         auto phrase = std::make_shared<VskPhrase>();
         phrase->m_setting = vsk_ssg_sound_settings[iChannel];
         phrase->m_setting.m_fm = false;
-        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
-            return false;
-        }
+        if (!vsk_phrase_from_cmd_play_items(phrase, items))
+            return VSK_SOUND_ERR_ILLEGAL;
+
         // apply settings
         vsk_ssg_sound_settings[iChannel] = phrase->m_setting;
         // add phrase
@@ -542,11 +541,11 @@ bool vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool stereo)
     // play now
     vsk_sound_player->play(block, stereo);
 
-    return true;
+    return VSK_SOUND_ERR_SUCCESS;
 }
 
 // FM+SSG音源で音楽再生
-bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool stereo)
+VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -557,9 +556,9 @@ bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool ster
     for (auto& str : strs) {
         // get play items
         std::vector<VskPlayItem> items;
-        if (!vsk_eval_cmd_play_items(items, str)) {
-            return false;
-        }
+        if (!vsk_eval_cmd_play_items(items, str))
+            return VSK_SOUND_ERR_ILLEGAL;
+
         // create phrase
         auto phrase = std::make_shared<VskPhrase>();
         if (iChannel < 3) {
@@ -569,9 +568,9 @@ bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool ster
             phrase->m_setting = vsk_ssg_sound_settings[iChannel - 3];
             phrase->m_setting.m_fm = false;
         }
-        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
-            return false;
-        }
+        if (!vsk_phrase_from_cmd_play_items(phrase, items))
+            return VSK_SOUND_ERR_ILLEGAL;
+
         // apply settings
         if (iChannel < 3) {
             vsk_fm_sound_settings[iChannel] = phrase->m_setting;
@@ -587,11 +586,11 @@ bool vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool ster
     // play now
     vsk_sound_player->play(block, stereo);
 
-    return true;
+    return VSK_SOUND_ERR_SUCCESS;
 }
 
 // FM音源で音楽再生
-bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool stereo)
+VSK_SOUND_ERR vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -602,16 +601,16 @@ bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool stereo)
     for (auto& str : strs) {
         // get play items
         std::vector<VskPlayItem> items;
-        if (!vsk_eval_cmd_play_items(items, str)) {
-            return false;
-        }
+        if (!vsk_eval_cmd_play_items(items, str))
+            return VSK_SOUND_ERR_ILLEGAL;
+
         // create phrase
         auto phrase = std::make_shared<VskPhrase>();
         phrase->m_setting = vsk_fm_sound_settings[iChannel];
         phrase->m_setting.m_fm = true;
-        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
-            return false;
-        }
+        if (!vsk_phrase_from_cmd_play_items(phrase, items))
+            return VSK_SOUND_ERR_ILLEGAL;
+
         // apply settings
         vsk_fm_sound_settings[iChannel] = phrase->m_setting;
         // add phrase
@@ -623,13 +622,13 @@ bool vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool stereo)
     // play now
     vsk_sound_player->play(block, stereo);
 
-    return true;
+    return VSK_SOUND_ERR_SUCCESS;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
 // SSG音源で音楽保存
-bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
+VSK_SOUND_ERR vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -640,17 +639,16 @@ bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar
     for (auto& str : strs) {
         // get play items
         std::vector<VskPlayItem> items;
-        if (!vsk_eval_cmd_play_items(items, str)) {
-            return false;
-        }
+        if (!vsk_eval_cmd_play_items(items, str))
+            return VSK_SOUND_ERR_ILLEGAL;
 
         // create phrase
         auto phrase = std::make_shared<VskPhrase>();
         phrase->m_setting = vsk_ssg_sound_settings[iChannel];
         phrase->m_setting.m_fm = false;
-        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
-            return false;
-        }
+        if (!vsk_phrase_from_cmd_play_items(phrase, items))
+            return VSK_SOUND_ERR_ILLEGAL;
+
         // apply settings
         vsk_ssg_sound_settings[iChannel] = phrase->m_setting;
         // add phrase
@@ -662,13 +660,13 @@ bool vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar
     }
 
     if (!vsk_sound_player->save_as_wav(block, filename, stereo))
-        return false; // 失敗
+        return VSK_SOUND_ERR_IO_ERROR;
 
-    return true;
+    return VSK_SOUND_ERR_SUCCESS;
 }
 
 // FM+SSG音源で音楽保存
-bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
+VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -679,9 +677,9 @@ bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, cons
     for (auto& str : strs) {
         // get play items
         std::vector<VskPlayItem> items;
-        if (!vsk_eval_cmd_play_items(items, str)) {
-            return false;
-        }
+        if (!vsk_eval_cmd_play_items(items, str))
+            return VSK_SOUND_ERR_ILLEGAL;
+
         // create phrase
         auto phrase = std::make_shared<VskPhrase>();
         if (iChannel < 3) {
@@ -691,9 +689,9 @@ bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, cons
             phrase->m_setting = vsk_ssg_sound_settings[iChannel - 3];
             phrase->m_setting.m_fm = false;
         }
-        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
-            return false;
-        }
+        if (!vsk_phrase_from_cmd_play_items(phrase, items))
+            return VSK_SOUND_ERR_ILLEGAL;
+
         // apply settings
         if (iChannel < 3) {
             vsk_fm_sound_settings[iChannel] = phrase->m_setting;
@@ -707,13 +705,13 @@ bool vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, cons
     }
 
     if (!vsk_sound_player->save_as_wav(block, filename, stereo))
-        return false; // 失敗
+        return VSK_SOUND_ERR_IO_ERROR; // 失敗
 
-    return true;
+    return VSK_SOUND_ERR_SUCCESS;
 }
 
 // FM音源で音楽保存
-bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
+VSK_SOUND_ERR vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
     assert(strs.size() < VSK_MAX_CHANNEL);
     size_t iChannel = 0;
@@ -724,16 +722,16 @@ bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_
     for (auto& str : strs) {
         // get play items
         std::vector<VskPlayItem> items;
-        if (!vsk_eval_cmd_play_items(items, str)) {
-            return false;
-        }
+        if (!vsk_eval_cmd_play_items(items, str))
+            return VSK_SOUND_ERR_ILLEGAL; // 失敗
+
         // create phrase
         auto phrase = std::make_shared<VskPhrase>();
         phrase->m_setting = vsk_fm_sound_settings[iChannel];
         phrase->m_setting.m_fm = true;
-        if (!vsk_phrase_from_cmd_play_items(phrase, items)) {
-            return false;
-        }
+        if (!vsk_phrase_from_cmd_play_items(phrase, items))
+            return VSK_SOUND_ERR_ILLEGAL; // 失敗
+
         // apply settings
         vsk_fm_sound_settings[iChannel] = phrase->m_setting;
         // add phrase
@@ -743,7 +741,7 @@ bool vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_
     }
 
     if (!vsk_sound_player->save_as_wav(block, filename, stereo))
-        return false; // 失敗
+        return VSK_SOUND_ERR_IO_ERROR; // 失敗
 
-    return true;
+    return VSK_SOUND_ERR_SUCCESS;
 }

@@ -71,6 +71,7 @@ enum TEXT_ID {
     IDT_INVALID_OPTION,
     IDT_SOUND_INIT_FAILED,
     IDT_CIRCULAR_REFERENCE,
+    IDT_CANT_OPEN_FILE,
 };
 
 // localization
@@ -101,6 +102,7 @@ LPCTSTR get_text(INT id)
         case IDT_INVALID_OPTION: return TEXT("エラー: 「%s」は、無効なオプションです。\n");
         case IDT_SOUND_INIT_FAILED: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
         case IDT_CIRCULAR_REFERENCE: return TEXT("エラー: 変数の循環参照を検出しました。\n");
+        case IDT_CANT_OPEN_FILE: return TEXT("エラー: ファイル「%s」が開けません。\n");
         }
     }
     else // The others are Let's la English
@@ -128,6 +130,7 @@ LPCTSTR get_text(INT id)
         case IDT_INVALID_OPTION: return TEXT("ERROR: '%s' is an invalid option.\n");
         case IDT_SOUND_INIT_FAILED: return TEXT("ERROR: vsk_sound_init failed.\n");
         case IDT_CIRCULAR_REFERENCE: return TEXT("ERROR: Circular variable reference detected.\n");
+        case IDT_CANT_OPEN_FILE: return TEXT("ERROR: Unable to open file '%s'.\n");
         }
     }
 
@@ -444,23 +447,45 @@ RET CMD_PLAY::run()
         switch (m_audio_mode)
         {
         case 0:
-            if (!vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
+            if (VSK_SOUND_ERR ret = vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
-                my_puts(get_text(IDT_BAD_CALL), stderr);
-                do_beep();
-                vsk_sound_exit();
-                return RET_BAD_CALL;
+                switch (ret)
+                {
+                case VSK_SOUND_ERR_SUCCESS:
+                    break;
+                case VSK_SOUND_ERR_ILLEGAL:
+                    my_puts(get_text(IDT_BAD_CALL), stderr);
+                    do_beep();
+                    vsk_sound_exit();
+                    return RET_BAD_CALL;
+                case VSK_SOUND_ERR_IO_ERROR:
+                    my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
+                    do_beep();
+                    vsk_sound_exit();
+                    return RET_CANT_OPEN_FILE;
+                }
             }
             break;
         case 2:
         case 3:
         case 4:
-            if (!vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
+            if (VSK_SOUND_ERR ret = vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
             {
-                my_puts(get_text(IDT_BAD_CALL), stderr);
-                do_beep();
-                vsk_sound_exit();
-                return RET_BAD_CALL;
+                switch (ret)
+                {
+                case VSK_SOUND_ERR_SUCCESS:
+                    break;
+                case VSK_SOUND_ERR_ILLEGAL:
+                    my_puts(get_text(IDT_BAD_CALL), stderr);
+                    do_beep();
+                    vsk_sound_exit();
+                    return RET_BAD_CALL;
+                case VSK_SOUND_ERR_IO_ERROR:
+                    my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
+                    do_beep();
+                    vsk_sound_exit();
+                    return RET_CANT_OPEN_FILE;
+                }
             }
             break;
         }
@@ -470,7 +495,7 @@ RET CMD_PLAY::run()
     switch (m_audio_mode)
     {
     case 0:
-        if (!vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo))
+        if (VSK_SOUND_ERR ret = vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo))
         {
             my_puts(get_text(IDT_BAD_CALL), stderr);
             do_beep();
@@ -481,7 +506,7 @@ RET CMD_PLAY::run()
     case 2:
     case 3:
     case 4:
-        if (!vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo))
+        if (VSK_SOUND_ERR ret = vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo))
         {
             my_puts(get_text(IDT_BAD_CALL), stderr);
             do_beep();
