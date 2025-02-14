@@ -123,7 +123,6 @@ struct VskPhrase {
 
     VskPhrase() { }
     VskPhrase(const VskSoundSetting& setting) : m_setting(setting) { }
-    ~VskPhrase() { destroy(); }
 
     // 音符を追加
     void add_note(char note) {
@@ -218,7 +217,6 @@ struct VskPhrase {
 protected:
     void rescan_notes();
     void calc_total();
-    void destroy();
 }; // struct VskPhrase
 
 //////////////////////////////////////////////////////////////////////////////

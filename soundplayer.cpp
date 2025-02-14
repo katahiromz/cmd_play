@@ -239,8 +239,6 @@ int VskNote::get_key_from_char(char ch, char sign) {
 //////////////////////////////////////////////////////////////////////////////
 // VskPhrase - フレーズ
 
-void VskPhrase::destroy() { }
-
 // スペシャルアクションを予約する
 void VskPhrase::schedule_special_action(float gate, int action_no) {
     m_gate_to_special_action_no.push_back(std::make_pair(gate, action_no));
@@ -343,7 +341,6 @@ void VskPhrase::calc_total() {
 
 // 波形を実現する（ステレオ）
 void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *pdata_size) {
-    destroy();
     calc_total();
     rescan_notes();
 
