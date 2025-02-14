@@ -331,7 +331,7 @@ void VskPhrase::rescan_notes() {
     m_notes = std::move(new_notes);
 } // VskPhrase::rescan_notes
 
-// ゴール（演奏終了）の時刻を取得する
+// 音符再生の時刻とゴール（演奏終了）の時刻を取得する
 void VskPhrase::calc_total() {
     float gate = 0;
     for (auto& note : m_notes) {
