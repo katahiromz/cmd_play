@@ -354,8 +354,10 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
 
     // Allocate the wave data
     auto count = uint32_t(m_goal * SAMPLERATE * 2); // stereo
+    if (count % 2)
+        ++count;
     *pdata_size = count * sizeof(VSK_PCM16_VALUE);
-    data = new VSK_PCM16_VALUE[count + SAMPLERATE * 2];
+    data = new VSK_PCM16_VALUE[count];
     std::memset(&data[0], 0, *pdata_size);
 
     uint32_t isample = 0;
@@ -504,7 +506,7 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
             isample += nsamples;
         }
     }
-} // VskPhrase::realize
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // WAVEヘッダ

@@ -26,6 +26,7 @@ waveOutProc(
 {
     if (uMsg == WOM_DONE) {
         // バッファの再生が完了したときの処理
+        Sleep(50);
         vsk_sound_player->m_stopping_event.set();
     }
 }
