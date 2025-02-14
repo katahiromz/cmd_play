@@ -47,20 +47,21 @@ enum SpecialKeys {
     KEY_ENVELOP_TYPE = -7,     // エンベロープ形状
 };
 
+// 音符、休符、特別な何か
 struct VskNote {
-    int         m_tempo;
-    int         m_octave;
-    int         m_key;
-    bool        m_dot;
-    float       m_length;
-    char        m_sign;
-    float       m_sec;
-    float       m_gate;
-    float       m_volume;   // in 0 to 15
-    int         m_quantity; // in 0 to 8
-    bool        m_and;
-    int         m_reg;
-    int         m_data;
+    int         m_tempo;            // テンポ
+    int         m_octave;           // オクターブ
+    int         m_key;              // キー
+    bool        m_dot;              // 付点
+    float       m_length;           // 長さ
+    char        m_sign;             // シャープかフラットか
+    float       m_sec;              // 秒数
+    float       m_gate;             // 開始時刻
+    float       m_volume;           // 音量 (0～15)
+    int         m_quantity;         // 音符の長さの割合 (0～8)
+    bool        m_and;              // タイか？
+    int         m_reg;              // レジスタのアドレス
+    int         m_data;             // 汎用データ
 
     VskNote(int tempo, int octave, int note,
             bool dot = false, float length = 24.0f, char sign = 0,
@@ -73,7 +74,7 @@ struct VskNote {
         m_length = length;
         m_sign = sign;
         m_sec = get_sec(m_tempo, m_length);
-        set_key_from_char(note);
+        m_key = get_key_from_char(note, sign);
         m_volume = volume;
         m_quantity = quantity;
         m_and = and_;
@@ -82,7 +83,7 @@ struct VskNote {
     }
 
     float get_sec(int tempo, float length) const;
-    void set_key_from_char(char note);
+    static int get_key_from_char(char note, bool sign);
 
 private:
     VskNote();

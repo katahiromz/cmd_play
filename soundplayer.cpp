@@ -189,55 +189,50 @@ float VskNote::get_sec(int tempo, float length) const {
     return sec;
 } // VskNote::get_sec
 
-void VskNote::set_key_from_char(char ch) {
-    if (ch == 'R' || ch == 0) {
-        m_key = KEY_REST;
-    }
-    else if (ch == '@') {
-        m_key = KEY_TONE;
-    }
-    else if (ch == 'W') {
-        m_key = KEY_SPECIAL_REST;
-    }
-    else if (ch == 'Y') {
-        m_key = KEY_REG;
-    }
-    else if (ch == 'M') {
-        m_key = KEY_ENVELOP_INTERVAL;
-    }
-    else if (ch == 'S') {
-        m_key = KEY_ENVELOP_TYPE;
-    }
-    else if (ch == 'X') {
-        m_key = KEY_SPECIAL_ACTION;
-    } else {
-        static const char keys[KEY_NUM + 1] = "C+D+EF+G+A+B";
+int VskNote::get_key_from_char(char ch, bool sign) {
+    if (ch == 'R' || ch == 0)
+        return KEY_REST;
+    if (ch == '@')
+        return KEY_TONE;
+    if (ch == 'W')
+        return KEY_SPECIAL_REST;
+    if (ch == 'Y')
+        return KEY_REG;
+    if (ch == 'M')
+        return KEY_ENVELOP_INTERVAL;
+    if (ch == 'S')
+        return KEY_ENVELOP_TYPE;
+    if (ch == 'X')
+        return KEY_SPECIAL_ACTION;
 
-        const char *ptr = strchr(keys, ch);
-        assert(ptr != NULL);
-        assert(*ptr == ch);
-        m_key = int(ptr - keys);
+    static const char keys[KEY_NUM + 1] = "C+D+EF+G+A+B";
 
-        switch (m_sign) {
-        case '+': case '#':
-            if (m_key == KEY_B) {
-                m_key = KEY_C;
-            } else {
-                ++m_key;
-            }
-            break;
-        case '-':
-            if (m_key == KEY_C) {
-                m_key = KEY_B;
-            } else {
-                --m_key;
-            }
-            break;
-        default:
-            break;
+    const char *ptr = strchr(keys, ch);
+    assert(ptr != NULL);
+    assert(*ptr == ch);
+    int key = int(ptr - keys);
+
+    switch (sign) {
+    case '+': case '#':
+        if (key == KEY_B) {
+            key = KEY_C;
+        } else {
+            ++key;
         }
+        break;
+    case '-':
+        if (key == KEY_C) {
+            key = KEY_B;
+        } else {
+            --key;
+        }
+        break;
+    default:
+        break;
     }
-} // VskNote::char_to_key
+
+    return key;
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
