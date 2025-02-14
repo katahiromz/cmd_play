@@ -35,8 +35,9 @@
 #include "fmgon/YM2203.h"
 
 //////////////////////////////////////////////////////////////////////////////
-// VskNote
+// VskNote - 音符、休符、その他の何か
 
+// 特殊キー
 enum SpecialKeys {
     KEY_REST = -1,             // 休符
     KEY_SPECIAL_ACTION = -2,   // スペシャルアクション
@@ -47,7 +48,6 @@ enum SpecialKeys {
     KEY_ENVELOP_TYPE = -7,     // エンベロープ形状
 };
 
-// 音符、休符、特別な何か
 struct VskNote {
     int         m_tempo;            // テンポ
     int         m_octave;           // オクターブ
@@ -105,26 +105,27 @@ struct VskSoundSetting {
 }; // struct VskSoundSetting
 
 //////////////////////////////////////////////////////////////////////////////
-// VskPhrase
+// VskPhrase - フレーズ
 
 struct VskSoundPlayer;
 
 struct VskPhrase {
-    float                               m_goal = 0;
-    VskSoundSetting                     m_setting;
-    std::vector<VskNote>                m_notes;
+    float                               m_goal = 0;     // 演奏終了時刻（秒）
+    VskSoundSetting                     m_setting;      // 音声設定
+    std::vector<VskNote>                m_notes;        // 音符、休符、その他の何か
 
-    VskSoundPlayer*                     m_player;
+    VskSoundPlayer*                     m_player;       // サウンドプレーヤー
+
+    // 時刻からスペシャルアクションへの写像
     std::vector<std::pair<float, int>>  m_gate_to_special_action_no;
-    size_t                              m_remaining_actions;
+
+    size_t                              m_remaining_actions;    // 残りのスペシャルアクションの個数
 
     VskPhrase() { }
     VskPhrase(const VskSoundSetting& setting) : m_setting(setting) { }
+    ~VskPhrase() { destroy(); }
 
-    ~VskPhrase() {
-        destroy();
-    }
-
+    // 音符を追加
     void add_note(char note) {
         add_note(note, false);
     }
@@ -146,36 +147,48 @@ struct VskPhrase {
             note, dot, length, sign, m_setting.m_volume,
             quantity, and_);
     }
+
+    // スペシャルアクションを追加
     void add_action_node(char note, int action_no) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, action_no);
     }
+
+    // 音色を追加
     void add_tone(char note, int tone_no) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, tone_no);
     }
+
+    // レジスタ書き込みを追加
     void add_reg(char note, int reg, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, reg, data);
     }
+
+    // 波形の間隔を追加
     void add_envelop_interval(char note, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, data);
     }
+
+    // 波形の種類を追加
     void add_envelop_type(char note, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, data);
     }
+
+    // キーを追加
     void add_key(int key) {
         add_key(key, false);
     }
@@ -192,8 +205,8 @@ struct VskPhrase {
         if (key == 96) {
             key = 0;
         }
-        VskNote note(m_setting.m_tempo, 0,
-            0, dot, length, sign, m_setting.m_volume, quantity);
+        VskNote note(m_setting.m_tempo, 0.0f, 0, dot, length, sign,
+                     m_setting.m_volume, quantity);
         note.m_key = key;
         m_notes.push_back(note);
     }
@@ -201,6 +214,7 @@ struct VskPhrase {
     void schedule_special_action(float gate, int action_no);
     void execute_special_actions();
 
+protected:
     void rescan_notes();
     void calc_total();
     void realize(VskSoundPlayer *player, FM_SAMPLETYPE*& data, size_t& data_size);
@@ -209,22 +223,26 @@ struct VskPhrase {
 
 //////////////////////////////////////////////////////////////////////////////
 
+// 楽譜のブロックは、フレーズの集合
 typedef std::vector<std::shared_ptr<VskPhrase>>  VskScoreBlock;
 
-// The function pointer type of special action
+// スペシャルアクションの関数
 typedef void (*VskSpecialActionFn)(int action_number);
 
 //////////////////////////////////////////////////////////////////////////////
+// VskSoundPlayer - サウンドプレーヤー
 
 struct VskSoundPlayer {
-    bool                                        m_playing_music;
-    PE_event                                    m_stopping_event;
-    std::deque<VskScoreBlock>                   m_melody_line;
-    unboost::mutex                              m_play_lock;
-    std::vector<std::shared_ptr<VskNote>>       m_notes;
-    YM2203                                      m_ym;
+    bool                                        m_playing_music;    // 演奏中か？
+    PE_event                                    m_stopping_event;   // 演奏停止用のイベント
+    std::deque<VskScoreBlock>                   m_melody_line;      // メロディーライン
+    unboost::mutex                              m_play_lock;        // 排他制御のミューテックス
+    std::vector<std::shared_ptr<VskNote>>       m_notes;            // 音符、休符、その他の何かの配列
+    YM2203                                      m_ym;               // 音源エミュレータ
+    std::vector<VSK_PCM16_VALUE>                m_pcm_values;       // 実際の波形
+
+    // アクション番号からスペシャルアクションへの写像
     std::unordered_map<int, VskSpecialActionFn> m_action_no_to_special_action;
-    std::vector<VSK_PCM16_VALUE>                m_pcm_values;
 
     VskSoundPlayer(const char *rhythm_path = NULL);
     virtual ~VskSoundPlayer() { }

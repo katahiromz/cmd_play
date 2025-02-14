@@ -177,6 +177,7 @@ protected:
 
 //////////////////////////////////////////////////////////////////////////////
 
+// 秒数を計算
 float VskNote::get_sec(int tempo, float length, bool dot) {
     float sec;
     assert(tempo != 0);
@@ -189,6 +190,7 @@ float VskNote::get_sec(int tempo, float length, bool dot) {
     return sec;
 }
 
+// 文字からキーを取得
 int VskNote::get_key_from_char(char ch, bool sign) {
     if (ch == 'R' || ch == 0)
         return KEY_REST;
@@ -236,13 +238,14 @@ int VskNote::get_key_from_char(char ch, bool sign) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-void VskPhrase::destroy() {
-} // VskPhrase::destroy
+void VskPhrase::destroy() { }
 
+// スペシャルアクションを予約する
 void VskPhrase::schedule_special_action(float gate, int action_no) {
     m_gate_to_special_action_no.push_back(std::make_pair(gate, action_no));
 }
 
+// スペシャルアクションを実行する
 void VskPhrase::execute_special_actions() {
     assert(m_player);
 
@@ -301,6 +304,7 @@ void VskPhrase::execute_special_actions() {
     ).detach();
 }
 
+// 音楽記号のタイを実現するために、フレーズデータを再スキャンする
 void VskPhrase::rescan_notes() {
     std::vector<VskNote> new_notes;
     for (size_t i = 0; i < m_notes.size(); ++i) {
@@ -326,6 +330,7 @@ void VskPhrase::rescan_notes() {
     m_notes = std::move(new_notes);
 } // VskPhrase::rescan_notes
 
+// ゴール（演奏終了）の時刻を取得する
 void VskPhrase::calc_total() {
     float gate = 0;
     for (auto& note : m_notes) {
@@ -335,14 +340,13 @@ void VskPhrase::calc_total() {
     m_goal = gate;
 } // VskPhrase::calc_total
 
+// 波形を実現する（ステレオ）
 void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t& data_size) {
     destroy();
     calc_total();
     rescan_notes();
 
     m_player = player;
-
-    // Initialize YM2203
     YM2203& ym = player->m_ym;
 
     // Allocate the wave data
@@ -500,8 +504,9 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t& 
 } // VskPhrase::realize
 
 //////////////////////////////////////////////////////////////////////////////
+// WAVEヘッダ
 
-#define WAV_HEADER_SIZE    44
+#define WAV_HEADER_SIZE 44 // WAVEヘッダのバイトサイズ
 
 // WAVEヘッダを取得する
 static uint8_t*
@@ -537,6 +542,7 @@ get_wav_header(uint32_t data_size, uint32_t sample_rate, uint16_t bit_depth, boo
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// VskSoundPlayer
 
 VskSoundPlayer::VskSoundPlayer(const char *rhythm_path)
     : m_playing_music(false)
@@ -557,6 +563,7 @@ bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds, 
     return wait_for_stop(milliseconds);
 }
 
+// PCM波形を生成する
 bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM16_VALUE>& values, bool stereo) {
     std::vector<VSK_PCM16_VALUE *> raw_data;
     std::vector<size_t> data_sizes;
@@ -618,6 +625,7 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
     return true;
 }
 
+// 音声をWAVファイルとして保存
 bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename, bool stereo) {
     std::vector<VSK_PCM16_VALUE> values;
     generate_pcm_raw(block, values, stereo);
@@ -635,6 +643,7 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename, 
     return true;
 }
 
+// 演奏を開始する
 void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
     generate_pcm_raw(block, m_pcm_values, stereo);
 
@@ -643,8 +652,9 @@ void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
     }
 
     vsk_sound_play(m_pcm_values.data(), m_pcm_values.size() * sizeof(VSK_PCM16_VALUE), stereo);
-} // VskSoundPlayer::play
+}
 
+// 演奏を停止
 void VskSoundPlayer::stop() {
     m_playing_music = false;
     m_stopping_event.pulse();
@@ -652,13 +662,15 @@ void VskSoundPlayer::stop() {
     m_play_lock.lock();
     m_melody_line.clear();
     m_play_lock.unlock();
-} // VskSoundPlayer::stop
+}
 
+// スペシャルアクションを登録
 void VskSoundPlayer::register_special_action(int action_no, VskSpecialActionFn fn)
 {
     m_action_no_to_special_action[action_no] = fn;
 }
 
+// 特定のスペシャルアクションを実行する
 void VskSoundPlayer::do_special_action(int action_no)
 {
     auto fn = m_action_no_to_special_action[action_no];
