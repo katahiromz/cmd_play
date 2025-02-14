@@ -1,7 +1,6 @@
 ﻿//////////////////////////////////////////////////////////////////////////////
 // soundplayer --- an fmgon sound player
 // Copyright (C) 2015-2025 Katayama Hirofumi MZ. All Rights Reserved.
-//////////////////////////////////////////////////////////////////////////////
 
 #include "fmgon/fmgon.h"
 #include "soundplayer.h"
@@ -176,6 +175,7 @@ protected:
 }; // class VskLFOCtrl
 
 //////////////////////////////////////////////////////////////////////////////
+// VskNote - 音符、休符、その他の何か
 
 // 秒数を計算
 float VskNote::get_sec(int tempo, float length, bool dot) {
@@ -237,6 +237,7 @@ int VskNote::get_key_from_char(char ch, bool sign) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// VskPhrase - フレーズ
 
 void VskPhrase::destroy() { }
 
@@ -542,7 +543,7 @@ get_wav_header(uint32_t data_size, uint32_t sample_rate, uint16_t bit_depth, boo
 }
 
 //////////////////////////////////////////////////////////////////////////////
-// VskSoundPlayer
+// VskSoundPlayer - サウンドプレーヤー
 
 VskSoundPlayer::VskSoundPlayer(const char *rhythm_path)
     : m_playing_music(false)

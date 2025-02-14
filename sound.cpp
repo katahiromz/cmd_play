@@ -10,10 +10,12 @@
 // サウンドプレーヤー
 std::shared_ptr<VskSoundPlayer> vsk_sound_player;
 
+// WAVE出力用の変数
 WAVEFORMATEX vsk_wfx;
 HWAVEOUT vsk_hWaveOut = nullptr;
 WAVEHDR vsk_waveHdr = { nullptr };
 
+// WAVE出力用のコールバック関数
 static void CALLBACK
 waveOutProc(
     HWAVEOUT hWaveOut,
@@ -31,30 +33,32 @@ waveOutProc(
 //////////////////////////////////////////////////////////////////////////////
 
 // リズム音源データのある場所を取得する
-void vsk_get_rhythm_path(char *path, size_t path_max)
+bool vsk_get_rhythm_path(char *path, size_t path_max)
 {
     GetModuleFileNameA(NULL, path, path_max); // EXEファイルのパスファイル名を取得
+
+    // rhythmフォルダを探す
     PathRemoveFileSpecA(path); // パスの最後の項目を削除
-    PathAppendA(path, "data\\");
+    PathAppendA(path, "rhythm\\");
+    if (PathIsDirectoryA(path))
+        return true;
 
-    // dataフォルダを探す
-    if (!PathIsDirectoryA(path))
-    {
-        PathRemoveFileSpecA(path);
-        PathRemoveFileSpecA(path);
-        PathAppendA(path, "data\\");
+    PathRemoveFileSpecA(path);
+    PathRemoveFileSpecA(path);
+    PathAppendA(path, "rhythm\\");
+    if (PathIsDirectoryA(path))
+        return true;
 
-        if (!PathIsDirectoryA(path))
-        {
-            PathRemoveFileSpecA(path);
-            PathRemoveFileSpecA(path);
-            PathRemoveFileSpecA(path);
-            PathAppendA(path, "data\\");
+    PathRemoveFileSpecA(path);
+    PathRemoveFileSpecA(path);
+    PathRemoveFileSpecA(path);
+    PathAppendA(path, "rhythm\\");
 
-            if (!PathIsDirectoryA(path))
-                path[0] = 0; // 見つからなかった
-        }
-    }
+    if (PathIsDirectoryA(path))
+        return true;
+
+    path[0] = 0;
+    return false; // 見つからなかった
 }
 
 // 音源を初期化する
@@ -137,17 +141,18 @@ bool vsk_sound_is_playing(void)
 // 音源を待つ。単位はミリ秒
 bool vsk_sound_wait(VskDword milliseconds)
 {
-    if (vsk_sound_is_playing())
-        return vsk_sound_player->wait_for_stop(milliseconds);
-    return false;
+    if (!vsk_sound_is_playing())
+        return false;
+
+    return vsk_sound_player->wait_for_stop(milliseconds);
 }
 
 // OPNのレジスタにデータを設定する
 bool vsk_sound_voice_reg(int addr, int data)
 {
-    if (vsk_sound_player) {
-        vsk_sound_player->write_reg(addr, data);
-        return true;
-    }
-    return false;
+    if (!vsk_sound_player)
+        return false;
+
+    vsk_sound_player->write_reg(addr, data);
+    return true;
 }
