@@ -10,8 +10,8 @@
 #include <cstdio>
 #include <limits>
 
-#define CLOCK       8000000
-#define SAMPLERATE  44100
+#define CLOCK       8000000     // クロック数
+#define SAMPLERATE  44100       // サンプルレート (Hz)
 
 #define LFO_INTERVAL 150
 
