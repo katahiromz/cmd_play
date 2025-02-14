@@ -342,7 +342,7 @@ void VskPhrase::calc_total() {
 } // VskPhrase::calc_total
 
 // 波形を実現する（ステレオ）
-void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t& data_size) {
+void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *pdata_size) {
     destroy();
     calc_total();
     rescan_notes();
@@ -352,9 +352,9 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t& 
 
     // Allocate the wave data
     auto count = uint32_t((m_goal + 1) * SAMPLERATE * 2); // stereo
-    data_size = count * sizeof(VSK_PCM16_VALUE);
+    *pdata_size = count * sizeof(VSK_PCM16_VALUE);
     data = new VSK_PCM16_VALUE[count];
-    std::memset(&data[0], 0, data_size);
+    std::memset(&data[0], 0, *pdata_size);
 
     uint32_t isample = 0;
     if (m_setting.m_fm) { // FM sound?
@@ -566,36 +566,39 @@ bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds, 
 
 // PCM波形を生成する
 bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM16_VALUE>& values, bool stereo) {
-    std::vector<VSK_PCM16_VALUE *> raw_data;
-    std::vector<size_t> data_sizes;
-
-    // Realize phrases (stereo)
+    // ステレオ音声として波形を実現する
     const int source_num_channels = 2;
+    std::vector<VSK_PCM16_VALUE*> raw_data;
+    std::vector<size_t> data_sizes;
     for (auto& phrase : block) {
         if (phrase) {
             VSK_PCM16_VALUE *data;
             size_t data_size;
-            phrase->realize(this, data, data_size);
+            phrase->realize(this, data, &data_size);
             raw_data.push_back(data);
             data_sizes.push_back(data_size);
         }
     }
 
-    // Get maximum data size
+    // 最大のデータサイズを計算
     size_t data_size = 0;
     for (size_t i = 0; i < raw_data.size(); ++i) {
         if (data_size < data_sizes[i])
             data_size = data_sizes[i];
     }
 
+    // 転送元のデータを計算
     const size_t source_num_samples = data_size / sizeof(VSK_PCM16_VALUE) / source_num_channels;
     const size_t source_num_values = source_num_samples * source_num_channels;
+
+    // 転送先の波形データを確保
     const int num_channels = (stereo ? 2 : 1);
     values.resize(source_num_samples * num_channels);
 
+    // 波形データを構築
     for (size_t ivalue = 0; ivalue < source_num_values; ++ivalue) {
         if (!stereo && (ivalue & 1))
-            continue;
+            continue; // モノラルでivalueが奇数の場合は無視
 
         // Mixing
         int32_t value = 0;
@@ -610,7 +613,7 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
         else if (value > std::numeric_limits<VSK_PCM16_VALUE>::max())
             value = std::numeric_limits<VSK_PCM16_VALUE>::max();
 
-        // If it's not stereo, make it mono
+        // 作成する波形がステレオでなければモノラルにする。転送先に格納
         int32_t sample_value = ((ivalue < data_size) ? value : 0);
         if (stereo) {
             values[ivalue] = sample_value;
@@ -619,6 +622,7 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
         }
     }
 
+    // 後始末
     for (auto entry : raw_data) {
         delete[] entry;
     }
@@ -628,14 +632,17 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
 
 // 音声をWAVファイルとして保存
 bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename, bool stereo) {
+    // 波形を生成する
     std::vector<VSK_PCM16_VALUE> values;
     generate_pcm_raw(block, values, stereo);
     size_t data_size = values.size() * sizeof(VSK_PCM16_VALUE);
 
+    // WAVファイルを書き込み用として開く
     FILE *fout = _wfopen(filename, L"wb");
     if (!fout)
         return false;
 
+    // WAVファイルに書き込み、閉じる
     auto wav_header = get_wav_header(data_size, SAMPLERATE, 16, stereo);
     std::fwrite(wav_header, WAV_HEADER_SIZE, 1, fout);
     std::fwrite(values.data(), data_size, 1, fout);
@@ -646,20 +653,26 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename, 
 
 // 演奏を開始する
 void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
+    // 波形を生成
     generate_pcm_raw(block, m_pcm_values, stereo);
 
+    // スペシャルアクションを実行
     for (auto& phrase : block) {
         phrase->execute_special_actions();
     }
 
+    // 波形に基づいて演奏
     vsk_sound_play(m_pcm_values.data(), m_pcm_values.size() * sizeof(VSK_PCM16_VALUE), stereo);
 }
 
 // 演奏を停止
-void VskSoundPlayer::stop() {
+void VskSoundPlayer::stop()
+{
+    // 演奏停止を知らせる
     m_playing_music = false;
     m_stopping_event.pulse();
 
+    // メロディーラインをクリア
     m_play_lock.lock();
     m_melody_line.clear();
     m_play_lock.unlock();
