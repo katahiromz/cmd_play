@@ -51,6 +51,7 @@ enum SpecialKeys {
 struct VskNote {
     int         m_tempo;            // テンポ
     int         m_octave;           // オクターブ
+    uint8_t     m_LR;               // 左右 (left/right)
     int         m_key;              // キー
     bool        m_dot;              // 付点
     float       m_length;           // 長さ
@@ -63,13 +64,14 @@ struct VskNote {
     int         m_reg;              // レジスタのアドレス
     int         m_data;             // 汎用データ
 
-    VskNote(int tempo, int octave, int note,
+    VskNote(int tempo, int octave, uint8_t LR, int note,
             bool dot = false, float length = 24.0f, char sign = 0,
             float volume = 8.0f, int quantity = 8,
             bool and_ = false, int reg = -1, int data = -1)
     {
         m_tempo = tempo;
         m_octave = octave;
+        m_LR = LR;
         m_dot = dot;
         m_length = length;
         m_sign = sign;
@@ -100,6 +102,7 @@ struct VskSoundSetting {
     float               m_volume;   // 音量 (0～15)
     int                 m_quantity; // 音符の長さの割合 (0～8)
     int                 m_tone;     // 音色
+    uint8_t             m_LR;       // 左右 (left/right)
     YM2203_Timbre       m_timbre;   // see YM2203_Timbre
 
     VskSoundSetting(int tempo = 120, int octave = 4 - 1, float length = 24,
@@ -110,6 +113,7 @@ struct VskSoundSetting {
         m_volume = 8;
         m_quantity = 8;
         m_tone = tone;
+        m_LR = 0x3;
     }
 
     void reset() {
@@ -120,6 +124,7 @@ struct VskSoundSetting {
         m_volume = 8;
         m_quantity = 8;
         m_tone = 0;
+        m_LR = 0x3;
     }
 };
 
@@ -161,7 +166,7 @@ struct VskPhrase {
     }
     void add_note(char note, bool dot, float length, char sign, int quantity, bool and_) {
         m_notes.emplace_back(
-            m_setting.m_tempo, m_setting.m_octave,
+            m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
             note, dot, length, sign, m_setting.m_volume,
             quantity, and_);
     }
@@ -169,7 +174,7 @@ struct VskPhrase {
     // スペシャルアクションを追加
     void add_action_node(char note, int action_no) {
         m_notes.emplace_back(
-            m_setting.m_tempo, m_setting.m_octave,
+            m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, action_no);
     }
@@ -177,7 +182,7 @@ struct VskPhrase {
     // 音色を追加
     void add_tone(char note, int tone_no) {
         m_notes.emplace_back(
-            m_setting.m_tempo, m_setting.m_octave,
+            m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, tone_no);
     }
@@ -185,7 +190,7 @@ struct VskPhrase {
     // レジスタ書き込みを追加
     void add_reg(char note, int reg, int data) {
         m_notes.emplace_back(
-            m_setting.m_tempo, m_setting.m_octave,
+            m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, reg, data);
     }
@@ -193,7 +198,7 @@ struct VskPhrase {
     // 波形の間隔を追加
     void add_envelop_interval(char note, int data) {
         m_notes.emplace_back(
-            m_setting.m_tempo, m_setting.m_octave,
+            m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, data);
     }
@@ -201,7 +206,7 @@ struct VskPhrase {
     // 波形の種類を追加
     void add_envelop_type(char note, int data) {
         m_notes.emplace_back(
-            m_setting.m_tempo, m_setting.m_octave,
+            m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
             note, false, 0.0f, 0, m_setting.m_volume,
             m_setting.m_quantity, false, -1, data);
     }
@@ -223,7 +228,7 @@ struct VskPhrase {
         if (key == 96) {
             key = 0;
         }
-        VskNote note(m_setting.m_tempo, 0, 0, dot, length, sign,
+        VskNote note(m_setting.m_tempo, 0, m_setting.m_LR, 0, dot, length, sign,
                      m_setting.m_volume, quantity);
         note.m_key = key;
         m_notes.push_back(note);

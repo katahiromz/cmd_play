@@ -363,11 +363,11 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
     uint32_t isample = 0;
     if (m_setting.m_fm) { // FM sound?
         int ch = FM_CH1;
+        VskLFOCtrl lc;
 
         auto& timbre = m_setting.m_timbre;
         timbre.set(ym2203_tone_table[m_setting.m_tone]);
         ym.set_timbre(ch, &timbre);
-        VskLFOCtrl lc;
 
         for (auto& note : m_notes) { // For each note
             if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
@@ -400,6 +400,15 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
                 auto type = note.m_data;
                 m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
                 continue;
+            }
+
+            // Set LR
+            auto LR = note.m_LR;
+            auto pms = timbre.pms;
+            for (int i = 0; i < 3; ++i) {
+                auto ams = timbre.ams[i];
+                uint8_t value = (uint8_t)((LR << 6) | (ams << 4) | pms);
+                ym.write_reg(0xB4 + i, value);
             }
 
             if (note.m_key != KEY_SPECIAL_REST) { // Not special rest?
