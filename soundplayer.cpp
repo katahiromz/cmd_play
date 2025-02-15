@@ -363,11 +363,13 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
     uint32_t isample = 0;
     if (m_setting.m_fm) { // FM sound?
         int ch = FM_CH1;
-        VskLFOCtrl lc;
 
         auto& timbre = m_setting.m_timbre;
         timbre.set(ym2203_tone_table[m_setting.m_tone]);
         ym.set_timbre(ch, &timbre);
+
+        VskLFOCtrl lc;
+        lc.init_for_timbre(&timbre);
 
         for (auto& note : m_notes) { // For each note
             if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
@@ -402,7 +404,7 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
                 continue;
             }
 
-            // Set LR
+            // 左右を設定する
             auto LR = note.m_LR;
             auto pms = timbre.pms;
             for (int i = 0; i < 3; ++i) {
