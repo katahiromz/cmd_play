@@ -509,7 +509,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
 // SSG音源で音楽再生
 VSK_SOUND_ERR vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool stereo)
 {
-    assert(strs.size() < VSK_MAX_CHANNEL);
+    assert(strs.size() <= VSK_MAX_CHANNEL);
     size_t iChannel = 0;
 
     // add phrases to block
@@ -547,7 +547,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool st
 // FM+SSG音源で音楽再生
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool stereo)
 {
-    assert(strs.size() < VSK_MAX_CHANNEL);
+    assert(strs.size() <= VSK_MAX_CHANNEL);
     size_t iChannel = 0;
 
     // add phrases to block
@@ -592,7 +592,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, 
 // FM音源で音楽再生
 VSK_SOUND_ERR vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool stereo)
 {
-    assert(strs.size() < VSK_MAX_CHANNEL);
+    assert(strs.size() <= VSK_MAX_CHANNEL);
     size_t iChannel = 0;
 
     // add phrases to block
@@ -630,7 +630,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool ste
 // SSG音源で音楽保存
 VSK_SOUND_ERR vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
-    assert(strs.size() < VSK_MAX_CHANNEL);
+    assert(strs.size() <= VSK_MAX_CHANNEL);
     size_t iChannel = 0;
 
     // add phrases to block
@@ -668,7 +668,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, co
 // FM+SSG音源で音楽保存
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
-    assert(strs.size() < VSK_MAX_CHANNEL);
+    assert(strs.size() <= VSK_MAX_CHANNEL);
     size_t iChannel = 0;
 
     // add phrases to block
@@ -713,7 +713,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& s
 // FM音源で音楽保存
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo)
 {
-    assert(strs.size() < VSK_MAX_CHANNEL);
+    assert(strs.size() <= VSK_MAX_CHANNEL);
     size_t iChannel = 0;
 
     // add phrases to block

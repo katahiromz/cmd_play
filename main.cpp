@@ -400,7 +400,7 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         if (arg[0] == '#')
         {
             m_audio_mode = _wtoi(&arg[1]);
-            if (!(0 <= m_audio_mode && m_audio_mode <= 4))
+            if (!(0 <= m_audio_mode && m_audio_mode <= 5))
             {
                 my_puts(get_text(IDT_MODE_OUT_OF_RANGE), stderr);
                 return RET_BAD_CMDLINE;
@@ -449,76 +449,63 @@ RET CMD_PLAY::run()
 
     if (m_output_file.size())
     {
+        VSK_SOUND_ERR err;
         switch (m_audio_mode)
         {
         case 0:
-            if (VSK_SOUND_ERR ret = vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
-            {
-                switch (ret)
-                {
-                case VSK_SOUND_ERR_SUCCESS:
-                    break;
-                case VSK_SOUND_ERR_ILLEGAL:
-                    my_puts(get_text(IDT_BAD_CALL), stderr);
-                    do_beep();
-                    vsk_sound_exit();
-                    return RET_BAD_CALL;
-                case VSK_SOUND_ERR_IO_ERROR:
-                    my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
-                    do_beep();
-                    vsk_sound_exit();
-                    return RET_CANT_OPEN_FILE;
-                }
-            }
+            err = vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo);
             break;
         case 2:
         case 3:
         case 4:
-            if (VSK_SOUND_ERR ret = vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo))
-            {
-                switch (ret)
-                {
-                case VSK_SOUND_ERR_SUCCESS:
-                    break;
-                case VSK_SOUND_ERR_ILLEGAL:
-                    my_puts(get_text(IDT_BAD_CALL), stderr);
-                    do_beep();
-                    vsk_sound_exit();
-                    return RET_BAD_CALL;
-                case VSK_SOUND_ERR_IO_ERROR:
-                    my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
-                    do_beep();
-                    vsk_sound_exit();
-                    return RET_CANT_OPEN_FILE;
-                }
-            }
+            err = vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo);
+            break;
+        case 5:
+            err = vsk_sound_cmd_play_fm_save(m_str_to_play, m_output_file.c_str(), m_stereo);
             break;
         }
-        return RET_SUCCESS;
-    }
 
-    switch (m_audio_mode)
-    {
-    case 0:
-        if (VSK_SOUND_ERR ret = vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo))
+        switch (err)
         {
+        case VSK_SOUND_ERR_SUCCESS:
+            break;
+        case VSK_SOUND_ERR_ILLEGAL:
             my_puts(get_text(IDT_BAD_CALL), stderr);
             do_beep();
             vsk_sound_exit();
             return RET_BAD_CALL;
+        case VSK_SOUND_ERR_IO_ERROR:
+            my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
+            do_beep();
+            vsk_sound_exit();
+            return RET_CANT_OPEN_FILE;
         }
+
+        return RET_SUCCESS;
+    }
+
+    VSK_SOUND_ERR err;
+    switch (m_audio_mode)
+    {
+    case 0:
+        err = vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo);
         break;
     case 2:
     case 3:
     case 4:
-        if (VSK_SOUND_ERR ret = vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo))
-        {
-            my_puts(get_text(IDT_BAD_CALL), stderr);
-            do_beep();
-            vsk_sound_exit();
-            return RET_BAD_CALL;
-        }
+        err = vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo);
         break;
+    case 5:
+        err = vsk_sound_cmd_play_fm(m_str_to_play, m_stereo);
+        break;
+    }
+
+    if (err)
+    {
+        my_puts(get_text(IDT_BAD_CALL), stderr);
+        do_beep();
+        vsk_sound_exit();
+        return RET_BAD_CALL;
     }
 
     vsk_sound_wait(-1);
