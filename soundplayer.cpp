@@ -600,10 +600,8 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
     values.resize(source_num_samples * num_channels);
 
     // 波形データを構築
+    VSK_PCM16_VALUE prev_value = 0;
     for (size_t ivalue = 0; ivalue < source_num_values; ++ivalue) {
-        if (!stereo && (ivalue & 1))
-            continue; // モノラルでivalueが奇数の場合は無視
-
         // Mixing
         int32_t value = 0;
         for (size_t i = 0; i < raw_data.size(); ++i) {
@@ -617,12 +615,15 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
         else if (value > std::numeric_limits<VSK_PCM16_VALUE>::max())
             value = std::numeric_limits<VSK_PCM16_VALUE>::max();
 
-        // 作成する波形がステレオでなければモノラルにする。転送先に格納
+        // 転送先に格納
         int32_t sample_value = ((ivalue < data_size) ? value : 0);
-        if (stereo) {
-            values[ivalue] = sample_value;
-        } else {
-            values[ivalue / 2] = sample_value;
+        if (stereo) { // ステレオの場合
+            values[ivalue] = (VSK_PCM16_VALUE)sample_value;
+        } else { // モノラルの場合
+            if (ivalue & 1) // 奇数の場合
+                values[ivalue >> 1] = (VSK_PCM16_VALUE)((prev_value + sample_value) >> 1);
+            else // 偶数の場合
+                prev_value = sample_value;
         }
     }
 
