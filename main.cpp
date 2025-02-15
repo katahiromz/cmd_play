@@ -91,7 +91,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -D変数名=値            変数に代入。\n")
                 TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
                 TEXT("  -stopm                 音楽を止めて設定をリセット。\n")
-                TEXT("  -stereo                音をステレオにする。\n")
+                TEXT("  -mono                  音をモノラルにする。\n")
                 TEXT("  -help                  このメッセージを表示する。\n")
                 TEXT("  -version               バージョン情報を表示する。\n")
                 TEXT("\n")
@@ -120,7 +120,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -DVAR=VALUE            Assign to a variable.\n")
                 TEXT("  -save_wav output.wav   Save as WAV file.\n")
                 TEXT("  -stopm                 Stop music and reset settings.\n")
-                TEXT("  -stereo                Make sound stereo.\n")
+                TEXT("  -mono                  Make sound mono.\n")
                 TEXT("  -help                  Display this message.\n")
                 TEXT("  -version               Display version info.\n")
                 TEXT("\n")
@@ -257,7 +257,7 @@ struct CMD_PLAY
     std::wstring m_output_file;
     int m_audio_mode = 2;
     bool m_stopm = false;
-    bool m_stereo = false;
+    bool m_stereo = true;
 
     RET parse_cmd_line(int argc, wchar_t **argv);
     RET run();
@@ -379,9 +379,9 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             continue;
         }
 
-        if (_wcsicmp(arg, L"-stereo") == 0 || _wcsicmp(arg, L"--stereo") == 0)
+        if (_wcsicmp(arg, L"-mono") == 0 || _wcsicmp(arg, L"--mono") == 0)
         {
-            m_stereo = true;
+            m_stereo = false;
             continue;
         }
 
@@ -441,8 +441,11 @@ RET CMD_PLAY::run()
         return RET_BAD_SOUND_INIT;
     }
 
-    if (!m_stopm)
+    if (m_stopm) {
+        // TODO: Stop music
+    } else {
         load_settings();
+    }
 
     if (m_output_file.size())
     {
