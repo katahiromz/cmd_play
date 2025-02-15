@@ -290,7 +290,7 @@ bool CMD_PLAY::load_settings()
 
         DWORD cbValue = size;
         error = RegQueryValueExW(hKey, s_setting_key[ch], NULL, NULL, setting[ch].data(), &cbValue);
-        if (!error)
+        if (!error && cbValue == size)
             vsk_cmd_play_set_setting(ch, setting[ch]);
     }
 
