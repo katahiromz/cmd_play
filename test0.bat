@@ -1,1 +1,1 @@
-cmd_play -reset "CDEFEDC"
+cmd_play.exe -stopm "CDEFEDC"

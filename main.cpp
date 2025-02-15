@@ -90,7 +90,7 @@ LPCTSTR get_text(INT id)
                 TEXT("オプション:\n")
                 TEXT("  -D変数名=値            変数に代入。\n")
                 TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
-                TEXT("  -reset                 設定をリセット。\n")
+                TEXT("  -stopm                 音楽を止めて設定をリセット。\n")
                 TEXT("  -stereo                音をステレオにする。\n")
                 TEXT("  -help                  このメッセージを表示する。\n")
                 TEXT("  -version               バージョン情報を表示する。\n")
@@ -119,7 +119,7 @@ LPCTSTR get_text(INT id)
                 TEXT("Options:\n")
                 TEXT("  -DVAR=VALUE            Assign to a variable.\n")
                 TEXT("  -save_wav output.wav   Save as WAV file.\n")
-                TEXT("  -reset                 Reset settings.\n")
+                TEXT("  -stopm                 Stop music and reset settings.\n")
                 TEXT("  -stereo                Make sound stereo.\n")
                 TEXT("  -help                  Display this message.\n")
                 TEXT("  -version               Display version info.\n")
@@ -256,7 +256,7 @@ struct CMD_PLAY
     std::vector<std::string> m_str_to_play;
     std::wstring m_output_file;
     int m_audio_mode = 2;
-    bool m_reset = false;
+    bool m_stopm = false;
     bool m_stereo = false;
 
     RET parse_cmd_line(int argc, wchar_t **argv);
@@ -373,9 +373,9 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
         }
 
-        if (_wcsicmp(arg, L"-reset") == 0 || _wcsicmp(arg, L"--reset") == 0)
+        if (_wcsicmp(arg, L"-stopm") == 0 || _wcsicmp(arg, L"--stopm") == 0)
         {
-            m_reset = true;
+            m_stopm = true;
             continue;
         }
 
@@ -441,7 +441,7 @@ RET CMD_PLAY::run()
         return RET_BAD_SOUND_INIT;
     }
 
-    if (!m_reset)
+    if (!m_stopm)
         load_settings();
 
     if (m_output_file.size())
