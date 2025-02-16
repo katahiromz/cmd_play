@@ -517,6 +517,7 @@ RET CMD_PLAY::run()
     return RET_SUCCESS;
 }
 
+#ifdef CMD_PLAY_EXE
 static bool g_canceled = false; // Ctrl+Cなどが押されたか？
 
 static BOOL WINAPI HandlerRoutine(DWORD signal)
@@ -603,3 +604,4 @@ int main(void)
     std::printf("Ok\n");
     return ret;
 }
+#endif  // def CMD_PLAY_EXE
