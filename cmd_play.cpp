@@ -17,6 +17,15 @@ extern std::shared_ptr<VskSoundPlayer> vsk_sound_player;
 VskSoundSetting vsk_fm_sound_settings[VSK_MAX_CHANNEL];
 VskSoundSetting vsk_ssg_sound_settings[VSK_MAX_CHANNEL];
 
+// 設定のリセット
+void vsk_cmd_play_reset_settings(void)
+{
+    for (auto& item : vsk_fm_sound_settings)
+        item = VskSoundSetting();
+    for (auto& item : vsk_ssg_sound_settings)
+        item = VskSoundSetting();
+}
+
 // 設定のサイズ
 size_t vsk_cmd_play_get_setting_size(void)
 {

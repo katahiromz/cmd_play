@@ -272,47 +272,103 @@ static LPCWSTR s_setting_key[NUM_SETTINGS] = {
     L"setting6", L"setting7", L"setting8", L"setting9", L"setting10", L"setting11",
 };
 
+// レジストリから設定を読み込む
 bool CMD_PLAY::load_settings()
 {
+    // レジストリを開く
     HKEY hKey;
-
     LSTATUS error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Katayama Hirofumi MZ\\cmd_play", 0,
                                   KEY_READ, &hKey);
     if (error)
         return false;
 
+    // 音声の設定のサイズ
     size_t size = vsk_cmd_play_get_setting_size();
 
-    std::vector<uint8_t> setting[NUM_SETTINGS];
+    // 設定項目を読み込む
+    std::vector<uint8_t> setting;
     for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
-        setting[ch].resize(size);
+        setting.resize(size);
 
         DWORD cbValue = size;
-        error = RegQueryValueExW(hKey, s_setting_key[ch], NULL, NULL, setting[ch].data(), &cbValue);
+        error = RegQueryValueExW(hKey, s_setting_key[ch], NULL, NULL, setting.data(), &cbValue);
         if (!error && cbValue == size)
-            vsk_cmd_play_set_setting(ch, setting[ch]);
+            vsk_cmd_play_set_setting(ch, setting);
     }
 
+    // 変数項目を読み込む
+    for (DWORD dwIndex = 0; ; ++dwIndex)
+    {
+        CHAR szName[MAX_PATH], szValue[512];
+        DWORD cchName = _countof(szName);
+        DWORD cbValue = sizeof(szValue);
+        error = RegEnumValueA(hKey, dwIndex, szName, &cchName, NULL, NULL, (BYTE *)szValue, &cbValue);
+        szName[_countof(szName) - 1] = 0; // Avoid buffer overrun
+        szValue[_countof(szValue) - 1] = 0; // Avoid buffer overrun
+        if (error)
+            break;
+
+        if (std::memcmp(szName, "VAR_", 4 * sizeof(CHAR)) != 0)
+            continue;
+
+        CharUpperA(szName);
+        CharUpperA(szValue);
+        g_variables[&szName[4]] = szValue;
+    }
+
+    // レジストリを閉じる
     RegCloseKey(hKey);
 
     return true;
 }
 
+// レジストリへ設定を書き込む
 bool CMD_PLAY::save_settings()
 {
+    // レジストリを作成
     HKEY hKey;
     LSTATUS error = RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Katayama Hirofumi MZ\\cmd_play", 0,
-                                    NULL, 0, KEY_WRITE, NULL, &hKey, NULL);
+                                    NULL, 0, KEY_READ | KEY_WRITE, NULL, &hKey, NULL);
     if (error)
         return false;
 
+    // 音声の設定を書き込む
     for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
         std::vector<uint8_t> setting;
         vsk_cmd_play_get_setting(ch, setting);
         RegSetValueExW(hKey, s_setting_key[ch], 0, REG_BINARY, setting.data(), (DWORD)setting.size());
     }
+
+    // レジストリの変数項目を消す
+retry:
+    for (DWORD dwIndex = 0; ; ++dwIndex)
+    {
+        CHAR szName[MAX_PATH];
+        DWORD cchName = _countof(szName);
+        error = RegEnumValueA(hKey, dwIndex, szName, &cchName, NULL, NULL, NULL, NULL);
+        szName[_countof(szName) - 1] = 0; // Avoid buffer overrun
+        if (error)
+            break;
+
+        if (std::memcmp(szName, "VAR_", 4 * sizeof(CHAR)) != 0)
+            continue;
+
+        RegDeleteValueA(hKey, szName);
+        goto retry;
+    }
+
+    // 新しい変数項目群を書き込む
+    for (auto& pair : g_variables)
+    {
+        std::string name = "VAR_";
+        name += pair.first;
+        DWORD cbValue = (pair.second.size() + 1) * sizeof(CHAR);
+        RegSetValueExA(hKey, name.c_str(), 0, REG_SZ, (BYTE *)pair.second.c_str(), cbValue);
+    }
+
+    // レジストリを閉じる
     RegCloseKey(hKey);
 
     return true;
@@ -441,10 +497,13 @@ RET CMD_PLAY::run()
         return RET_BAD_SOUND_INIT;
     }
 
-    if (m_stopm) {
-        // TODO: Stop music
-    } else {
-        load_settings();
+    load_settings();
+
+    if (m_stopm) // 音楽を止めて設定をリセットする
+    {
+        // TODO: 音楽を止める
+        g_variables.clear();
+        vsk_cmd_play_reset_settings();
     }
 
     if (m_output_file.size())
@@ -472,11 +531,13 @@ RET CMD_PLAY::run()
         case VSK_SOUND_ERR_ILLEGAL:
             my_puts(get_text(IDT_BAD_CALL), stderr);
             do_beep();
+            save_settings();
             vsk_sound_exit();
             return RET_BAD_CALL;
         case VSK_SOUND_ERR_IO_ERROR:
             my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
             do_beep();
+            save_settings();
             vsk_sound_exit();
             return RET_CANT_OPEN_FILE;
         }
@@ -504,6 +565,7 @@ RET CMD_PLAY::run()
     {
         my_puts(get_text(IDT_BAD_CALL), stderr);
         do_beep();
+        save_settings();
         vsk_sound_exit();
         return RET_BAD_CALL;
     }
@@ -511,7 +573,6 @@ RET CMD_PLAY::run()
     vsk_sound_wait(-1);
 
     save_settings();
-
     vsk_sound_exit();
 
     return RET_SUCCESS;

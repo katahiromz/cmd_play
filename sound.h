@@ -22,6 +22,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_sing(const wchar_t *str, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_sing_save(const wchar_t *wstr, const wchar_t *filename, bool stereo);
+void vsk_cmd_sing_reset_settings(void);
 size_t vsk_cmd_sing_get_setting_size(void);
 bool vsk_cmd_sing_get_setting(std::vector<uint8_t>& data);
 bool vsk_cmd_sing_set_setting(const std::vector<uint8_t>& data);
@@ -33,6 +34,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool ste
 VSK_SOUND_ERR vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo);
+void vsk_cmd_play_reset_settings(void);
 size_t vsk_cmd_play_get_setting_size(void);
 bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data);
 bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data);

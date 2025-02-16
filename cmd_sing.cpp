@@ -13,6 +13,12 @@ extern std::shared_ptr<VskSoundPlayer> vsk_sound_player;
 // CMD SINGの現在の設定
 static VskSoundSetting vsk_cmd_sing_settings;
 
+// 設定をリセット
+void vsk_cmd_sing_reset_settings(void)
+{
+    vsk_cmd_sing_settings = VskSoundSetting();
+}
+
 // 設定のサイズ
 size_t vsk_cmd_sing_get_setting_size(void)
 {
