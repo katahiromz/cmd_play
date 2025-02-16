@@ -125,6 +125,7 @@ struct VskSoundSetting {
         m_quantity = 8;
         m_tone = 0;
         m_LR = 0x3;
+        m_timbre = ym2203_tone_table[0];
     }
 };
 
@@ -135,7 +136,7 @@ struct VskSoundPlayer;
 
 struct VskPhrase {
     float                               m_goal = 0;     // 演奏終了時刻（秒）
-    VskSoundSetting                     m_setting;      // 音声設定
+    VskSoundSetting&                    m_setting;      // 音声設定
     std::vector<VskNote>                m_notes;        // 音符、休符、その他の何か
 
     VskSoundPlayer*                     m_player;       // サウンドプレーヤー
@@ -145,8 +146,7 @@ struct VskPhrase {
 
     size_t                              m_remaining_actions;    // 残りのスペシャルアクションの個数
 
-    VskPhrase() { }
-    VskPhrase(const VskSoundSetting& setting) : m_setting(setting) { }
+    VskPhrase(VskSoundSetting& setting) : m_setting(setting) { }
 
     // 音符を追加
     void add_note(char note) {
@@ -236,7 +236,7 @@ struct VskPhrase {
 
     void schedule_special_action(float gate, int action_no);
     void execute_special_actions();
-    void realize(VskSoundPlayer* player, VSK_PCM16_VALUE*& data, size_t *pdata_size);
+    void realize(VskSoundPlayer* player, int ich, VSK_PCM16_VALUE*& data, size_t *pdata_size);
 
 protected:
     void rescan_notes();

@@ -341,8 +341,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str, bool stereo)
         return VSK_SOUND_ERR_ILLEGAL; // 失敗
 
     // フレーズを作成する
-    auto phrase = std::make_shared<VskPhrase>();
-    phrase->m_setting = vsk_cmd_sing_settings;
+    auto phrase = std::make_shared<VskPhrase>(vsk_cmd_sing_settings);
     phrase->m_setting.m_fm = false;
     if (!vsk_phrase_from_sing_items(phrase, items))
         return VSK_SOUND_ERR_ILLEGAL; // 失敗
@@ -368,8 +367,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename, 
         return VSK_SOUND_ERR_ILLEGAL; // 失敗
 
     // フレーズを作成する
-    auto phrase = std::make_shared<VskPhrase>();
-    phrase->m_setting = vsk_cmd_sing_settings;
+    auto phrase = std::make_shared<VskPhrase>(vsk_cmd_sing_settings);
     phrase->m_setting.m_fm = false;
     if (!vsk_phrase_from_sing_items(phrase, items))
         return VSK_SOUND_ERR_ILLEGAL; // 失敗

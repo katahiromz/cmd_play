@@ -345,7 +345,7 @@ void VskPhrase::calc_gate_and_goal() {
 }
 
 // 波形を実現する（ステレオ）
-void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *pdata_size) {
+void VskPhrase::realize(VskSoundPlayer *player, int ich, VSK_PCM16_VALUE*& data, size_t *pdata_size) {
     calc_gate_and_goal();
     rescan_notes();
 
@@ -362,10 +362,9 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
 
     uint32_t isample = 0;
     if (m_setting.m_fm) { // FM sound?
-        int ch = FM_CH1;
+        int ch = FM_CH1 + ich; // Channel
 
         auto& timbre = m_setting.m_timbre;
-        timbre.set(ym2203_tone_table[m_setting.m_tone]);
         ym.set_timbre(ch, &timbre);
 
         VskLFOCtrl lc;
@@ -380,7 +379,7 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
             if (note.m_key == KEY_TONE) { // Tone change?
                 const auto new_tone = note.m_data;
                 assert((0 <= new_tone) && (new_tone < NUM_TONES));
-                timbre.set(ym2203_tone_table[new_tone]);
+                timbre = ym2203_tone_table[new_tone];
                 ym.set_timbre(ch, &timbre);
                 lc.init_for_timbre(&timbre);
                 continue;
@@ -464,7 +463,7 @@ void VskPhrase::realize(VskSoundPlayer *player, VSK_PCM16_VALUE*& data, size_t *
             isample += nsamples;
         }
     } else { // SSG sound?
-        int ch = SSG_CH_A;
+        int ch = SSG_CH_A + ich; // Channel
 
         ym.set_tone_or_noise(ch, TONE_MODE);
 
@@ -585,14 +584,16 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
     const int source_num_channels = 2;
     std::vector<VSK_PCM16_VALUE*> raw_data;
     std::vector<size_t> data_sizes;
+    int ich = 0;
     for (auto& phrase : block) {
         if (phrase) {
             VSK_PCM16_VALUE *data;
             size_t data_size;
-            phrase->realize(this, data, &data_size);
+            phrase->realize(this, ich, data, &data_size);
             raw_data.push_back(data);
             data_sizes.push_back(data_size);
         }
+        ++ich;
     }
 
     // 最大のデータサイズを計算

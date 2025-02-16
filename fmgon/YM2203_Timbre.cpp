@@ -8,6 +8,11 @@
 
 //////////////////////////////////////////////////////////////////////////////
 
+YM2203_Timbre::YM2203_Timbre()
+{
+    set(ym2203_tone_table[0]);
+}
+
 YM2203_Timbre::YM2203_Timbre(const int16_t array[5][10]) {
     set(array);
 }

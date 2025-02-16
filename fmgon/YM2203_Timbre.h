@@ -63,7 +63,7 @@ struct YM2203_Timbre {
     int8_t      amd;                    // Amplitude Modulation Depth (AMD)
     uint8_t     pms;                    // Pitch Modulation Sensitivity (PMS)
 
-    YM2203_Timbre() { }
+    YM2203_Timbre();
     YM2203_Timbre(const int16_t array[5][10]);
     void set(const int16_t array[5][10]);
 
