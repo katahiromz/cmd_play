@@ -107,6 +107,11 @@ void YM2203_Timbre::setKS(uint8_t op1, uint8_t op2, uint8_t op3, uint8_t op4) {
 
 //////////////////////////////////////////////////////////////////////////////
 
+// 100 N=???
+// 110 DIM V%(4, 9):CMD VOICE COPY N, V%
+// 120 FOR I=0 TO 4:FOR J=0 TO 9
+// 130 PRINT V%(I, J);",";
+// 140 NEXT J:PRINT:NEXT I
 int16_t ym2203_tone_table[NUM_TONES][5][10] = {
     // @0 Default VOICE
     {
@@ -574,7 +579,7 @@ int16_t ym2203_tone_table[NUM_TONES][5][10] = {
     },
     // @58 SNARE DRUM
     {
-        {60, 16, 0, 0, 0, 0, 0, 0, 0, 0},
+        {60, 15, 0, 0, 0, 0, 0, 0, 0, 0},
         {31, 0, 0, 8, 0, 14, 0, 15, 0, 0},
         {31, 15, 17, 12, 2, 17, 0, 0, 0, 0},
         {31, 24, 0, 8, 11, 19, 0, 0, 0, 0},
