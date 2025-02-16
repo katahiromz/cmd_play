@@ -107,10 +107,10 @@ void YM2203_Timbre::setKS(uint8_t op1, uint8_t op2, uint8_t op3, uint8_t op4) {
 
 //////////////////////////////////////////////////////////////////////////////
 
-// 100 N=???
-// 110 DIM V%(4, 9):CMD VOICE COPY N, V%
+// 100 N=???:NEW CMD
+// 110 DIM V%(4,9):CMD VOICE COPY N,V%
 // 120 FOR I=0 TO 4:FOR J=0 TO 9
-// 130 PRINT V%(I, J);",";
+// 130 PRINT V%(I,J);",";
 // 140 NEXT J:PRINT:NEXT I
 int16_t ym2203_tone_table[NUM_TONES][5][10] = {
     // @0 Default VOICE
