@@ -254,6 +254,7 @@ struct CMD_PLAY
     bool m_help = false;
     bool m_version = false;
     std::vector<std::string> m_str_to_play;
+    std::map<VskString, VskString> m_variables;
     std::wstring m_output_file;
     int m_audio_mode = 2;
     bool m_stopm = false;
@@ -411,7 +412,7 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             auto value = str.substr(ich + 1);
             CharUpperA(&var[0]);
             CharUpperA(&value[0]);
-            g_variables[var] = value;
+            m_variables[var] = value;
             continue;
         }
 
@@ -498,6 +499,10 @@ RET CMD_PLAY::run()
     }
 
     load_settings();
+
+    // g_variablesをm_variablesで上書き
+    for (auto& pair : m_variables)
+        g_variables[pair.first] = pair.second;
 
     if (m_stopm) // 音楽を止めて設定をリセットする
     {
