@@ -259,6 +259,7 @@ struct CMD_PLAY
     int m_audio_mode = 2;
     bool m_stopm = false;
     bool m_stereo = true;
+    bool m_no_reg = false;
 
     RET parse_cmd_line(int argc, wchar_t **argv);
     RET run();
@@ -276,6 +277,9 @@ static LPCWSTR s_setting_key[NUM_SETTINGS] = {
 // レジストリから設定を読み込む
 bool CMD_PLAY::load_settings()
 {
+    if (m_no_reg)
+        return false;
+
     // レジストリを開く
     HKEY hKey;
     LSTATUS error = RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Katayama Hirofumi MZ\\cmd_play", 0,
@@ -327,6 +331,9 @@ bool CMD_PLAY::load_settings()
 // レジストリへ設定を書き込む
 bool CMD_PLAY::save_settings()
 {
+    if (m_no_reg)
+        return false;
+
     // レジストリを作成
     HKEY hKey;
     LSTATUS error = RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Katayama Hirofumi MZ\\cmd_play", 0,
@@ -448,9 +455,17 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             continue;
         }
 
+        // hidden feature
         if (_wcsicmp(arg, L"-no-beep") == 0 || _wcsicmp(arg, L"--no-beep") == 0)
         {
             g_no_beep = true;
+            continue;
+        }
+
+        // hidden feature
+        if (_wcsicmp(arg, L"-no-reg") == 0 || _wcsicmp(arg, L"--no-reg") == 0)
+        {
+            m_no_reg = true;
             continue;
         }
 
