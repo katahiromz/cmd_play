@@ -521,15 +521,17 @@ RET CMD_PLAY::run()
 
     load_settings();
 
-    // g_variablesをm_variablesで上書き
-    for (auto& pair : m_variables)
-        g_variables[pair.first] = pair.second;
-
     if (m_stopm) // 音楽を止めて設定をリセットする
     {
         // TODO: 音楽を止める
         g_variables.clear();
         vsk_cmd_play_reset_settings();
+    }
+
+    // g_variablesをm_variablesで上書き
+    for (auto& pair : m_variables)
+    {
+        g_variables[pair.first] = pair.second;
     }
 
     if (m_output_file.size())
