@@ -213,10 +213,10 @@ void YM2203::set_tone_or_noise(int ch, int mode) {
     }
 }
 
-void YM2203::set_timbre(int ch, YM2203_Timbre *timbre) {
+void YM2203::set_fm_timbre(int fm_ich, YM2203_Timbre *timbre) {
     static const uint8_t OP_OFFSET[] = {0x00, 0x08, 0x04, 0x0C};
 
-    if ((ch < 0) || (ch >= FM_CH_NUM)) {
+    if ((fm_ich < 0) || (fm_ich >= FM_CH_NUM)) {
         assert(0);
         return;
     }
@@ -238,7 +238,7 @@ void YM2203::set_timbre(int ch, YM2203_Timbre *timbre) {
         }
         uint8_t multiple = timbre->multiple[op];
         uint8_t keyScale = timbre->keyScale[op];
-        uint8_t offset = (uint8_t)ch + OP_OFFSET[op];
+        uint8_t offset = (uint8_t)fm_ich + OP_OFFSET[op];
 
         addr = ADDR_FM_DETUNE_MULTI + offset;
         data = ((detune & 0x07) << 4) | (multiple & 0x0F);
@@ -265,7 +265,7 @@ void YM2203::set_timbre(int ch, YM2203_Timbre *timbre) {
         write_reg(addr, data);
     }
 
-    addr = ADDR_FM_FB_ALGORITHM + ch;
+    addr = ADDR_FM_FB_ALGORITHM + fm_ich;
     data = (((timbre->feedback & 0x07) << 3) | (timbre->algorithm & 0x07));
     write_reg(addr, data);
 
@@ -278,7 +278,7 @@ void YM2203::set_timbre(int ch, YM2203_Timbre *timbre) {
     //data = ...;
     //write_reg(addr, data);
 
-    m_fm_timbres[ch] = timbre;
-} // YM2203::set_timbre
+    m_fm_timbres[fm_ich] = timbre;
+} // YM2203::set_fm_timbre
 
 //////////////////////////////////////////////////////////////////////////////

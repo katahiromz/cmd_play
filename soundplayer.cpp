@@ -365,7 +365,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
         int ch = FM_CH1 + ich; // Channel
 
         auto& timbre = m_setting.m_timbre;
-        ym.set_timbre(ch, &timbre);
+        ym.set_fm_timbre(ich, &timbre);
 
         VskLFOCtrl lc;
         lc.init_for_timbre(&timbre);
@@ -380,7 +380,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
                 const auto new_tone = note.m_data;
                 assert((0 <= new_tone) && (new_tone < NUM_TONES));
                 timbre = ym2203_tone_table[new_tone];
-                ym.set_timbre(ch, &timbre);
+                ym.set_fm_timbre(ich, &timbre);
                 lc.init_for_timbre(&timbre);
                 continue;
             }

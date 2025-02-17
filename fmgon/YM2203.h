@@ -117,7 +117,7 @@ struct YM2203 {
     void set_tone_or_noise(int ch, int mode);
 
     // FM APIs
-    void set_timbre(int ch, YM2203_Timbre *timbre);
+    void set_fm_timbre(int fm_ich, YM2203_Timbre *timbre);
 
     void write_reg(uint32_t addr, uint32_t data) {
         m_opna.SetReg(addr, data);
