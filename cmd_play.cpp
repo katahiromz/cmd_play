@@ -2,6 +2,7 @@
 #include "sound.h"
 #include "encoding.h"
 #include "ast.h"
+#include <unordered_set>
 #include <cstdio>
 #include <cassert>
 
@@ -88,6 +89,47 @@ bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data)
     }
 }
 
+// 再帰的に「[変数名]」を変数の値に置き換える関数
+std::string
+vsk_replace_play_placeholders(const std::string& str, std::unordered_set<std::string>& visited) {
+    std::string result = str;
+    size_t start_pos = 0;
+
+    while ((start_pos = result.find("[", start_pos)) != result.npos) {
+        size_t end_pos = result.find("]", start_pos);
+        if (end_pos == std::string::npos)
+            break; // 閉じカッコが見つからない場合は終了
+
+        std::string key = result.substr(start_pos + 1, end_pos - start_pos - 1);
+        CharUpperA(&key[0]);
+        if (visited.find(key) != visited.end()) {
+            // 循環参照を検出した場合はエラーとして処理する
+            throw std::runtime_error("circular reference detected");
+        }
+        visited.insert(key);
+
+        auto it = g_variables.find(key);
+        if (it != g_variables.end()) {
+            // ここで再帰的に置き換えを行う
+            std::string value = vsk_replace_play_placeholders(it->second, visited);
+            result.replace(start_pos, end_pos - start_pos + 1, value);
+            start_pos += value.length(); // 置き換えた後の新しい開始位置に移動
+        } else {
+            result.replace(start_pos, end_pos - start_pos + 1, "");
+        }
+        visited.erase(key);
+    }
+
+    return result;
+}
+
+// 再帰的に「[変数名]」を変数の値に置き換える関数
+std::string vsk_replace_play_placeholders(const std::string& str)
+{
+    std::unordered_set<std::string> visited;
+    return vsk_replace_play_placeholders(str, visited);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // VskPlayItem --- CMD PLAY 用の演奏項目
 
@@ -171,12 +213,10 @@ bool vsk_scan_play_param(const char *& pch, VskPlayItem& item)
     return true;
 } // vsk_scan_play_param
 
-std::string vsk_replace_placeholders2(const std::string& str);
-
 // 演奏項目を評価する
 bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& expr)
 {
-    VskString str = vsk_replace_placeholders2(expr);
+    VskString str = vsk_replace_play_placeholders(expr);
     const char *pch = str.c_str();
     items.clear();
 
