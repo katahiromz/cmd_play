@@ -31,6 +31,20 @@ waveOutProc(
     }
 }
 
+#ifndef VEYSICK
+// ワイド文字列をSJIS文字列に変換
+std::string vsk_sjis_from_wide(const wchar_t *wide)
+{
+    int size = WideCharToMultiByte(932, 0, wide, -1, nullptr, 0, nullptr, nullptr);
+    if (size == 0)
+        return "";
+    std::string str;
+    str.resize(size - 1);
+    WideCharToMultiByte(932, 0, wide, -1, &str[0], size, nullptr, nullptr);
+    return str;
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 
 // リズム音源データのある場所を取得する

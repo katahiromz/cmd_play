@@ -11,6 +11,9 @@ void vsk_sound_stop(void);
 bool vsk_sound_voice_reg(int addr, int data);
 size_t vsk_sound_voice_size(void);
 bool vsk_sound_voice_copy(int tone, std::vector<uint8_t>& data);
+#ifndef VEYSICK
+std::string vsk_sjis_from_wide(const wchar_t *wide);
+#endif
 
 enum VSK_SOUND_ERR
 {
