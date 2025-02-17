@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// fmgengen YM2203 emulator
-// Copyright (C) 2015 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com).
-//////////////////////////////////////////////////////////////////////////////
+// OPNA emulator
+// Copyright (C) 2015-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
 
 #include "fmgon.h"
 #include "YM2203.h"

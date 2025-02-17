@@ -1,10 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
-// fmgengen YM2203 (OPN) emulator
-// Copyright (C) 2015 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com).
-//////////////////////////////////////////////////////////////////////////////
-
-#ifndef FMGENGEN_YM2203_H
-#define FMGENGEN_YM2203_H
+// OPNA emulator
+// Copyright (C) 2015-2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
 
 #include "opna.h"
 #include "YM2203_Timbre.h"
@@ -139,9 +135,5 @@ protected:
     static const uint16_t FM_PITCH_TABLE[KEY_NUM];
     static const uint16_t SSG_PITCH_TABLE[KEY_NUM];
 }; // struct YM2203
-
-//////////////////////////////////////////////////////////////////////////////
-
-#endif  // ndef FMGENGEN_YM2203_H
 
 //////////////////////////////////////////////////////////////////////////////
