@@ -93,7 +93,8 @@ struct YM2203 {
         int adj[4] = {0, 0, 0, 0};
         set_volume(ch, volume, adj);
     }
-    void note_on(int ch);
+    void fm_key_on(int fm_ich);
+    void ssg_key_on(int ssg_ich);
     void note_off(int ch);
 
     bool load_rhythm_data(const char *path) {

@@ -417,7 +417,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
                 if (note.m_key != KEY_REST) { // Has key?
                     ym.set_pitch(ch, note.m_octave, note.m_key);
                     ym.set_volume(ch, int(note.m_volume));
-                    ym.note_on(ch);
+                    ym.fm_key_on(ich);
                 }
 
                 lc.init_for_keyon(&timbre);
@@ -493,7 +493,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
             if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST) {
                 ym.set_pitch(ch, note.m_octave, note.m_key);
                 ym.set_volume(ch, int(note.m_volume));
-                ym.note_on(ch);
+                ym.ssg_key_on(ich);
             }
 
             // render sound

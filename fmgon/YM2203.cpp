@@ -42,34 +42,34 @@ void YM2203::init(uint32_t clock, uint32_t rate, const char* rhythmpath) {
     write_reg(addr, data);
 }
 
-void YM2203::note_on(int ch) {
-    uint32_t addr, data;
-    if ((FM_CH1 <= ch) && (ch <= FM_CH3)) {
-        if (m_fm_timbres[ch] == NULL) {
-            assert(0);
-            return;
-        }
-        addr = ADDR_FM_KEYON;
-        data = (m_fm_timbres[ch]->opMask << 4) | ch;
-        write_reg(addr, data);
-    } else if ((SSG_CH_A <= ch) && (ch <= SSG_CH_C)) {
-        m_ssg_key_on &= ~m_ssg_tone_noise[ch - SSG_CH_A];
-        addr = ADDR_SSG_MIXING;
-        data = m_ssg_key_on;
-        write_reg(addr, data);
-        if (m_ssg_enveloped[ch - SSG_CH_A]) {
-            switch (m_ssg_envelope_type) {
-            case 9: case 15:
-                addr = ADDR_SSG_ENV_TYPE;
-                data = m_ssg_envelope_type;
-                write_reg(addr, data);
-                break;
-            default:
-                break;
-            }
-        }
-    } else {
+void YM2203::fm_key_on(int fm_ich) {
+    assert(0 <= fm_ich && fm_ich < FM_CH_NUM);
+    if (m_fm_timbres[fm_ich] == NULL) {
         assert(0);
+        return;
+    }
+    uint32_t addr = ADDR_FM_KEYON;
+    uint32_t data = (m_fm_timbres[fm_ich]->opMask << 4) | fm_ich;
+    write_reg(addr, data);
+}
+
+void YM2203::ssg_key_on(int ssg_ich)
+{
+    assert(0 <= ssg_ich && ssg_ich < SSG_CH_NUM);
+    m_ssg_key_on &= ~m_ssg_tone_noise[ssg_ich];
+    uint32_t addr = ADDR_SSG_MIXING;
+    uint32_t data = m_ssg_key_on;
+    write_reg(addr, data);
+    if (m_ssg_enveloped[ssg_ich]) {
+        switch (m_ssg_envelope_type) {
+        case 9: case 15:
+            addr = ADDR_SSG_ENV_TYPE;
+            data = m_ssg_envelope_type;
+            write_reg(addr, data);
+            break;
+        default:
+            break;
+        }
     }
 }
 
