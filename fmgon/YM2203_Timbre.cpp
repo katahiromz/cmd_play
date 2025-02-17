@@ -13,11 +13,11 @@ YM2203_Timbre::YM2203_Timbre()
     set(ym2203_tone_table[0]);
 }
 
-YM2203_Timbre::YM2203_Timbre(const int16_t array[5][10]) {
+YM2203_Timbre::YM2203_Timbre(const timbre_array_t& array) {
     set(array);
 }
 
-void YM2203_Timbre::set(const int16_t array[5][10]) {
+void YM2203_Timbre::set(const timbre_array_t& array) {
     algorithm   =  array[0][0]       & 0x07;
     feedback    = (array[0][0] >> 3) & 0x07;
     opMask      =  array[0][1] & 0x0F;
@@ -117,7 +117,7 @@ void YM2203_Timbre::setKS(uint8_t op1, uint8_t op2, uint8_t op3, uint8_t op4) {
 // 120 FOR I=0 TO 4:FOR J=0 TO 9
 // 130 PRINT V%(I,J);",";
 // 140 NEXT J:PRINT:NEXT I
-int16_t ym2203_tone_table[NUM_TONES][5][10] = {
+const timbre_array_t ym2203_tone_table[NUM_TONES] = {
     // @0 Default VOICE
     {
         {58, 15, 0, 0, 0, 0, 0, 0, 0, 0},

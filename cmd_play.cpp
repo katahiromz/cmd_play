@@ -58,15 +58,14 @@ bool vsk_cmd_play_voice(int ich, const void *data, size_t data_size)
         return false;
     }
 
-    int16_t array[5][10];
-    size_t size = sizeof(array);
-    if (size != data_size)
+    timbre_array_t array;
+    if (sizeof(array) != data_size)
     {
         assert(0);
         return false;
     }
 
-    std::memcpy(array, data, size);
+    std::memcpy(array, data, data_size);
     vsk_fm_sound_settings[ich].m_timbre.set(array);
     return true;
 }

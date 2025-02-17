@@ -37,7 +37,12 @@
 #define ALGORITHM_7     7
 
 //////////////////////////////////////////////////////////////////////////////
-// YM2203 FM synthesizer timble structure.
+// timbre array
+
+typedef int16_t timbre_array_t[5][10];
+
+//////////////////////////////////////////////////////////////////////////////
+// YM2203 FM synthesizer timbre structure.
 
 struct YM2203_Timbre {
     uint8_t algorithm;                  // Algorithm
@@ -64,8 +69,8 @@ struct YM2203_Timbre {
     uint8_t     pms;                    // Pitch Modulation Sensitivity (PMS)
 
     YM2203_Timbre();
-    YM2203_Timbre(const int16_t array[5][10]);
-    void set(const int16_t array[5][10]);
+    YM2203_Timbre(const timbre_array_t& array);
+    void set(const timbre_array_t& array);
 
     void setAR(uint8_t op1, uint8_t op2, uint8_t op3, uint8_t op4);
     void setDR(uint8_t op1, uint8_t op2, uint8_t op3, uint8_t op4);
@@ -84,7 +89,7 @@ struct YM2203_Timbre {
 #define NUM_TONES   62
 
 // tone data
-extern int16_t ym2203_tone_table[NUM_TONES][5][10];
+extern const timbre_array_t ym2203_tone_table[NUM_TONES];
 
 //////////////////////////////////////////////////////////////////////////////
 
