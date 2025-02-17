@@ -89,6 +89,7 @@ void YM2203::ssg_key_off(int ssg_ich) {
 }
 
 void YM2203::fm_set_pitch(int fm_ich, int octave, int key, int adj) {
+    assert(0 <= fm_ich && fm_ich < FM_CH_NUM);
     uint32_t addr = ADDR_FM_FREQ_H + fm_ich;
     uint32_t data = (
         ((octave & 0x07) << 3) |
@@ -102,6 +103,7 @@ void YM2203::fm_set_pitch(int fm_ich, int octave, int key, int adj) {
 }
 
 void YM2203::ssg_set_pitch(int ssg_ich, int octave, int key, int adj) {
+    assert(0 <= ssg_ich && ssg_ich < SSG_CH_NUM);
     uint16_t ssg_f = SSG_PITCH_TABLE[key];
     if (octave > 0) {
         ssg_f >>= (octave - 1);
@@ -117,49 +119,50 @@ void YM2203::ssg_set_pitch(int ssg_ich, int octave, int key, int adj) {
     write_reg(addr, data);
 }
 
-void YM2203::set_volume(int ch, int volume, int adj[4]) {
-    static const uint8_t OP_OFFSET[] = {0x00, 0x08, 0x04, 0x0C};
-    uint32_t addr, data;
+static const uint8_t OP_OFFSET[] = {0x00, 0x08, 0x04, 0x0C};
 
+void YM2203::fm_set_volume(int fm_ich, int volume, int adj[4]) {
+    assert(0 <= fm_ich && fm_ich < FM_CH_NUM);
     assert((0 <= volume) && (volume <= 15));
 
-    if ((FM_CH1 <= ch) && (ch <= FM_CH3)) {
-        if (m_fm_timbres[ch] == NULL) {
-            assert(0);
-            return;
-        }
-
-        uint8_t algorithm = m_fm_timbres[ch]->algorithm;
-        uint8_t attenate = uint8_t(uint8_t(15 - volume) * 3);
-
-        addr = ADDR_FM_TL + uint8_t(ch) + OP_OFFSET[OPERATOR_4];
-        data = ((m_fm_timbres[ch]->tl[OPERATOR_4] + attenate - adj[3]) & 0x7F);
-        write_reg(addr, data);
-
-        if (algorithm >= ALGORITHM_4) {
-            addr = ADDR_FM_TL + uint8_t(ch) + OP_OFFSET[OPERATOR_2];
-            data = ((m_fm_timbres[ch]->tl[OPERATOR_2] + attenate - adj[1]) & 0x7F);
-            write_reg(addr, data);
-        }
-
-        if (algorithm >= ALGORITHM_5) {
-            addr = ADDR_FM_TL + uint8_t(ch) + OP_OFFSET[OPERATOR_3];
-            data = ((m_fm_timbres[ch]->tl[OPERATOR_3] + attenate - adj[2]) & 0x7F);
-            write_reg(addr, data);
-        }
-
-        if (algorithm == ALGORITHM_7) {
-            addr = ADDR_FM_TL + (uint8_t)ch + OP_OFFSET[OPERATOR_1];
-            data = ((m_fm_timbres[ch]->tl[OPERATOR_1] + attenate - adj[0]) & 0x7F);
-            write_reg(addr, data);
-        }
-    } else if ((SSG_CH_A <= ch) && (ch <= SSG_CH_C)) {
-        addr = ADDR_SSG_LEVEL_ENV + (ch - SSG_CH_A);
-        data = volume & 0x0F;
-        write_reg(addr, data);
-    } else {
+    if (m_fm_timbres[fm_ich] == NULL) {
         assert(0);
+        return;
     }
+
+    uint8_t algorithm = m_fm_timbres[fm_ich]->algorithm;
+    uint8_t attenate = uint8_t(uint8_t(15 - volume) * 3);
+
+    uint32_t addr = ADDR_FM_TL + uint8_t(fm_ich) + OP_OFFSET[OPERATOR_4];
+    uint32_t data = ((m_fm_timbres[fm_ich]->tl[OPERATOR_4] + attenate - adj[3]) & 0x7F);
+    write_reg(addr, data);
+
+    if (algorithm >= ALGORITHM_4) {
+        addr = ADDR_FM_TL + uint8_t(fm_ich) + OP_OFFSET[OPERATOR_2];
+        data = ((m_fm_timbres[fm_ich]->tl[OPERATOR_2] + attenate - adj[1]) & 0x7F);
+        write_reg(addr, data);
+    }
+
+    if (algorithm >= ALGORITHM_5) {
+        addr = ADDR_FM_TL + uint8_t(fm_ich) + OP_OFFSET[OPERATOR_3];
+        data = ((m_fm_timbres[fm_ich]->tl[OPERATOR_3] + attenate - adj[2]) & 0x7F);
+        write_reg(addr, data);
+    }
+
+    if (algorithm == ALGORITHM_7) {
+        addr = ADDR_FM_TL + (uint8_t)fm_ich + OP_OFFSET[OPERATOR_1];
+        data = ((m_fm_timbres[fm_ich]->tl[OPERATOR_1] + attenate - adj[0]) & 0x7F);
+        write_reg(addr, data);
+    }
+}
+
+void YM2203::ssg_set_volume(int ssg_ich, int volume) {
+    assert(0 <= ssg_ich && ssg_ich < SSG_CH_NUM);
+    assert((0 <= volume) && (volume <= 15));
+
+    uint32_t addr = ADDR_SSG_LEVEL_ENV + ssg_ich;
+    uint32_t data = volume & 0x0F;
+    write_reg(addr, data);
 }
 
 void YM2203::set_envelope(int ch, int type, uint16_t interval) {

@@ -86,19 +86,19 @@ struct YM2203 {
 
     void init(uint32_t clock, uint32_t rate, const char* rhythmpath);
 
-    // assert((0 <= volume) && (volume <= 15));
-    void set_volume(int ch, int volume, int adj[4]);
-    void set_volume(int ch, int volume) {
-        int adj[4] = {0, 0, 0, 0};
-        set_volume(ch, volume, adj);
-    }
     void fm_key_on(int fm_ich);
     void fm_key_off(int fm_ich);
     void fm_set_pitch(int fm_ich, int octave, int key, int adj = 0);
+    void fm_set_volume(int fm_ich, int volume, int adj[4]);
+    void fm_set_volume(int fm_ich, int volume) {
+        int adj[4] = {0, 0, 0, 0};
+        fm_set_volume(fm_ich, volume, adj);
+    }
 
     void ssg_key_on(int ssg_ich);
     void ssg_key_off(int ssg_ich);
     void ssg_set_pitch(int ssg_ich, int octave, int key, int adj = 0);
+    void ssg_set_volume(int ssg_ich, int volume);
 
     bool load_rhythm_data(const char *path) {
         return m_opna.LoadRhythmSample(path);
