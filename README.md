@@ -15,6 +15,7 @@
   -D変数名=値                変数に代入。
   -save_wav 出力.wav         WAVファイルとして保存。
   -stopm                     音楽を止めて設定をリセット。
+  -stereo                    音をステレオにする(デフォルト)。
   -mono                      音をモノラルにする。
   -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む。
   -voice-copy TONE FILE.voi  音色をファイルにコピーする。
