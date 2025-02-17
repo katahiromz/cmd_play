@@ -9,6 +9,8 @@ bool vsk_sound_is_playing(void);
 bool vsk_sound_wait(VskDword milliseconds);
 void vsk_sound_stop(void);
 bool vsk_sound_voice_reg(int addr, int data);
+size_t vsk_sound_voice_size(void);
+bool vsk_sound_voice_copy(int tone, std::vector<uint8_t>& data);
 
 enum VSK_SOUND_ERR
 {
@@ -38,3 +40,4 @@ void vsk_cmd_play_reset_settings(void);
 size_t vsk_cmd_play_get_setting_size(void);
 bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data);
 bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data);
+bool vsk_cmd_play_voice(int ich, const void *data, size_t data_size);

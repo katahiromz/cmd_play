@@ -157,3 +157,22 @@ bool vsk_sound_voice_reg(int addr, int data)
     vsk_sound_player->write_reg(addr, data);
     return true;
 }
+
+// 音色のサイズを取得する
+size_t vsk_sound_voice_size(void)
+{
+    return sizeof(ym2203_tone_table[0]);
+}
+
+// 音色をコピーする
+bool vsk_sound_voice_copy(int tone, std::vector<uint8_t>& data)
+{
+    if (tone < 0 || tone >= NUM_TONES)
+        return false;
+
+    size_t size = sizeof(ym2203_tone_table[tone]);
+    data.resize(size);
+
+    std::memcpy(data.data(), ym2203_tone_table[tone], size);
+    return true;
+}

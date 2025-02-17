@@ -125,7 +125,7 @@ struct VskSoundSetting {
         m_quantity = 8;
         m_tone = 0;
         m_LR = 0x3;
-        m_timbre = ym2203_tone_table[0];
+        m_timbre.set(ym2203_tone_table[0]);
     }
 };
 

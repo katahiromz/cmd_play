@@ -49,6 +49,28 @@ bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data)
     }
 }
 
+// 音色を適用する
+bool vsk_cmd_play_voice(int ich, const void *data, size_t data_size)
+{
+    if (ich < 0 || ich >= VSK_MAX_CHANNEL)
+    {
+        assert(0);
+        return false;
+    }
+
+    int16_t array[5][10];
+    size_t size = sizeof(array);
+    if (size != data_size)
+    {
+        assert(0);
+        return false;
+    }
+
+    std::memcpy(array, data, size);
+    vsk_fm_sound_settings[ich].m_timbre.set(array);
+    return true;
+}
+
 // 設定の設定
 bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data)
 {

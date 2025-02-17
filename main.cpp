@@ -68,10 +68,12 @@ enum TEXT_ID {
     IDT_MODE_OUT_OF_RANGE,
     IDT_BAD_CALL,
     IDT_NEEDS_OPERAND,
+    IDT_NEEDS_TWO_OPERANDS,
     IDT_INVALID_OPTION,
     IDT_SOUND_INIT_FAILED,
     IDT_CIRCULAR_REFERENCE,
     IDT_CANT_OPEN_FILE,
+    IDT_CANT_COPY_TONE,
 };
 
 // localization
@@ -88,22 +90,26 @@ LPCTSTR get_text(INT id)
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
                 TEXT("\n")
                 TEXT("オプション:\n")
-                TEXT("  -D変数名=値            変数に代入。\n")
-                TEXT("  -save_wav 出力.wav     WAVファイルとして保存。\n")
-                TEXT("  -stopm                 音楽を止めて設定をリセット。\n")
-                TEXT("  -mono                  音をモノラルにする。\n")
-                TEXT("  -help                  このメッセージを表示する。\n")
-                TEXT("  -version               バージョン情報を表示する。\n")
+                TEXT("  -D変数名=値                変数に代入。\n")
+                TEXT("  -save_wav 出力.wav         WAVファイルとして保存。\n")
+                TEXT("  -stopm                     音楽を止めて設定をリセット。\n")
+                TEXT("  -mono                      音をモノラルにする。\n")
+                TEXT("  -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む。\n")
+                TEXT("  -voice-copy TONE FILE.voi  音色をファイルにコピーする。\n")
+                TEXT("  -help                      このメッセージを表示する。\n")
+                TEXT("  -version                   バージョン情報を表示する。\n")
                 TEXT("\n")
                 TEXT("文字列変数は [ ] で囲えば展開できます。\n");
         case IDT_TOO_MANY_ARGS: return TEXT("エラー: 引数が多すぎます。\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case IDT_BAD_CALL: return TEXT("エラー: 不正な関数呼び出しです。\n");
         case IDT_NEEDS_OPERAND: return TEXT("エラー: オプション「%s」は引数が必要です。\n");
+        case IDT_NEEDS_TWO_OPERANDS: return TEXT("エラー: オプション「%s」は２つの引数が必要です。\n");
         case IDT_INVALID_OPTION: return TEXT("エラー: 「%s」は、無効なオプションです。\n");
         case IDT_SOUND_INIT_FAILED: return TEXT("エラー: vsk_sound_initが失敗しました。\n");
         case IDT_CIRCULAR_REFERENCE: return TEXT("エラー: 変数の循環参照を検出しました。\n");
         case IDT_CANT_OPEN_FILE: return TEXT("エラー: ファイル「%s」が開けません。\n");
+        case IDT_CANT_COPY_TONE: return TEXT("エラー: 音色をコピーできませんでした。\n");
         }
     }
     else // The others are Let's la English
@@ -117,22 +123,26 @@ LPCTSTR get_text(INT id)
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
                 TEXT("\n")
                 TEXT("Options:\n")
-                TEXT("  -DVAR=VALUE            Assign to a variable.\n")
-                TEXT("  -save_wav output.wav   Save as WAV file.\n")
-                TEXT("  -stopm                 Stop music and reset settings.\n")
-                TEXT("  -mono                  Make sound mono.\n")
-                TEXT("  -help                  Display this message.\n")
-                TEXT("  -version               Display version info.\n")
+                TEXT("  -DVAR=VALUE                Assign to a variable.\n")
+                TEXT("  -save_wav output.wav       Save as WAV file.\n")
+                TEXT("  -stopm                     Stop music and reset settings.\n")
+                TEXT("  -mono                      Make sound mono.\n")
+                TEXT("  -voice CH FILE.voi         Load a tone from a file to channel CH.\n")
+                TEXT("  -voice-copy TONE FILE.voi  Copy the tone to a file.\n")
+                TEXT("  -help                      Display this message.\n")
+                TEXT("  -version                   Display version info.\n")
                 TEXT("\n")
                 TEXT("String variables can be expanded by enclosing them in [ ].\n");
         case IDT_TOO_MANY_ARGS: return TEXT("ERROR: Too many arguments.\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
         case IDT_BAD_CALL: return TEXT("ERROR: Illegal function call\n");
         case IDT_NEEDS_OPERAND: return TEXT("ERROR: Option '%s' needs an operand.\n");
+        case IDT_NEEDS_TWO_OPERANDS: return TEXT("ERROR: Option '%s' needs two operands.\n");
         case IDT_INVALID_OPTION: return TEXT("ERROR: '%s' is an invalid option.\n");
         case IDT_SOUND_INIT_FAILED: return TEXT("ERROR: vsk_sound_init failed.\n");
         case IDT_CIRCULAR_REFERENCE: return TEXT("ERROR: Circular variable reference detected.\n");
         case IDT_CANT_OPEN_FILE: return TEXT("ERROR: Unable to open file '%s'.\n");
+        case IDT_CANT_COPY_TONE: return TEXT("ERROR: Unable to copy tone.\n");
         }
     }
 
@@ -249,6 +259,12 @@ std::string vsk_sjis_from_wide(const wchar_t *wide)
 
 #define VSK_MAX_CHANNEL 6
 
+struct VOICE_INFO
+{
+    INT m_ch;
+    std::wstring m_file;
+};
+
 struct CMD_PLAY
 {
     bool m_help = false;
@@ -260,6 +276,7 @@ struct CMD_PLAY
     bool m_stopm = false;
     bool m_stereo = true;
     bool m_no_reg = false;
+    std::vector<VOICE_INFO> m_voices;
 
     RET parse_cmd_line(int argc, wchar_t **argv);
     RET run();
@@ -455,6 +472,63 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             continue;
         }
 
+        if (_wcsicmp(arg, L"-voice-copy") == 0 || _wcsicmp(arg, L"--voice-copy") == 0)
+        {
+            if (iarg + 2 < argc)
+            {
+                int tone = _wtoi(argv[++iarg]);
+                std::wstring file = argv[++iarg];
+
+                // 音色をコピーする
+                std::vector<uint8_t> data;
+                if (!vsk_sound_voice_copy(tone, data))
+                {
+                    my_printf(stderr, get_text(IDT_CANT_COPY_TONE));
+                    return RET_BAD_CALL;
+                }
+
+                // 音色をファイルに書き込む
+                FILE *fout = _wfopen(file.c_str(), L"wb");
+                if (!fout)
+                {
+                    my_printf(stderr, get_text(IDT_CANT_OPEN_FILE), file.c_str());
+                    return RET_BAD_CALL;
+                }
+                fwrite(data.data(), data.size(), 1, fout);
+                fclose(fout);
+
+                continue;
+            }
+            else
+            {
+                my_printf(stderr, get_text(IDT_NEEDS_TWO_OPERANDS), arg);
+                return RET_BAD_CMDLINE;
+            }
+        }
+
+        if (_wcsicmp(arg, L"-voice") == 0 || _wcsicmp(arg, L"--voice") == 0)
+        {
+            if (iarg + 2 < argc)
+            {
+                int ch = _wtoi(argv[++iarg]);
+                std::wstring file = argv[++iarg];
+
+                if (!(1 <= ch && ch <= 6))
+                {
+                    my_printf(stderr, get_text(IDT_CANT_COPY_TONE));
+                    return RET_BAD_CALL;
+                }
+
+                m_voices.push_back({ ch, file });
+                continue;
+            }
+            else
+            {
+                my_printf(stderr, get_text(IDT_NEEDS_TWO_OPERANDS), arg);
+                return RET_BAD_CMDLINE;
+            }
+        }
+
         // hidden feature
         if (_wcsicmp(arg, L"-no-beep") == 0 || _wcsicmp(arg, L"--no-beep") == 0)
         {
@@ -532,6 +606,30 @@ RET CMD_PLAY::run()
     for (auto& pair : m_variables)
     {
         g_variables[pair.first] = pair.second;
+    }
+
+    // 音色を適用する
+    for (auto& voice : m_voices)
+    {
+        // ファイルから音色を読み込む
+        FILE *fin = _wfopen(voice.m_file.c_str(), L"rb");
+        if (!fin)
+        {
+            my_printf(stderr, get_text(IDT_CANT_OPEN_FILE), voice.m_file.c_str());
+            vsk_sound_exit();
+            return RET_BAD_CALL;
+        }
+        size_t size = vsk_sound_voice_size();
+        char buf[size];
+        size_t count = fread(buf, size, 1, fin);
+        fclose(fin);
+
+        // 音色を適用
+        if (!count || !vsk_cmd_play_voice(voice.m_ch - 1, buf, size))
+        {
+            my_printf(stderr, get_text(IDT_CANT_COPY_TONE));
+            return RET_BAD_CALL;
+        }
     }
 
     if (m_output_file.size())
