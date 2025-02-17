@@ -94,11 +94,14 @@ struct YM2203 {
         int adj[4] = {0, 0, 0, 0};
         fm_set_volume(fm_ich, volume, adj);
     }
+    void fm_set_timbre(int fm_ich, YM2203_Timbre *timbre);
 
     void ssg_key_on(int ssg_ich);
     void ssg_key_off(int ssg_ich);
     void ssg_set_pitch(int ssg_ich, int octave, int key, int adj = 0);
     void ssg_set_volume(int ssg_ich, int volume);
+    void ssg_set_envelope(int ssg_ich, int type, uint16_t interval);
+    void ssg_set_tone_or_noise(int ssg_ich, int mode);
 
     bool load_rhythm_data(const char *path) {
         return m_opna.LoadRhythmSample(path);
@@ -115,13 +118,6 @@ struct YM2203 {
     void reset() {
         m_opna.Reset();
     }
-
-    // SSG APIs
-    void set_envelope(int ch, int type, uint16_t interval);
-    void set_tone_or_noise(int ch, int mode);
-
-    // FM APIs
-    void set_fm_timbre(int fm_ich, YM2203_Timbre *timbre);
 
     void write_reg(uint32_t addr, uint32_t data) {
         m_opna.SetReg(addr, data);

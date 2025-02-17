@@ -165,18 +165,13 @@ void YM2203::ssg_set_volume(int ssg_ich, int volume) {
     write_reg(addr, data);
 }
 
-void YM2203::set_envelope(int ch, int type, uint16_t interval) {
-    uint32_t addr, data;
+void YM2203::ssg_set_envelope(int ssg_ich, int type, uint16_t interval) {
+    assert(0 <= ssg_ich && ssg_ich < SSG_CH_NUM);
 
-    if ((ch < SSG_CH_A) || (ch > SSG_CH_C)) {
-        assert(0);
-        return;
-    }
-
-    addr = ADDR_SSG_LEVEL_ENV + (ch - SSG_CH_A);
-    data = 0x10;
+    uint32_t addr = ADDR_SSG_LEVEL_ENV + ssg_ich;
+    uint32_t data = 0x10;
     write_reg(addr, data);
-    m_ssg_enveloped[ch - SSG_CH_A] = true;
+    m_ssg_enveloped[ssg_ich] = true;
 
     addr = ADDR_SSG_ENV_TYPE;
     data = (type & 0x0F);
@@ -192,30 +187,27 @@ void YM2203::set_envelope(int ch, int type, uint16_t interval) {
     write_reg(addr, data);
 }
 
-void YM2203::set_tone_or_noise(int ch, int mode) {
+void YM2203::ssg_set_tone_or_noise(int ssg_ich, int mode) {
+    assert(0 <= ssg_ich && ssg_ich < SSG_CH_NUM);
+
     static const uint8_t TONE_MASK[3] = {0x01, 0x02, 0x04};
     static const uint8_t NOISE_MASK[3] = {0x08, 0x10, 0x20};
 
-    if ((ch < SSG_CH_A) || (ch > SSG_CH_C)) {
-        assert(0);
-        return;
-    }
-    ch -= SSG_CH_A;
-
-    switch(mode){
+    switch (mode)
+    {
     case TONE_MODE:
-        m_ssg_tone_noise[ch] = TONE_MASK[ch];
+        m_ssg_tone_noise[ssg_ich] = TONE_MASK[ssg_ich];
         break;
     case NOISE_MODE:
-        m_ssg_tone_noise[ch] = NOISE_MASK[ch];
+        m_ssg_tone_noise[ssg_ich] = NOISE_MASK[ssg_ich];
         break;
     case TONE_NOISE_MODE:
-        m_ssg_tone_noise[ch] = TONE_MASK[ch] + NOISE_MASK[ch];
+        m_ssg_tone_noise[ssg_ich] = TONE_MASK[ssg_ich] + NOISE_MASK[ssg_ich];
         break;
     }
 }
 
-void YM2203::set_fm_timbre(int fm_ich, YM2203_Timbre *timbre) {
+void YM2203::fm_set_timbre(int fm_ich, YM2203_Timbre *timbre) {
     static const uint8_t OP_OFFSET[] = {0x00, 0x08, 0x04, 0x0C};
 
     if ((fm_ich < 0) || (fm_ich >= FM_CH_NUM)) {
@@ -281,6 +273,6 @@ void YM2203::set_fm_timbre(int fm_ich, YM2203_Timbre *timbre) {
     //write_reg(addr, data);
 
     m_fm_timbres[fm_ich] = timbre;
-} // YM2203::set_fm_timbre
+} // YM2203::fm_set_timbre
 
 //////////////////////////////////////////////////////////////////////////////

@@ -362,10 +362,8 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
 
     uint32_t isample = 0;
     if (m_setting.m_fm) { // FM sound?
-        int ch = FM_CH1 + ich; // Channel
-
         auto& timbre = m_setting.m_timbre;
-        ym.set_fm_timbre(ich, &timbre);
+        ym.fm_set_timbre(ich, &timbre);
 
         VskLFOCtrl lc;
         lc.init_for_timbre(&timbre);
@@ -380,7 +378,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
                 const auto new_tone = note.m_data;
                 assert((0 <= new_tone) && (new_tone < NUM_TONES));
                 timbre = ym2203_tone_table[new_tone];
-                ym.set_fm_timbre(ich, &timbre);
+                ym.fm_set_timbre(ich, &timbre);
                 lc.init_for_timbre(&timbre);
                 continue;
             }
@@ -463,8 +461,6 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
             isample += nsamples;
         }
     } else { // SSG sound?
-        int ch = SSG_CH_A + ich; // Channel
-
         for (auto& note : m_notes) {
             if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
                 schedule_special_action(note.m_gate, note.m_data);
@@ -567,10 +563,10 @@ VskSoundPlayer::VskSoundPlayer(const char *rhythm_path)
     m_ym0.init(CLOCK, SAMPLERATE, rhythm_path);
     m_ym1.init(CLOCK, SAMPLERATE, rhythm_path);
 
-    for (int ch = SSG_CH_A; ch <= SSG_CH_C; ++ch)
+    for (int ich = 0; ich < SSG_CH_NUM; ++ich)
     {
-        m_ym0.set_tone_or_noise(ch, TONE_MODE);
-        m_ym1.set_tone_or_noise(ch, TONE_MODE);
+        m_ym0.ssg_set_tone_or_noise(ich, TONE_MODE);
+        m_ym1.ssg_set_tone_or_noise(ich, TONE_MODE);
     }
 }
 
