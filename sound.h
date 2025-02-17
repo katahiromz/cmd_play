@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.h"
+#include <map>
 
 bool vsk_sound_init(bool stereo);
 void vsk_sound_exit(void);
@@ -44,3 +45,6 @@ size_t vsk_cmd_play_get_setting_size(void);
 bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data);
 bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data);
 bool vsk_cmd_play_voice(int ich, const void *data, size_t data_size);
+
+// variables
+extern std::map<VskString, VskString> g_variables;
