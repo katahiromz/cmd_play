@@ -6,16 +6,6 @@
 #include "YM2203_Timbre.h"
 
 //////////////////////////////////////////////////////////////////////////////
-// Number of channels
-
-#define FM_CH1          0   // FM channel 1
-#define FM_CH2          1   // FM channel 2
-#define FM_CH3          2   // FM channel 3
-#define SSG_CH_A        3   // SSG channel A
-#define SSG_CH_B        4   // SSG channel B
-#define SSG_CH_C        5   // SSG channel C
-
-//////////////////////////////////////////////////////////////////////////////
 // Number of Key 
 
 #define KEY_C           0   // C
@@ -33,11 +23,9 @@
 #define KEY_NUM         12  // 12 keys in a octave
 
 //////////////////////////////////////////////////////////////////////////////
-// Total number of channels
 
-#define FM_CH_NUM       3   // a YM2203 has 3 FM channels
-#define SSG_CH_NUM      3   // a YM2203 has 3 SSG channels
-#define ALL_CH_NUM      (FM_CH_NUM + SSG_CH_NUM)
+#define FM_CH_NUM       3   // YM2203 has 3 FM channels
+#define SSG_CH_NUM      3   // YM2203 has 3 SSG channels
 
 //////////////////////////////////////////////////////////////////////////////
 // Tone/Noise mode of SSG channels

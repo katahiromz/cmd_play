@@ -19,18 +19,14 @@
 
 YM2203::YM2203() {
     // initial value
-    m_fm_timbres[FM_CH1] = NULL;
-    m_fm_timbres[FM_CH2] = NULL;
-    m_fm_timbres[FM_CH3] = NULL;
-    m_fm_volumes[FM_CH1] = 0;
-    m_fm_volumes[FM_CH2] = 0;
-    m_fm_volumes[FM_CH3] = 0;
-    m_ssg_enveloped[SSG_CH_A - SSG_CH_A] = false;
-    m_ssg_enveloped[SSG_CH_B - SSG_CH_A] = false;
-    m_ssg_enveloped[SSG_CH_C - SSG_CH_A] = false;
-    m_ssg_tone_noise[SSG_CH_A - SSG_CH_A] = 0x01;
-    m_ssg_tone_noise[SSG_CH_B - SSG_CH_A] = 0x02;
-    m_ssg_tone_noise[SSG_CH_C - SSG_CH_A] = 0x04;
+    for (int ich = 0; ich < 3; ++ich) {
+        m_fm_timbres[ich] = NULL;
+        m_fm_volumes[ich] = 0;
+        m_ssg_enveloped[ich] = false;
+    }
+    m_ssg_tone_noise[0] = 0x01;
+    m_ssg_tone_noise[1] = 0x02;
+    m_ssg_tone_noise[2] = 0x04;
 }
 
 void YM2203::init(uint32_t clock, uint32_t rate, const char* rhythmpath) {
