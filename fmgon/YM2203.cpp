@@ -73,20 +73,18 @@ void YM2203::ssg_key_on(int ssg_ich)
     }
 }
 
-void YM2203::note_off(int ch) {
-    uint32_t addr, data;
-    if ((FM_CH1 <= ch) && (ch <= FM_CH3)) {
-        addr = ADDR_FM_KEYON;
-        data = 0 | ch;
-        write_reg(addr, data);
-    } else if ((SSG_CH_A <= ch) && (ch <= SSG_CH_C)) {
-        m_ssg_key_on |= m_ssg_tone_noise[ch - SSG_CH_A];
-        addr = ADDR_SSG_MIXING;
-        data = m_ssg_key_on;
-        write_reg(addr, data);
-    } else {
-        assert(0);
-    }
+void YM2203::fm_key_off(int fm_ich) {
+    assert(0 <= fm_ich && fm_ich < FM_CH_NUM);
+    uint32_t addr = ADDR_FM_KEYON;
+    uint32_t data = 0 | fm_ich;
+    write_reg(addr, data);
+}
+
+void YM2203::ssg_key_off(int ssg_ich) {
+    m_ssg_key_on |= m_ssg_tone_noise[ssg_ich];
+    uint32_t addr = ADDR_SSG_MIXING;
+    uint32_t data = m_ssg_key_on;
+    write_reg(addr, data);
 }
 
 void YM2203::set_pitch(int ch, int octave, int key, int adj) {

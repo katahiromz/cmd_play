@@ -452,7 +452,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
             nsamples = int(SAMPLERATE * sec);
             if (note.m_key != KEY_SPECIAL_REST) {
                 // do key off
-                ym.note_off(ch);
+                ym.fm_key_off(ich);
             }
             unit = SAMPLERATE;
             if (unit > nsamples) {
@@ -507,7 +507,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
             nsamples = int(SAMPLERATE * sec);
             if (note.m_key != KEY_SPECIAL_REST) {
                 // do key off
-                ym.note_off(ch);
+                ym.ssg_key_off(ich);
             }
             ym.mix(&data[isample * 2], nsamples);
             ym.count(uint32_t(sec * 1000 * 1000));
