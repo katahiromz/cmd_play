@@ -355,9 +355,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
         ich -= 3;
 
     // メモリーを割り当て
-    auto count = uint32_t(m_goal * SAMPLERATE * 2); // stereo
-    if (count % 2)
-        ++count;
+    auto count = uint32_t(m_goal * SAMPLERATE + 1) * 2; // stereo
     *pdata_size = count * sizeof(VSK_PCM16_VALUE);
     auto data = std::make_unique<VSK_PCM16_VALUE[]>(count);
     std::memset(&data[0], 0, *pdata_size);
@@ -467,8 +465,6 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
     } else { // SSG sound?
         int ch = SSG_CH_A + ich; // Channel
 
-        ym.set_tone_or_noise(ch, TONE_MODE);
-
         for (auto& note : m_notes) {
             if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
                 schedule_special_action(note.m_gate, note.m_data);
@@ -570,6 +566,12 @@ VskSoundPlayer::VskSoundPlayer(const char *rhythm_path)
     // YMを初期化
     m_ym0.init(CLOCK, SAMPLERATE, rhythm_path);
     m_ym1.init(CLOCK, SAMPLERATE, rhythm_path);
+
+    for (int ch = SSG_CH_A; ch <= SSG_CH_C; ++ch)
+    {
+        m_ym0.set_tone_or_noise(ch, TONE_MODE);
+        m_ym1.set_tone_or_noise(ch, TONE_MODE);
+    }
 }
 
 bool VskSoundPlayer::wait_for_stop(uint32_t milliseconds) {
