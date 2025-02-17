@@ -415,7 +415,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
             if (note.m_key != KEY_SPECIAL_REST) { // Not special rest?
                 // do key on
                 if (note.m_key != KEY_REST) { // Has key?
-                    ym.set_pitch(ch, note.m_octave, note.m_key);
+                    ym.fm_set_pitch(ich, note.m_octave, note.m_key);
                     ym.set_volume(ch, int(note.m_volume));
                     ym.fm_key_on(ich);
                 }
@@ -441,7 +441,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
                         int(lc.m_adj_v[2]), int(lc.m_adj_v[3]),
                     };
                     ym.set_volume(ch, int(note.m_volume), adj);
-                    ym.set_pitch(ch, note.m_octave, note.m_key, int(lc.m_adj_p));
+                    ym.fm_set_pitch(ich, note.m_octave, note.m_key, int(lc.m_adj_p));
                 }
                 nsamples -= unit;
             }
@@ -491,7 +491,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
 
             // do key on
             if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST) {
-                ym.set_pitch(ch, note.m_octave, note.m_key);
+                ym.ssg_set_pitch(ich, note.m_octave, note.m_key);
                 ym.set_volume(ch, int(note.m_volume));
                 ym.ssg_key_on(ich);
             }

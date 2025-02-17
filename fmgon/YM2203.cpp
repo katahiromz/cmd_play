@@ -81,39 +81,40 @@ void YM2203::fm_key_off(int fm_ich) {
 }
 
 void YM2203::ssg_key_off(int ssg_ich) {
+    assert(0 <= ssg_ich && ssg_ich < SSG_CH_NUM);
     m_ssg_key_on |= m_ssg_tone_noise[ssg_ich];
     uint32_t addr = ADDR_SSG_MIXING;
     uint32_t data = m_ssg_key_on;
     write_reg(addr, data);
 }
 
-void YM2203::set_pitch(int ch, int octave, int key, int adj) {
-    uint32_t addr, data;
-    if ((FM_CH1 <= ch) && (ch <= FM_CH3)) {
-        addr = ADDR_FM_FREQ_H + ch;
-        data = (
-            ((octave & 0x07) << 3) |
-            (((FM_PITCH_TABLE[key] + adj) >> 8) & 0x07)
-        );
-        write_reg(addr, data);
-        addr = ADDR_FM_FREQ_L + ch;
-        data = (uint8_t)(FM_PITCH_TABLE[key] + adj);
-        write_reg(addr, data);
-    } else if ((SSG_CH_A <= ch) && (ch <= SSG_CH_C)) {
-        uint16_t ssg_f = SSG_PITCH_TABLE[key];
-        if (octave > 0) {
-            ssg_f >>= (octave - 1);
-            ssg_f = (ssg_f >> 1) + (ssg_f & 0x0001);
-        }
-        addr = ADDR_SSG_TONE_FREQ_L + (ch - SSG_CH_A) * 2;
-        data = ssg_f;
-        write_reg(addr, data);
-        addr = ADDR_SSG_TONE_FREQ_H + (ch - SSG_CH_A) * 2;
-        data = (ssg_f >> 8) & 0x0F;
-        write_reg(addr, data);
-    } else {
-        assert(0);
+void YM2203::fm_set_pitch(int fm_ich, int octave, int key, int adj) {
+    uint32_t addr = ADDR_FM_FREQ_H + fm_ich;
+    uint32_t data = (
+        ((octave & 0x07) << 3) |
+        (((FM_PITCH_TABLE[key] + adj) >> 8) & 0x07)
+    );
+    write_reg(addr, data);
+
+    addr = ADDR_FM_FREQ_L + fm_ich;
+    data = (uint8_t)(FM_PITCH_TABLE[key] + adj);
+    write_reg(addr, data);
+}
+
+void YM2203::ssg_set_pitch(int ssg_ich, int octave, int key, int adj) {
+    uint16_t ssg_f = SSG_PITCH_TABLE[key];
+    if (octave > 0) {
+        ssg_f >>= (octave - 1);
+        ssg_f = (ssg_f >> 1) + (ssg_f & 0x0001);
     }
+
+    uint32_t addr = ADDR_SSG_TONE_FREQ_L + ssg_ich * 2;
+    uint32_t data = ssg_f;
+    write_reg(addr, data);
+
+    addr = ADDR_SSG_TONE_FREQ_H + ssg_ich * 2;
+    data = (ssg_f >> 8) & 0x0F;
+    write_reg(addr, data);
 }
 
 void YM2203::set_volume(int ch, int volume, int adj[4]) {
