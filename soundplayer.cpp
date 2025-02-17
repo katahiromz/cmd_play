@@ -350,7 +350,9 @@ void VskPhrase::realize(VskSoundPlayer *player, int ich, std::unique_ptr<VSK_PCM
     rescan_notes();
 
     m_player = player;
-    YM2203& ym = player->m_ym;
+    YM2203& ym = (ich >= 3) ? player->m_ym1 : player->m_ym0;
+    if (ich >= 3)
+        ich -= 3;
 
     // Allocate the wave data
     auto count = uint32_t(m_goal * SAMPLERATE * 2); // stereo
@@ -564,7 +566,8 @@ VskSoundPlayer::VskSoundPlayer(const char *rhythm_path)
     , m_stopping_event(false, false)
 {
     // YMを初期化
-    m_ym.init(CLOCK, SAMPLERATE, rhythm_path);
+    m_ym0.init(CLOCK, SAMPLERATE, rhythm_path);
+    m_ym1.init(CLOCK, SAMPLERATE, rhythm_path);
 }
 
 bool VskSoundPlayer::wait_for_stop(uint32_t milliseconds) {

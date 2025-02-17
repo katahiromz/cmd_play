@@ -260,7 +260,8 @@ struct VskSoundPlayer {
     std::deque<VskScoreBlock>                   m_melody_line;      // メロディーライン
     unboost::mutex                              m_play_lock;        // 排他制御のミューテックス
     std::vector<std::shared_ptr<VskNote>>       m_notes;            // 音符、休符、その他の何かの配列
-    YM2203                                      m_ym;               // 音源エミュレータ
+    YM2203                                      m_ym0;              // 音源エミュレータ #0
+    YM2203                                      m_ym1;              // 音源エミュレータ #1
     std::vector<VSK_PCM16_VALUE>                m_pcm_values;       // 実際の波形
 
     // アクション番号からスペシャルアクションへの写像
@@ -280,7 +281,8 @@ struct VskSoundPlayer {
     void do_special_action(int action_no);
 
     void write_reg(uint32_t addr, uint32_t data) {
-        m_ym.write_reg(addr, data);
+        m_ym0.write_reg(addr, data);
+        m_ym1.write_reg(addr, data);
     }
 }; // struct VskSoundPlayer
 
