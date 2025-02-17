@@ -236,7 +236,7 @@ struct VskPhrase {
 
     void schedule_special_action(float gate, int action_no);
     void execute_special_actions();
-    void realize(VskSoundPlayer* player, int ich, VSK_PCM16_VALUE*& data, size_t *pdata_size);
+    void realize(VskSoundPlayer* player, int ich, std::unique_ptr<VSK_PCM16_VALUE[]>& data, size_t *pdata_size);
 
 protected:
     void rescan_notes();

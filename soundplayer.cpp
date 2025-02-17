@@ -345,7 +345,7 @@ void VskPhrase::calc_gate_and_goal() {
 }
 
 // 波形を実現する（ステレオ）
-void VskPhrase::realize(VskSoundPlayer *player, int ich, VSK_PCM16_VALUE*& data, size_t *pdata_size) {
+void VskPhrase::realize(VskSoundPlayer *player, int ich, std::unique_ptr<VSK_PCM16_VALUE[]>& data, size_t *pdata_size) {
     calc_gate_and_goal();
     rescan_notes();
 
@@ -357,7 +357,7 @@ void VskPhrase::realize(VskSoundPlayer *player, int ich, VSK_PCM16_VALUE*& data,
     if (count % 2)
         ++count;
     *pdata_size = count * sizeof(VSK_PCM16_VALUE);
-    data = new VSK_PCM16_VALUE[count];
+    data = std::make_unique<VSK_PCM16_VALUE[]>(count);
     std::memset(&data[0], 0, *pdata_size);
 
     uint32_t isample = 0;
@@ -582,15 +582,15 @@ bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds, 
 bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM16_VALUE>& values, bool stereo) {
     // ステレオ音声として波形を実現する
     const int source_num_channels = 2;
-    std::vector<VSK_PCM16_VALUE*> raw_data;
+    std::vector<std::unique_ptr<VSK_PCM16_VALUE[]>> raw_data;
     std::vector<size_t> data_sizes;
     int ich = 0;
     for (auto& phrase : block) {
         if (phrase) {
-            VSK_PCM16_VALUE *data;
+            std::unique_ptr<VSK_PCM16_VALUE[]> data;
             size_t data_size;
             phrase->realize(this, ich, data, &data_size);
-            raw_data.push_back(data);
+            raw_data.push_back(std::move(data));
             data_sizes.push_back(data_size);
         }
         ++ich;
@@ -637,11 +637,6 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
             else // 偶数の場合
                 prev_value = sample_value;
         }
-    }
-
-    // 後始末
-    for (auto entry : raw_data) {
-        delete[] entry;
     }
 
     return true;
