@@ -148,6 +148,11 @@ struct VskPhrase {
 
     VskPhrase(VskSoundSetting& setting) : m_setting(setting) { }
 
+    void set_player(VskSoundPlayer* player)
+    {
+        m_player = player;
+    }
+
     // 音符を追加
     void add_note(char note) {
         add_note(note, false);
@@ -236,9 +241,7 @@ struct VskPhrase {
 
     void schedule_special_action(float gate, int action_no);
     void execute_special_actions();
-    void realize(VskSoundPlayer* player, int ich, std::unique_ptr<VSK_PCM16_VALUE[]>& data, size_t *pdata_size);
-
-protected:
+    std::unique_ptr<VSK_PCM16_VALUE[]> realize(int ich, size_t *pdata_size);
     void rescan_notes();
     void calc_gate_and_goal();
 }; // struct VskPhrase

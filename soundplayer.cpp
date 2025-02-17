@@ -345,21 +345,21 @@ void VskPhrase::calc_gate_and_goal() {
 }
 
 // 波形を実現する（ステレオ）
-void VskPhrase::realize(VskSoundPlayer *player, int ich, std::unique_ptr<VSK_PCM16_VALUE[]>& data, size_t *pdata_size) {
-    calc_gate_and_goal();
-    rescan_notes();
+std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_size)
+{
+    assert(m_player != nullptr);
 
-    m_player = player;
-    YM2203& ym = (ich >= 3) ? player->m_ym1 : player->m_ym0;
+    // チャンネルに応じてチップに振り分ける
+    YM2203& ym = (ich >= 3) ? m_player->m_ym1 : m_player->m_ym0;
     if (ich >= 3)
         ich -= 3;
 
-    // Allocate the wave data
+    // メモリーを割り当て
     auto count = uint32_t(m_goal * SAMPLERATE * 2); // stereo
     if (count % 2)
         ++count;
     *pdata_size = count * sizeof(VSK_PCM16_VALUE);
-    data = std::make_unique<VSK_PCM16_VALUE[]>(count);
+    auto data = std::make_unique<VSK_PCM16_VALUE[]>(count);
     std::memset(&data[0], 0, *pdata_size);
 
     uint32_t isample = 0;
@@ -518,6 +518,8 @@ void VskPhrase::realize(VskSoundPlayer *player, int ich, std::unique_ptr<VSK_PCM
             isample += nsamples;
         }
     }
+
+    return data;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -583,16 +585,22 @@ bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds, 
 
 // PCM波形を生成する
 bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM16_VALUE>& values, bool stereo) {
-    // ステレオ音声として波形を実現する
-    const int source_num_channels = 2;
     std::vector<std::unique_ptr<VSK_PCM16_VALUE[]>> raw_data;
     std::vector<size_t> data_sizes;
+
+    // ステレオ音声として波形を実現する
     int ich = 0;
+    const int source_num_channels = 2;
     for (auto& phrase : block) {
         if (phrase) {
-            std::unique_ptr<VSK_PCM16_VALUE[]> data;
+            phrase->calc_gate_and_goal();
+            phrase->rescan_notes();
+            phrase->set_player(this);
+
             size_t data_size;
-            phrase->realize(this, ich, data, &data_size);
+            auto data = phrase->realize(ich, &data_size);
+            assert(data != nullptr);
+
             raw_data.push_back(std::move(data));
             data_sizes.push_back(data_size);
         }
