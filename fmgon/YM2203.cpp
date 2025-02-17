@@ -53,8 +53,7 @@ void YM2203::fm_key_on(int fm_ich) {
     write_reg(addr, data);
 }
 
-void YM2203::ssg_key_on(int ssg_ich)
-{
+void YM2203::ssg_key_on(int ssg_ich) {
     assert(0 <= ssg_ich && ssg_ich < SSG_CH_NUM);
     m_ssg_key_on &= ~m_ssg_tone_noise[ssg_ich];
     uint32_t addr = ADDR_SSG_MIXING;
@@ -193,8 +192,7 @@ void YM2203::ssg_set_tone_or_noise(int ssg_ich, int mode) {
     static const uint8_t TONE_MASK[3] = {0x01, 0x02, 0x04};
     static const uint8_t NOISE_MASK[3] = {0x08, 0x10, 0x20};
 
-    switch (mode)
-    {
+    switch (mode) {
     case TONE_MODE:
         m_ssg_tone_noise[ssg_ich] = TONE_MASK[ssg_ich];
         break;
@@ -208,12 +206,9 @@ void YM2203::ssg_set_tone_or_noise(int ssg_ich, int mode) {
 }
 
 void YM2203::fm_set_timbre(int fm_ich, YM2203_Timbre *timbre) {
-    static const uint8_t OP_OFFSET[] = {0x00, 0x08, 0x04, 0x0C};
+    assert(0 <= fm_ich && fm_ich < FM_CH_NUM);
 
-    if ((fm_ich < 0) || (fm_ich >= FM_CH_NUM)) {
-        assert(0);
-        return;
-    }
+    static const uint8_t OP_OFFSET[] = {0x00, 0x08, 0x04, 0x0C};
 
     uint32_t addr, data;
     for (int op = OPERATOR_1; op <= OPERATOR_4; ++op) {
