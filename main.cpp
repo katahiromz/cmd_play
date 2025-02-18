@@ -872,6 +872,8 @@ int main(void)
         std::printf("^C\nBreak\nOk\n");
         std::fflush(stdout);
         do_beep();
+        if (HWND hwndServer = find_server_window())
+            PostMessageW(hwndServer, WM_CLOSE, 0, 0);
         erase_reg_settings();
         return RET_CANCELED;
     }
