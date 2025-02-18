@@ -482,10 +482,20 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 INT
 Server_Main(HINSTANCE hInstance, INT argc, LPWSTR *argv, INT nCmdShow)
 {
+    // サーバーの二重起動を回避する
+    if (HWND hwndServer = find_server_window())
+    {
+        SetForegroundWindow(hwndServer);
+        ShowWindow(hwndServer, nCmdShow);
+        return 0;
+    }
+
+    // 設定を読み込み、コマンドラインをパースする
     SERVER_CMD cmd;
     cmd.load_settings();
     cmd.parse_cmd_line(argc, argv);
 
+    // コマンドを積む
     SERVER server;
     server.m_stack.push(cmd);
 
