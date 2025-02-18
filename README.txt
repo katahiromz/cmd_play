@@ -18,6 +18,8 @@
       -mono                      音をモノラルにする。
       -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む。
       -voice-copy TONE FILE.voi  音色をファイルにコピーする。
+      -bgm 0                     演奏が終わるまで待つ（デフォルト）。
+      -bgm 1                     演奏が終わるまで待たない。
       -help                      このメッセージを表示する。
       -version                   バージョン情報を表示する。
 
