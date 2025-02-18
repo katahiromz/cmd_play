@@ -1,17 +1,13 @@
+// server.h --- cmd_play_server.exe のヘッダ
+// Copyright (C) 2025 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+
 #pragma once
 
 #define SERVER_CLASSNAME L"cmd_play server"
 #define SERVER_TITLE L"cmd_play server"
 
 inline HWND
-Server_FindWindow(VOID)
+find_server_window(VOID)
 {
     return FindWindowW(SERVER_CLASSNAME, SERVER_TITLE);
-}
-
-inline BOOL
-Server_SendData(HWND hwndServer, const void *data_ptr, DWORD data_size)
-{
-    COPYDATASTRUCT cds = { 0xDEADFACE, data_size, (PVOID)data_ptr };
-    return (BOOL)SendMessageW(hwndServer, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
 }

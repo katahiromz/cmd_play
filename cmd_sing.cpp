@@ -371,7 +371,7 @@ bool vsk_sing_items_from_string(std::vector<VskSingItem>& items, const VskString
 } // vsk_sing_items_from_string
 
 // CMD SING文実装の本体
-VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str, bool stereo)
+VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str, bool stereo, bool no_sound)
 {
     VskString s = vsk_replace_sing_placeholders(str); // {文字列変数名}を展開する
 
@@ -386,12 +386,12 @@ VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str, bool stereo)
     if (!vsk_phrase_from_sing_items(phrase, items))
         return VSK_SOUND_ERR_ILLEGAL; // 失敗
 
-    // フレーズを演奏する
-    VskScoreBlock block = { phrase };
-    vsk_sound_player->play(block, stereo);
-
-    // 設定を保存する
-    vsk_cmd_sing_settings = phrase->m_setting;
+    if (!no_sound)
+    {
+        // フレーズを演奏する
+        VskScoreBlock block = { phrase };
+        vsk_sound_player->play(block, stereo);
+    }
 
     return VSK_SOUND_ERR_SUCCESS; // 成功
 }

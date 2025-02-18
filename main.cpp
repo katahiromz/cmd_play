@@ -190,9 +190,15 @@ struct CMD_PLAY
     std::vector<VOICE_INFO> m_voices;
 
     RET parse_cmd_line(int argc, wchar_t **argv);
-    RET run();
+    RET run(int argc, wchar_t **argv);
+    RET start_server(const std::wstring& cmd_line);
     bool load_settings();
     bool save_settings();
+    bool save_bgm_only();
+
+    std::wstring build_server_cmd_line(int argc, wchar_t **argv);
+    VSK_SOUND_ERR save_wav();
+    VSK_SOUND_ERR play_str(bool no_sound);
 };
 
 #define NUM_SETTINGS 12
@@ -264,6 +270,31 @@ bool CMD_PLAY::load_settings()
         CharUpperA(szName);
         CharUpperA(szValue);
         g_variables[&szName[4]] = szValue;
+    }
+
+    // レジストリを閉じる
+    RegCloseKey(hKey);
+
+    return true;
+}
+
+// レジストリへ設定を書き込む
+bool CMD_PLAY::save_bgm_only()
+{
+    if (m_no_reg)
+        return false;
+
+    // レジストリを作成
+    HKEY hKey;
+    LSTATUS error = RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Katayama Hirofumi MZ\\cmd_play", 0,
+                                    NULL, 0, KEY_READ | KEY_WRITE, NULL, &hKey, NULL);
+    if (error)
+        return false;
+
+    // BGMか？
+    {
+        DWORD dwValue = !!m_bgm, cbValue = sizeof(dwValue);
+        RegSetValueExW(hKey, L"BGM", 0, REG_DWORD, (BYTE *)&dwValue, cbValue);
     }
 
     // レジストリを閉じる
@@ -532,7 +563,92 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
     return RET_SUCCESS;
 }
 
-RET CMD_PLAY::run()
+std::wstring CMD_PLAY::build_server_cmd_line(int argc, wchar_t **argv)
+{
+    std::wstring ret;
+
+    bool first = true;
+    for (int iarg = 1; iarg < argc; ++iarg)
+    {
+        if (!first)
+            ret += L' ';
+        else
+            first = false;
+
+        std::wstring arg = argv[iarg];
+        if (arg.find(L' ') != arg.npos || arg.find(L'\t') != arg.npos)
+        {
+            ret += L'"';
+            ret += arg;
+            ret += L'"';
+        }
+        else
+        {
+            ret += arg;
+        }
+    }
+
+    return ret;
+}
+
+// サーバーを起動する
+RET CMD_PLAY::start_server(const std::wstring& cmd_line)
+{
+    // サーバーへのパスファイル名を構築する
+    WCHAR szPath[MAX_PATH];
+    GetModuleFileNameW(NULL, szPath, _countof(szPath));
+    PathRemoveFileSpecW(szPath);
+    PathAppendW(szPath, L"cmd_play_server.exe");
+
+    // シェルでサーバーを起動する
+    SHELLEXECUTEINFOW info = { sizeof(info) };
+    info.fMask = SEE_MASK_FLAG_NO_UI;
+    info.lpFile = szPath;
+    info.lpParameters = cmd_line.c_str();
+    info.nShow = SW_HIDE;
+    if (!ShellExecuteExW(&info))
+    {
+        my_printf(stderr, get_text(IDT_BAD_CALL));
+        return RET_BAD_CALL;
+    }
+
+    return RET_SUCCESS;
+}
+
+VSK_SOUND_ERR CMD_PLAY::play_str(bool no_sound)
+{
+    switch (m_audio_mode)
+    {
+    case 0:
+        return vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo, no_sound);
+    case 2:
+    case 3:
+    case 4:
+        return vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo, no_sound);
+    case 5:
+        return vsk_sound_cmd_play_fm(m_str_to_play, m_stereo, no_sound);
+    }
+
+    return VSK_SOUND_ERR_ILLEGAL;
+}
+
+VSK_SOUND_ERR CMD_PLAY::save_wav()
+{
+    switch (m_audio_mode)
+    {
+    case 0:
+        return vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo);
+    case 2:
+    case 3:
+    case 4:
+        return vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo);
+    case 5:
+        return vsk_sound_cmd_play_fm_save(m_str_to_play, m_output_file.c_str(), m_stereo);
+    }
+    return VSK_SOUND_ERR_ILLEGAL;
+}
+
+RET CMD_PLAY::run(int argc, wchar_t **argv)
 {
     if (m_help)
     {
@@ -546,28 +662,58 @@ RET CMD_PLAY::run()
         return RET_SUCCESS;
     }
 
-    load_settings();
-
-    if (m_bgm)
-    {
-        // TODO: 非同期的に演奏する
-    }
-
     if (!vsk_sound_init(m_stereo))
     {
         my_puts(get_text(IDT_SOUND_INIT_FAILED), stderr);
         return RET_BAD_SOUND_INIT;
     }
 
+    if (m_bgm && m_output_file.empty() && !m_stopm) // 非同期に演奏か？
+    {
+        // 文法をチェックする
+        auto err = play_str(true);
+
+        save_bgm_only();
+        vsk_sound_exit();
+
+        switch (err)
+        {
+        case VSK_SOUND_ERR_ILLEGAL:
+            my_puts(get_text(IDT_BAD_CALL), stderr);
+            do_beep();
+            return RET_BAD_CALL;
+        case VSK_SOUND_ERR_IO_ERROR:
+            my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
+            do_beep();
+            return RET_CANT_OPEN_FILE;
+        default:
+            break;
+        }
+
+        auto cmd_line = build_server_cmd_line(argc, argv);
+        HWND hwndServer = find_server_window();
+        if (!hwndServer)
+            return start_server(cmd_line);
+
+        COPYDATASTRUCT cds;
+        cds.dwData = 0xDEADFACE;
+        cds.cbData = (cmd_line.size() + 1) * sizeof(WCHAR);
+        cds.lpData = (PVOID)cmd_line.c_str();
+        SendMessageW(hwndServer, WM_COPYDATA, 0, (LPARAM)&cds);
+
+        return RET_SUCCESS;
+    }
+
     if (m_stopm) // 音楽を止めて設定をリセットする
     {
         // サーバーを停止
-        if (HWND hwndServer = Server_FindWindow())
+        if (HWND hwndServer = find_server_window())
             PostMessageW(hwndServer, WM_CLOSE, 0, 0);
         // 変数をクリア
         g_variables.clear();
         // 設定をクリア
         vsk_cmd_play_reset_settings();
+        m_bgm = false;
     }
 
     // g_variablesをm_variablesで上書き
@@ -602,22 +748,7 @@ RET CMD_PLAY::run()
 
     if (m_output_file.size())
     {
-        VSK_SOUND_ERR err;
-        switch (m_audio_mode)
-        {
-        case 0:
-            err = vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo);
-            break;
-        case 2:
-        case 3:
-        case 4:
-            err = vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo);
-            break;
-        case 5:
-            err = vsk_sound_cmd_play_fm_save(m_str_to_play, m_output_file.c_str(), m_stereo);
-            break;
-        }
-
+        auto err = save_wav();
         switch (err)
         {
         case VSK_SOUND_ERR_SUCCESS:
@@ -639,22 +770,7 @@ RET CMD_PLAY::run()
         return RET_SUCCESS;
     }
 
-    VSK_SOUND_ERR err;
-    switch (m_audio_mode)
-    {
-    case 0:
-        err = vsk_sound_cmd_play_ssg(m_str_to_play, m_stereo);
-        break;
-    case 2:
-    case 3:
-    case 4:
-        err = vsk_sound_cmd_play_fm_and_ssg(m_str_to_play, m_stereo);
-        break;
-    case 5:
-        err = vsk_sound_cmd_play_fm(m_str_to_play, m_stereo);
-        break;
-    }
-
+    auto err = play_str(false);
     if (err)
     {
         my_puts(get_text(IDT_BAD_CALL), stderr);
@@ -696,13 +812,16 @@ int wmain(int argc, wchar_t **argv)
     SetConsoleCtrlHandler(HandlerRoutine, TRUE); // Ctrl+C
 
     CMD_PLAY play;
+
+    play.load_settings();
+
     if (RET ret = play.parse_cmd_line(argc, argv))
     {
         do_beep();
         return ret;
     }
 
-    if (RET ret = play.run())
+    if (RET ret = play.run(argc, argv))
         return ret;
 
     return RET_SUCCESS;
