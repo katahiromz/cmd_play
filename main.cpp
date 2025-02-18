@@ -223,6 +223,14 @@ bool CMD_PLAY::load_settings()
             m_stereo = !!dwValue;
     }
 
+    // BGMか？
+    {
+        DWORD dwValue, cbValue = sizeof(dwValue);
+        error = RegQueryValueExW(hKey, L"BGM", NULL, NULL, (BYTE*)&dwValue, &cbValue);
+        if (!error)
+            m_bgm = !!dwValue;
+    }
+
     // 音声の設定のサイズ
     size_t size = vsk_cmd_play_get_setting_size();
 
@@ -281,6 +289,11 @@ bool CMD_PLAY::save_settings()
     {
         DWORD dwValue = !!m_stereo, cbValue = sizeof(dwValue);
         RegSetValueExW(hKey, L"Stereo", 0, REG_DWORD, (BYTE *)&dwValue, cbValue);
+    }
+    // BGMか？
+    {
+        DWORD dwValue = !!m_bgm, cbValue = sizeof(dwValue);
+        RegSetValueExW(hKey, L"BGM", 0, REG_DWORD, (BYTE *)&dwValue, cbValue);
     }
 
     // 音声の設定を書き込む
