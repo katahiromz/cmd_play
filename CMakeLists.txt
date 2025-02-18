@@ -38,4 +38,9 @@ if(ENABLE_BEEP)
     target_compile_definitions(cmd_play PRIVATE ENABLE_BEEP)
 endif()
 
+# cmd_play_server.exe
+add_executable(cmd_play_server WIN32 cmd_play.cpp cmd_sing.cpp sound.cpp soundplayer.cpp server/server.cpp server/server_res.rc)
+target_compile_definitions(cmd_play_server PRIVATE UNICODE _UNICODE JAPAN _CRT_SECURE_NO_WARNINGS)
+target_link_libraries(cmd_play_server comctl32 fmgon shlwapi winmm)
+
 ##############################################################################

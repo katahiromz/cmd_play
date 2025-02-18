@@ -15,6 +15,7 @@
 #include <tchar.h>
 #include <shlwapi.h>
 #include <strsafe.h>
+#include "server/server.h" // 非同期演奏のためのサーバー
 
 enum RET { // exit code of this program
     RET_SUCCESS = 0,
@@ -523,8 +524,12 @@ RET CMD_PLAY::run()
 
     if (m_stopm) // 音楽を止めて設定をリセットする
     {
-        // TODO: 音楽を止める
+        // サーバーを停止
+        if (HWND hwndServer = Server_FindWindow())
+            PostMessageW(hwndServer, WM_CLOSE, 0, 0);
+        // 変数をクリア
         g_variables.clear();
+        // 設定をクリア
         vsk_cmd_play_reset_settings();
     }
 
