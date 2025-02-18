@@ -669,15 +669,23 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         return RET_BAD_SOUND_INIT;
     }
 
+    if (m_stopm) // 音楽を止めて設定をリセットする
+    {
+        // コマンドラインの -bgm 設定を優先する
+        m_bgm = m_bgm2;
+        // サーバーを停止
+        if (HWND hwndServer = find_server_window())
+            SendMessageW(hwndServer, WM_CLOSE, 0, 0);
+        // 変数をクリア
+        g_variables.clear();
+        // 設定をクリア
+        vsk_cmd_play_reset_settings();
+        // 設定を保存
+        save_settings();
+    }
+
     if (m_bgm && m_output_file.empty()) // 非同期に演奏か？
     {
-        if (m_stopm && m_bgm2)
-        {
-            // サーバーを停止
-            if (HWND hwndServer = find_server_window())
-                SendMessageW(hwndServer, WM_CLOSE, 0, 0);
-        }
-
         // 文法をチェックする
         auto err = play_str(true);
 
@@ -710,18 +718,6 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         SendMessageW(hwndServer, WM_COPYDATA, 0, (LPARAM)&cds);
 
         return RET_SUCCESS;
-    }
-
-    if (m_stopm) // 音楽を止めて設定をリセットする
-    {
-        // サーバーを停止
-        if (HWND hwndServer = find_server_window())
-            PostMessageW(hwndServer, WM_CLOSE, 0, 0);
-        // 変数をクリア
-        g_variables.clear();
-        // 設定をクリア
-        vsk_cmd_play_reset_settings();
-        m_bgm = false;
     }
 
     // g_variablesをm_variablesで上書き
