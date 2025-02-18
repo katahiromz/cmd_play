@@ -19,6 +19,9 @@ HANDLE g_hStackMutex = NULL;
 #define TIMER_ID 999 // タイマーID
 #define TIMER_INTERVAL (10 * 1000)  // 10秒
 
+#define ID_RESTART_TIMER 1000
+#define ID_KILL_TIMER 1001
+
 #define VSK_MAX_CHANNEL 6
 
 struct VOICE_INFO
@@ -342,6 +345,7 @@ VSK_SOUND_ERR SERVER::play_cmd(SERVER_CMD& cmd, bool no_sound)
 
 DWORD SERVER::thread_proc()
 {
+    size_t prev_size = 0;
     while (g_hMainWnd)
     {
         // 次に演奏するデータを取り出す
@@ -349,21 +353,43 @@ DWORD SERVER::thread_proc()
         DWORD wait = WaitForSingleObject(g_hStackMutex, INFINITE);
         if (wait != WAIT_OBJECT_0)
             break;
-        if (m_stack.size())
+        size_t size = m_stack.size();
+        if (size)
         {
             cmd = m_stack.top();
             m_stack.pop();
         }
         ReleaseMutex(g_hStackMutex);
 
-        // 実際に演奏する
-        play_cmd(cmd, false);
+        if (!size) // データがない？
+        {
+            if (prev_size != size) // 前とサイズが違う
+            {
+                // タイマーを再開する
+                PostMessageW(g_hMainWnd, WM_COMMAND, ID_RESTART_TIMER, 0);
+            }
+            else
+            {
+                // やることないんだから、あんまりCPU時間を食うな。ビジーループを回避
+                Sleep(100);
+            }
+        }
+        else
+        {
+            // タイマーを破棄する
+            PostMessageW(g_hMainWnd, WM_COMMAND, ID_KILL_TIMER, 0);
 
-        // 設定を保存する
-        cmd.save_settings();
+            // 実際に演奏する
+            play_cmd(cmd, false);
 
-        // 演奏が終わるまで待つ
-        vsk_sound_wait(-1);
+            // 設定を保存する
+            cmd.save_settings();
+
+            // 演奏が終わるまで待つ
+            vsk_sound_wait(-1);
+        }
+
+        prev_size = size;
     }
     return 0;
 }
@@ -433,7 +459,7 @@ BOOL OnCopyData(HWND hwnd, HWND hwndFrom, PCOPYDATASTRUCT pcds)
         cmd.parse_cmd_line(argc, argv);
         // 音色を適用
         pServer->apply_voice(cmd);
-        // 音声なしで演奏する
+        // 演奏しないで設定のみを更新する
         pServer->play_cmd(cmd, true);
         // 設定を保存する
         cmd.save_settings();
@@ -452,6 +478,16 @@ BOOL OnCopyData(HWND hwnd, HWND hwndFrom, PCOPYDATASTRUCT pcds)
 void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
     SERVER *pServer = Server_GetData(hwnd);
+    switch (id)
+    {
+    case ID_RESTART_TIMER:
+        KillTimer(hwnd, TIMER_ID);
+        SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
+        break;
+    case ID_KILL_TIMER:
+        KillTimer(hwnd, TIMER_ID);
+        break;
+    }
 }
 
 void OnTimer(HWND hwnd, UINT id)
