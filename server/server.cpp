@@ -29,7 +29,6 @@ struct VOICE_INFO
 
 struct SERVER_CMD
 {
-    bool m_stopm = false;
     std::map<std::string, std::string> m_variables;
     int m_audio_mode = 2;
     std::vector<std::string> m_str_to_play;
@@ -203,7 +202,6 @@ int SERVER_CMD::parse_cmd_line(INT argc, LPWSTR *argv)
 
         if (_wcsicmp(arg, L"-stopm") == 0 || _wcsicmp(arg, L"--stopm") == 0)
         {
-            m_stopm = true;
             continue;
         }
 
