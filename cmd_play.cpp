@@ -606,7 +606,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool st
 
         // create phrase
         auto phrase = std::make_shared<VskPhrase>(vsk_ssg_sound_settings[iChannel]);
-        phrase->m_setting.m_fm = false;
+        phrase->m_setting.m_audio_type = AUDIO_TYPE_SSG;
         if (!vsk_phrase_from_cmd_play_items(phrase, items))
             return VSK_SOUND_ERR_ILLEGAL;
 
@@ -644,7 +644,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, 
         auto phrase = std::make_shared<VskPhrase>(
             (iChannel < 3) ? vsk_fm_sound_settings[iChannel] : vsk_ssg_sound_settings[iChannel - 3]
         );
-        phrase->m_setting.m_fm = (iChannel < 3);
+        phrase->m_setting.m_audio_type = ((iChannel < 3) ? AUDIO_TYPE_FM : AUDIO_TYPE_SSG);
         if (!vsk_phrase_from_cmd_play_items(phrase, items))
             return VSK_SOUND_ERR_ILLEGAL;
 
@@ -680,7 +680,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool ste
 
         // create phrase
         auto phrase = std::make_shared<VskPhrase>(vsk_fm_sound_settings[iChannel]);
-        phrase->m_setting.m_fm = true;
+        phrase->m_setting.m_audio_type = AUDIO_TYPE_FM;
         if (!vsk_phrase_from_cmd_play_items(phrase, items))
             return VSK_SOUND_ERR_ILLEGAL;
 
@@ -718,7 +718,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, co
 
         // create phrase
         auto phrase = std::make_shared<VskPhrase>(vsk_ssg_sound_settings[iChannel]);
-        phrase->m_setting.m_fm = false;
+        phrase->m_setting.m_audio_type = AUDIO_TYPE_SSG;
         if (!vsk_phrase_from_cmd_play_items(phrase, items))
             return VSK_SOUND_ERR_ILLEGAL;
 
@@ -753,7 +753,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& s
         auto phrase = std::make_shared<VskPhrase>(
             (iChannel < 3) ? vsk_fm_sound_settings[iChannel] : vsk_ssg_sound_settings[iChannel - 3]
         );
-        phrase->m_setting.m_fm = (iChannel < 3);
+        phrase->m_setting.m_audio_type = ((iChannel < 3) ? AUDIO_TYPE_FM : AUDIO_TYPE_SSG);
         if (!vsk_phrase_from_cmd_play_items(phrase, items))
             return VSK_SOUND_ERR_ILLEGAL;
 
@@ -786,7 +786,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, con
 
         // create phrase
         auto phrase = std::make_shared<VskPhrase>(vsk_fm_sound_settings[iChannel]);
-        phrase->m_setting.m_fm = true;
+        phrase->m_setting.m_audio_type = AUDIO_TYPE_FM;
         if (!vsk_phrase_from_cmd_play_items(phrase, items))
             return VSK_SOUND_ERR_ILLEGAL; // 失敗
 

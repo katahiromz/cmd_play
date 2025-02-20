@@ -382,7 +382,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing(const char *str, bool stereo, bool no_sound)
 
     // フレーズを作成する
     auto phrase = std::make_shared<VskPhrase>(vsk_cmd_sing_settings);
-    phrase->m_setting.m_fm = false;
+    phrase->m_setting.m_audio_type = AUDIO_TYPE_SSG;
     if (!vsk_phrase_from_sing_items(phrase, items))
         return VSK_SOUND_ERR_ILLEGAL; // 失敗
 
@@ -408,7 +408,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename, 
 
     // フレーズを作成する
     auto phrase = std::make_shared<VskPhrase>(vsk_cmd_sing_settings);
-    phrase->m_setting.m_fm = false;
+    phrase->m_setting.m_audio_type = AUDIO_TYPE_SSG;
     if (!vsk_phrase_from_sing_items(phrase, items))
         return VSK_SOUND_ERR_ILLEGAL; // 失敗
 

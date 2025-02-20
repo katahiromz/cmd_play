@@ -345,9 +345,10 @@ void VskPhrase::calc_gate_and_goal() {
 }
 
 // 波形を実現する（ステレオ）
-std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_size)
+std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::fm_realize(int ich, size_t *pdata_size)
 {
     assert(m_player != nullptr);
+    assert(m_setting.m_audio_type == AUDIO_TYPE_FM);
 
     // チャンネルに応じてチップに振り分ける
     YM2203& ym = (ich >= 3) ? m_player->m_ym1 : m_player->m_ym0;
@@ -361,154 +362,175 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::realize(int ich, size_t *pdata_siz
     std::memset(&data[0], 0, *pdata_size);
 
     uint32_t isample = 0;
-    if (m_setting.m_fm) { // FM sound?
-        auto& timbre = m_setting.m_timbre;
-        ym.fm_set_timbre(ich, &timbre);
 
-        VskLFOCtrl lc;
-        lc.init_for_timbre(&timbre);
+    auto& timbre = m_setting.m_timbre;
+    ym.fm_set_timbre(ich, &timbre);
 
-        for (auto& note : m_notes) { // For each note
-            if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
-                schedule_special_action(note.m_gate, note.m_data);
-                continue;
+    VskLFOCtrl lc;
+    lc.init_for_timbre(&timbre);
+
+    for (auto& note : m_notes) { // For each note
+        if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
+            schedule_special_action(note.m_gate, note.m_data);
+            continue;
+        }
+
+        if (note.m_key == KEY_TONE) { // Tone change?
+            const auto new_tone = note.m_data;
+            assert((0 <= new_tone) && (new_tone < NUM_TONES));
+            timbre = ym2203_tone_table[new_tone];
+            ym.fm_set_timbre(ich, &timbre);
+            lc.init_for_timbre(&timbre);
+            continue;
+        }
+
+        if (note.m_key == KEY_REG) { // Register?
+            m_player->write_reg(note.m_reg, note.m_data);
+            continue;
+        }
+
+        if (note.m_key == KEY_ENVELOP_INTERVAL) {
+            auto interval = note.m_data;
+            m_player->write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
+            m_player->write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
+            continue;
+        }
+
+        if (note.m_key == KEY_ENVELOP_TYPE) {
+            auto type = note.m_data;
+            m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
+            continue;
+        }
+
+        // 左右を設定する
+        auto LR = note.m_LR;
+        auto pms = timbre.pms;
+        for (int i = 0; i < 3; ++i) {
+            auto ams = timbre.ams[i];
+            uint8_t value = (uint8_t)((LR << 6) | (ams << 4) | pms);
+            ym.write_reg(0xB4 + i, value);
+        }
+
+        if (note.m_key != KEY_SPECIAL_REST) { // Not special rest?
+            // do key on
+            if (note.m_key != KEY_REST) { // Has key?
+                ym.fm_set_pitch(ich, note.m_octave, note.m_key);
+                ym.fm_set_volume(ich, int(note.m_volume));
+                ym.fm_key_on(ich);
             }
 
-            if (note.m_key == KEY_TONE) { // Tone change?
-                const auto new_tone = note.m_data;
-                assert((0 <= new_tone) && (new_tone < NUM_TONES));
-                timbre = ym2203_tone_table[new_tone];
-                ym.fm_set_timbre(ich, &timbre);
-                lc.init_for_timbre(&timbre);
-                continue;
-            }
+            lc.init_for_keyon(&timbre);
+        }
 
-            if (note.m_key == KEY_REG) { // Register?
-                m_player->write_reg(note.m_reg, note.m_data);
-                continue;
-            }
-
-            if (note.m_key == KEY_ENVELOP_INTERVAL) {
-                auto interval = note.m_data;
-                m_player->write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
-                m_player->write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
-                continue;
-            }
-
-            if (note.m_key == KEY_ENVELOP_TYPE) {
-                auto type = note.m_data;
-                m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
-                continue;
-            }
-
-            // 左右を設定する
-            auto LR = note.m_LR;
-            auto pms = timbre.pms;
-            for (int i = 0; i < 3; ++i) {
-                auto ams = timbre.ams[i];
-                uint8_t value = (uint8_t)((LR << 6) | (ams << 4) | pms);
-                ym.write_reg(0xB4 + i, value);
-            }
-
-            if (note.m_key != KEY_SPECIAL_REST) { // Not special rest?
-                // do key on
-                if (note.m_key != KEY_REST) { // Has key?
-                    ym.fm_set_pitch(ich, note.m_octave, note.m_key);
-                    ym.fm_set_volume(ich, int(note.m_volume));
-                    ym.fm_key_on(ich);
-                }
-
-                lc.init_for_keyon(&timbre);
-            }
-
-            // render sound
-            auto sec = note.m_sec * note.m_quantity / 8.0f;
-            auto nsamples = int(SAMPLERATE * sec);
-            int unit;
-            while (nsamples) {
-                unit = SAMPLERATE / LFO_INTERVAL;
-                if (unit > nsamples) {
-                    unit = nsamples;
-                }
-                ym.mix(&data[isample * 2], unit);
-                isample += unit;
-                if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST) {
-                    lc.increment();
-                    int adj[4] = {
-                        int(lc.m_adj_v[0]), int(lc.m_adj_v[1]),
-                        int(lc.m_adj_v[2]), int(lc.m_adj_v[3]),
-                    };
-                    ym.fm_set_volume(ich, int(note.m_volume), adj);
-                    ym.fm_set_pitch(ich, note.m_octave, note.m_key, int(lc.m_adj_p));
-                }
-                nsamples -= unit;
-            }
-            ym.count(uint32_t(sec * 1000 * 1000));
-            isample += nsamples;
-
-            sec = note.m_sec * (8.0f - note.m_quantity) / 8.0f;
-            nsamples = int(SAMPLERATE * sec);
-            if (note.m_key != KEY_SPECIAL_REST) {
-                // do key off
-                ym.fm_key_off(ich);
-            }
-            unit = SAMPLERATE;
+        // render sound
+        auto sec = note.m_sec * note.m_quantity / 8.0f;
+        auto nsamples = int(SAMPLERATE * sec);
+        int unit;
+        while (nsamples) {
+            unit = SAMPLERATE / LFO_INTERVAL;
             if (unit > nsamples) {
                 unit = nsamples;
             }
             ym.mix(&data[isample * 2], unit);
-            ym.count(uint32_t(sec * 1000 * 1000));
-            isample += nsamples;
-        }
-    } else { // SSG sound?
-        for (auto& note : m_notes) {
-            if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
-                schedule_special_action(note.m_gate, note.m_data);
-                continue;
-            }
-
-            if (note.m_key == KEY_REG) { // Register?
-                m_player->write_reg(note.m_reg, note.m_data);
-                continue;
-            }
-
-            if (note.m_key == KEY_ENVELOP_INTERVAL) {
-                auto interval = note.m_data;
-                m_player->write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
-                m_player->write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
-                continue;
-            }
-
-            if (note.m_key == KEY_ENVELOP_TYPE) {
-                auto type = note.m_data;
-                m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
-                continue;
-            }
-
-            // do key on
+            isample += unit;
             if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST) {
-                ym.ssg_set_pitch(ich, note.m_octave, note.m_key);
-                ym.ssg_set_volume(ich, int(note.m_volume));
-                ym.ssg_key_on(ich);
+                lc.increment();
+                int adj[4] = {
+                    int(lc.m_adj_v[0]), int(lc.m_adj_v[1]),
+                    int(lc.m_adj_v[2]), int(lc.m_adj_v[3]),
+                };
+                ym.fm_set_volume(ich, int(note.m_volume), adj);
+                ym.fm_set_pitch(ich, note.m_octave, note.m_key, int(lc.m_adj_p));
             }
-
-            // render sound
-            auto sec = note.m_sec * note.m_quantity / 8.0f;
-            auto nsamples = int(SAMPLERATE * sec);
-            ym.mix(&data[isample * 2], nsamples);
-            ym.count(uint32_t(sec * 1000 * 1000));
-            isample += nsamples;
-
-            sec = note.m_sec * (8.0f - note.m_quantity) / 8.0f;
-            nsamples = int(SAMPLERATE * sec);
-            if (note.m_key != KEY_SPECIAL_REST) {
-                // do key off
-                ym.ssg_key_off(ich);
-            }
-            ym.mix(&data[isample * 2], nsamples);
-            ym.count(uint32_t(sec * 1000 * 1000));
-            isample += nsamples;
+            nsamples -= unit;
         }
+        ym.count(uint32_t(sec * 1000 * 1000));
+        isample += nsamples;
+
+        sec = note.m_sec * (8.0f - note.m_quantity) / 8.0f;
+        nsamples = int(SAMPLERATE * sec);
+        if (note.m_key != KEY_SPECIAL_REST) {
+            // do key off
+            ym.fm_key_off(ich);
+        }
+        unit = SAMPLERATE;
+        if (unit > nsamples) {
+            unit = nsamples;
+        }
+        ym.mix(&data[isample * 2], unit);
+        ym.count(uint32_t(sec * 1000 * 1000));
+        isample += nsamples;
+    }
+
+    return data;
+}
+
+// 波形を実現する（ステレオ）
+std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::ssg_realize(int ich, size_t *pdata_size)
+{
+    assert(m_player != nullptr);
+    assert(m_setting.m_audio_type == AUDIO_TYPE_SSG);
+
+    // チャンネルに応じてチップに振り分ける
+    YM2203& ym = (ich >= 3) ? m_player->m_ym1 : m_player->m_ym0;
+    if (ich >= 3)
+        ich -= 3;
+
+    // メモリーを割り当て
+    auto count = uint32_t(m_goal * SAMPLERATE + 1) * 2; // stereo
+    *pdata_size = count * sizeof(VSK_PCM16_VALUE);
+    auto data = std::make_unique<VSK_PCM16_VALUE[]>(count);
+    std::memset(&data[0], 0, *pdata_size);
+
+    uint32_t isample = 0;
+
+    for (auto& note : m_notes) {
+        if (note.m_key == KEY_SPECIAL_ACTION) { // Special action?
+            schedule_special_action(note.m_gate, note.m_data);
+            continue;
+        }
+
+        if (note.m_key == KEY_REG) { // Register?
+            m_player->write_reg(note.m_reg, note.m_data);
+            continue;
+        }
+
+        if (note.m_key == KEY_ENVELOP_INTERVAL) {
+            auto interval = note.m_data;
+            m_player->write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
+            m_player->write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
+            continue;
+        }
+
+        if (note.m_key == KEY_ENVELOP_TYPE) {
+            auto type = note.m_data;
+            m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
+            continue;
+        }
+
+        // do key on
+        if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST) {
+            ym.ssg_set_pitch(ich, note.m_octave, note.m_key);
+            ym.ssg_set_volume(ich, int(note.m_volume));
+            ym.ssg_key_on(ich);
+        }
+
+        // render sound
+        auto sec = note.m_sec * note.m_quantity / 8.0f;
+        auto nsamples = int(SAMPLERATE * sec);
+        ym.mix(&data[isample * 2], nsamples);
+        ym.count(uint32_t(sec * 1000 * 1000));
+        isample += nsamples;
+
+        sec = note.m_sec * (8.0f - note.m_quantity) / 8.0f;
+        nsamples = int(SAMPLERATE * sec);
+        if (note.m_key != KEY_SPECIAL_REST) {
+            // do key off
+            ym.ssg_key_off(ich);
+        }
+        ym.mix(&data[isample * 2], nsamples);
+        ym.count(uint32_t(sec * 1000 * 1000));
+        isample += nsamples;
     }
 
     return data;
@@ -606,7 +628,17 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
             phrase->set_player(this);
 
             size_t data_size;
-            auto data = phrase->realize(ich, &data_size);
+            std::unique_ptr<VSK_PCM16_VALUE[]> data;
+            switch (phrase->m_setting.m_audio_type) {
+            case AUDIO_TYPE_SSG:
+                data = phrase->ssg_realize(ich, &data_size);
+                break;
+            case AUDIO_TYPE_FM:
+                data = phrase->fm_realize(ich, &data_size);
+                break;
+            default:
+                assert(0);
+            }
             assert(data != nullptr);
 
             raw_data.push_back(std::move(data));

@@ -21,6 +21,15 @@
 #endif
 
 //////////////////////////////////////////////////////////////////////////////
+// AUDIO_TYPE
+
+enum AUDIO_TYPE {
+    AUDIO_TYPE_SSG,
+    AUDIO_TYPE_FM,
+    AUDIO_TYPE_MIDI,
+};
+
+//////////////////////////////////////////////////////////////////////////////
 
 #define VSK_PCM16_VALUE int16_t
 
@@ -95,20 +104,20 @@ private:
 // VskSoundSetting - 音声の設定
 
 struct VskSoundSetting {
-    int                 m_tempo;    // テンポ
-    int                 m_octave;   // オクターブ
-    float               m_length;   // 音符の長さ (24は四分音符の長さ)
-    bool                m_fm;       // FMかどうか
-    float               m_volume;   // 音量 (0～15)
-    int                 m_quantity; // 音符の長さの割合 (0～8)
-    int                 m_tone;     // 音色
-    uint8_t             m_LR;       // 左右 (left/right)
-    YM2203_Timbre       m_timbre;   // see YM2203_Timbre
+    int                 m_tempo;        // テンポ
+    int                 m_octave;       // オクターブ
+    float               m_length;       // 音符の長さ (24は四分音符の長さ)
+    AUDIO_TYPE          m_audio_type;   // 音源の種類
+    float               m_volume;       // 音量 (0～15)
+    int                 m_quantity;     // 音符の長さの割合 (0～8)
+    int                 m_tone;         // 音色
+    uint8_t             m_LR;           // 左右 (left/right)
+    YM2203_Timbre       m_timbre;       // see YM2203_Timbre
 
     VskSoundSetting(int tempo = 120, int octave = 4 - 1, float length = 24,
-                    int tone = 0, bool fm = false) :
+                    int tone = 0, AUDIO_TYPE audio_type = AUDIO_TYPE_SSG) :
         m_tempo(tempo), m_octave(octave), m_length(length),
-        m_fm(fm)
+        m_audio_type(audio_type)
     {
         m_volume = 8;
         m_quantity = 8;
@@ -120,7 +129,7 @@ struct VskSoundSetting {
         m_tempo = 120;
         m_octave = 4 - 1;
         m_length = 24;
-        m_fm = false;
+        m_audio_type = AUDIO_TYPE_SSG;
         m_volume = 8;
         m_quantity = 8;
         m_tone = 0;
@@ -241,7 +250,8 @@ struct VskPhrase {
 
     void schedule_special_action(float gate, int action_no);
     void execute_special_actions();
-    std::unique_ptr<VSK_PCM16_VALUE[]> realize(int ich, size_t *pdata_size);
+    std::unique_ptr<VSK_PCM16_VALUE[]> fm_realize(int ich, size_t *pdata_size);
+    std::unique_ptr<VSK_PCM16_VALUE[]> ssg_realize(int ich, size_t *pdata_size);
     void rescan_notes();
     void calc_gate_and_goal();
 }; // struct VskPhrase
