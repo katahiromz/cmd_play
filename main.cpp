@@ -181,7 +181,7 @@ struct CMD_PLAY
     bool m_version = false;
     std::vector<std::string> m_str_to_play;
     std::map<VskString, VskString> m_variables;
-    std::wstring m_output_file;
+    std::wstring m_save_wav;
     int m_audio_mode = 2;
     bool m_stopm = false;
     bool m_stereo = true;
@@ -421,7 +421,7 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
         {
             if (iarg + 1 < argc)
             {
-                m_output_file = argv[++iarg];
+                m_save_wav = argv[++iarg];
                 continue;
             }
             else
@@ -638,13 +638,13 @@ VSK_SOUND_ERR CMD_PLAY::save_wav()
     switch (m_audio_mode)
     {
     case 0:
-        return vsk_sound_cmd_play_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo);
+        return vsk_sound_cmd_play_ssg_save(m_str_to_play, m_save_wav.c_str(), m_stereo);
     case 2:
     case 3:
     case 4:
-        return vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_output_file.c_str(), m_stereo);
+        return vsk_sound_cmd_play_fm_and_ssg_save(m_str_to_play, m_save_wav.c_str(), m_stereo);
     case 5:
-        return vsk_sound_cmd_play_fm_save(m_str_to_play, m_output_file.c_str(), m_stereo);
+        return vsk_sound_cmd_play_fm_save(m_str_to_play, m_save_wav.c_str(), m_stereo);
     }
     return VSK_SOUND_ERR_ILLEGAL;
 }
@@ -684,7 +684,7 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         save_settings();
     }
 
-    if (m_bgm && m_output_file.empty()) // 非同期に演奏か？
+    if (m_bgm && m_save_wav.empty()) // 非同期に演奏か？
     {
         // 文法をチェックする
         auto err = play_str(true);
@@ -750,7 +750,7 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         }
     }
 
-    if (m_output_file.size())
+    if (m_save_wav.size())
     {
         auto err = save_wav();
         switch (err)
