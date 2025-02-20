@@ -385,20 +385,20 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::fm_realize(int ich, size_t *pdata_
         }
 
         if (note.m_key == KEY_REG) { // Register?
-            m_player->write_reg(note.m_reg, note.m_data);
+            ym.write_reg(note.m_reg, note.m_data);
             continue;
         }
 
         if (note.m_key == KEY_ENVELOP_INTERVAL) {
             auto interval = note.m_data;
-            m_player->write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
-            m_player->write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
+            ym.write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
+            ym.write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
             continue;
         }
 
         if (note.m_key == KEY_ENVELOP_TYPE) {
             auto type = note.m_data;
-            m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
+            ym.write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
             continue;
         }
 
@@ -491,20 +491,20 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::ssg_realize(int ich, size_t *pdata
         }
 
         if (note.m_key == KEY_REG) { // Register?
-            m_player->write_reg(note.m_reg, note.m_data);
+            ym.write_reg(note.m_reg, note.m_data);
             continue;
         }
 
         if (note.m_key == KEY_ENVELOP_INTERVAL) {
             auto interval = note.m_data;
-            m_player->write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
-            m_player->write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
+            ym.write_reg(ADDR_SSG_ENV_FREQ_L, (interval & 0xFF));
+            ym.write_reg(ADDR_SSG_ENV_FREQ_H, ((interval >> 8) & 0xFF));
             continue;
         }
 
         if (note.m_key == KEY_ENVELOP_TYPE) {
             auto type = note.m_data;
-            m_player->write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
+            ym.write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
             continue;
         }
 

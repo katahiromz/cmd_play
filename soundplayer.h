@@ -291,11 +291,6 @@ struct VskSoundPlayer {
 
     void register_special_action(int action_no, VskSpecialActionFn fn = nullptr);
     void do_special_action(int action_no);
-
-    void write_reg(uint32_t addr, uint32_t data) {
-        m_ym0.write_reg(addr, data);
-        m_ym1.write_reg(addr, data);
-    }
 }; // struct VskSoundPlayer
 
 //////////////////////////////////////////////////////////////////////////////

@@ -165,16 +165,6 @@ bool vsk_sound_wait(VskDword milliseconds)
     return vsk_sound_player->wait_for_stop(milliseconds);
 }
 
-// OPNのレジスタにデータを設定する
-bool vsk_sound_voice_reg(int addr, int data)
-{
-    if (!vsk_sound_player)
-        return false;
-
-    vsk_sound_player->write_reg(addr, data);
-    return true;
-}
-
 // 音色のサイズを取得する
 size_t vsk_sound_voice_size(void)
 {
