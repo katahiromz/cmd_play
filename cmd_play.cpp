@@ -728,7 +728,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, co
         ++iChannel;
     }
 
-    if (!vsk_sound_player->save_as_wav(block, filename, stereo))
+    if (!vsk_sound_player->save_wav(block, filename, stereo))
         return VSK_SOUND_ERR_IO_ERROR;
 
     return VSK_SOUND_ERR_SUCCESS;
@@ -763,7 +763,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& s
         ++iChannel;
     }
 
-    if (!vsk_sound_player->save_as_wav(block, filename, stereo))
+    if (!vsk_sound_player->save_wav(block, filename, stereo))
         return VSK_SOUND_ERR_IO_ERROR; // 失敗
 
     return VSK_SOUND_ERR_SUCCESS;
@@ -796,7 +796,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, con
         ++iChannel;
     }
 
-    if (!vsk_sound_player->save_as_wav(block, filename, stereo))
+    if (!vsk_sound_player->save_wav(block, filename, stereo))
         return VSK_SOUND_ERR_IO_ERROR; // 失敗
 
     return VSK_SOUND_ERR_SUCCESS;

@@ -414,7 +414,7 @@ VSK_SOUND_ERR vsk_sound_cmd_sing_save(const char *str, const wchar_t *filename, 
 
     // フレーズを演奏する
     VskScoreBlock block = { phrase };
-    if (!vsk_sound_player->save_as_wav(block, filename, stereo))
+    if (!vsk_sound_player->save_wav(block, filename, stereo))
         return VSK_SOUND_ERR_IO_ERROR; // 失敗
 
     return VSK_SOUND_ERR_SUCCESS;

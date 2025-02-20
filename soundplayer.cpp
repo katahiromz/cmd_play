@@ -694,7 +694,7 @@ bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM1
 }
 
 // 音声をWAVファイルとして保存
-bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename, bool stereo) {
+bool VskSoundPlayer::save_wav(VskScoreBlock& block, const wchar_t *filename, bool stereo) {
     // 波形を生成する
     std::vector<VSK_PCM16_VALUE> values;
     generate_pcm_raw(block, values, stereo);
