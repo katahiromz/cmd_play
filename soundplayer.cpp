@@ -575,10 +575,20 @@ bool VskSoundPlayer::wait_for_stop(uint32_t milliseconds) {
     return m_stopping_event.wait_for_event(milliseconds);
 }
 
-bool VskSoundPlayer::play_and_wait(VskScoreBlock& block, uint32_t milliseconds, bool stereo) {
-    // 演奏して終わるのを待つ
-    play(block, stereo);
-    return wait_for_stop(milliseconds);
+// 実際に演奏する
+void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
+    // 波形を生成
+    generate_pcm_raw(block, m_pcm_values, stereo);
+
+    // スペシャルアクションを実行
+    for (auto& phrase : block)
+        phrase->execute_special_actions();
+
+    // 波形に基づいて演奏
+    vsk_sound_play(m_pcm_values.data(), m_pcm_values.size() * sizeof(VSK_PCM16_VALUE), stereo);
+
+    // 終わるのを待つ
+    wait_for_stop(-1);
 }
 
 // PCM波形を生成する
@@ -670,20 +680,6 @@ bool VskSoundPlayer::save_as_wav(VskScoreBlock& block, const wchar_t *filename, 
     std::fclose(fout);
 
     return true;
-}
-
-// 演奏を開始する
-void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
-    // 波形を生成
-    generate_pcm_raw(block, m_pcm_values, stereo);
-
-    // スペシャルアクションを実行
-    for (auto& phrase : block) {
-        phrase->execute_special_actions();
-    }
-
-    // 波形に基づいて演奏
-    vsk_sound_play(m_pcm_values.data(), m_pcm_values.size() * sizeof(VSK_PCM16_VALUE), stereo);
 }
 
 // 演奏を停止

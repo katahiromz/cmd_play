@@ -384,9 +384,6 @@ DWORD SERVER::thread_proc()
 
             // 設定を保存する
             cmd.save_settings();
-
-            // 演奏が終わるまで待つ
-            vsk_sound_wait(-1);
         }
 
         prev_size = size;

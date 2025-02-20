@@ -3,6 +3,12 @@
 #include "types.h"
 #include <map>
 
+enum AUDIO_TYPE {
+    AUDIO_TYPE_SSG,
+    AUDIO_TYPE_FM,
+    AUDIO_TYPE_MIDI,
+};
+
 bool vsk_sound_init(bool stereo);
 void vsk_sound_exit(void);
 void vsk_sound_play(const void *data, size_t data_size, bool stereo);
