@@ -12,12 +12,13 @@
 
     オプション:
       -D変数名=値                変数に代入。
-      -save-wav 出力.wav         WAVファイルとして保存。
+      -save-wav 出力.wav         WAVファイルとして保存（MIDI音源を除く）。
+      -save-mid 出力.mid         MIDファイルとして保存（MIDI音源のみ）。
       -stopm                     音楽を止めて設定をリセット。
       -stereo                    音をステレオにする（デフォルト）。
       -mono                      音をモノラルにする。
-      -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む。
-      -voice-copy TONE FILE.voi  音色をファイルにコピーする。
+      -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む（FM音源）。
+      -voice-copy TONE FILE.voi  音色をファイルにコピーする（FM音源）。
       -bgm 0                     演奏が終わるまで待つ（デフォルト）。
       -bgm 1                     演奏が終わるまで待たない。
       -help                      このメッセージを表示する。
