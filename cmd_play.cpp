@@ -511,17 +511,31 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             if (item.m_subcommand == "@") {
                 if (auto ast = vsk_get_play_param(item)) {
                     auto i0 = ast->to_int();
-                    if ((0 <= i0) && (i0 <= 61)) {
-                        phrase->add_tone(ch, i0);
-                        phrase->m_setting.m_tone = i0;
+                    switch (phrase->m_audio_type) {
+                    case AUDIO_TYPE_SSG:
+                        // SSG音源は音色を変えられない
                         continue;
+                    case AUDIO_TYPE_FM:
+                        if ((0 <= i0) && (i0 <= 61)) {
+                            phrase->add_tone(ch, i0);
+                            phrase->m_setting.m_tone = i0;
+                            continue;
+                        }
+                        return false;
+                    case AUDIO_TYPE_MIDI:
+                        if ((0 <= i0) && (i0 <= 127)) {
+                            phrase->add_tone(ch, i0);
+                            phrase->m_setting.m_tone = i0;
+                            continue;
+                        }
+                        return false;
                     }
                 }
             } else if (item.m_subcommand == "@V") {
                 if (auto ast = vsk_get_play_param(item)) {
                     auto i0 = ast->to_int();
                     if ((0 <= i0) && (i0 <= 127)) {
-                        phrase->m_setting.m_volume =  i0 * (15.0f / 127.0f);
+                        phrase->m_setting.m_volume = i0 * (15.0f / 127.0f);
                         continue;
                     }
                 }
