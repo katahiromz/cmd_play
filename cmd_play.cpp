@@ -231,12 +231,23 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
 
     // MMLのパース
     VskPlayItem item;
+    char ch, prev_ch = 0;
     while (*pch != 0) {
-        char ch = vsk_toupper(*pch++);
+        prev_ch = ch;
+        ch = vsk_toupper(*pch++); // 大文字にする
+
+        // 'Y'コマンドが不完全だと失敗
+        if (prev_ch == 'Y' && ch != ',')
+            return false;
+
+        // 終端文字なら終了
         if (ch == 0)
             break;
+
+        // 空白は無視
         if (vsk_isblank(ch))
             continue;
+
         switch (ch) {
         case ' ': case '\t': // blank
             continue;
@@ -261,8 +272,17 @@ bool vsk_eval_cmd_play_items(std::vector<VskPlayItem>& items, const VskString& e
             if (!vsk_scan_play_param(pch, item))
                 return false;
             break;
-        case 'Y': case ',':
+        case 'Y':
             // OPNレジスタ
+            item.m_subcommand = {ch};
+            // パラメータ
+            if (!vsk_scan_play_param(pch, item))
+                return false;
+            break;
+        case ',':
+            // OPNレジスタ
+            if (prev_ch != 'Y')
+                return false;
             item.m_subcommand = {ch};
             // パラメータ
             if (!vsk_scan_play_param(pch, item))
@@ -364,8 +384,14 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
 {
     float length;
     int key = 0;
+    char ch = 0;
+    static int s_r = -1; // コマンド'Y'チェック用
     for (auto& item : items) {
-        char ch = item.m_subcommand[0];
+        ch = item.m_subcommand[0];
+
+        if (ch != ',')
+            s_r = -1;
+
         switch (ch) {
         case ' ': case '\t': // blank
             continue;
@@ -587,36 +613,30 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             return false;
         case 'Y':
         case ',':
-            {
-                static int r = -1;
-                if (ch == 'Y') {
-                    if (auto ast = vsk_get_play_param(item)) {
-                        r = ast->to_int();
-                        if ((0 <= r) && (r <= 178))
-                            continue;
-                        return false;
+            if (ch == 'Y') {
+                if (auto ast = vsk_get_play_param(item)) {
+                    s_r = ast->to_int();
+                    if ((0 <= s_r) && (s_r <= 178))
+                        continue;
+                }
+            } else {
+                if (auto ast = vsk_get_play_param(item)) {
+                    int d = ast->to_int();
+                    if ((0 <= s_r) && (s_r <= 178) && (0 <= d) && (d <= 255)) {
+                        phrase->add_reg('Y', s_r, d);
+                        s_r = -1;
+                        continue;
                     }
-                    return false;
-                } else {
-                    if (auto ast = vsk_get_play_param(item)) {
-                        int d = ast->to_int();
-                        if ((0 <= r) && (r <= 178) && (0 <= d) && (d <= 255)) {
-                            phrase->add_reg('Y', r, d);
-                            r = -1;
-                            continue;
-                        }
-                    }
-                    r = -1;
-                    return false;
                 }
             }
-            continue;
+            return false;
         default:
             assert(0);
             break;
         }
     }
-    return true;
+
+    return ch != 'Y';
 } // vsk_phrase_from_cmd_play_items
 
 //////////////////////////////////////////////////////////////////////////////
