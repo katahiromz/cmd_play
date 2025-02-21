@@ -99,8 +99,8 @@ LPCTSTR get_text(INT id)
                 TEXT("  -mono                      音をモノラルにする。\n")
                 TEXT("  -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む（FM音源）。\n")
                 TEXT("  -voice-copy TONE FILE.voi  音色をファイルにコピーする（FM音源）。\n")
-                TEXT("  -bgm 0                     演奏が終わるまで待つ（デフォルト）。\n")
-                TEXT("  -bgm 1                     演奏が終わるまで待たない。\n")
+                TEXT("  -bgm 0                     演奏が終わるまで待つ。\n")
+                TEXT("  -bgm 1                     演奏が終わるまで待たない（デフォルト）。\n")
                 TEXT("  -help                      このメッセージを表示する。\n")
                 TEXT("  -version                   バージョン情報を表示する。\n")
                 TEXT("\n")
@@ -136,8 +136,8 @@ LPCTSTR get_text(INT id)
                 TEXT("  -mono                      Make sound mono.\n")
                 TEXT("  -voice CH FILE.voi         Load a tone from a file to channel CH (FM sound).\n")
                 TEXT("  -voice-copy TONE FILE.voi  Copy the tone to a file (FM sound).\n")
-                TEXT("  -bgm 0                     Wait until the performance is over (default).\n")
-                TEXT("  -bgm 1                     Don't wait until the performance is over.\n")
+                TEXT("  -bgm 0                     Wait until the performance is over.\n")
+                TEXT("  -bgm 1                     Don't wait until the performance is over (default).\n")
                 TEXT("  -help                      Display this message.\n")
                 TEXT("  -version                   Display version info.\n")
                 TEXT("\n")
@@ -189,8 +189,8 @@ struct CMD_PLAY
     bool m_stopm = false;
     bool m_stereo = true;
     bool m_no_reg = false;
-    bool m_bgm = false;
-    bool m_bgm2 = false;
+    bool m_bgm = true;
+    bool m_bgm2 = true;
     std::vector<VOICE_INFO> m_voices;
 
     RET parse_cmd_line(int argc, wchar_t **argv);
