@@ -708,8 +708,8 @@ void VskSoundPlayer::play_midi(VskScoreBlock& block)
     }
 
     // 実際に音を出す
-    float gate = 0;
-    const int max_quantity = 8, default_length = 24;
+    float gate = 0, volume = 8.0f;
+;    const int max_quantity = 8, default_length = 24;
     for (auto& note : notes) {
         int octave = note.m_octave;
         int quantity = note.m_quantity;
@@ -720,6 +720,12 @@ void VskSoundPlayer::play_midi(VskScoreBlock& block)
         if (note.m_gate > gate) {
             Sleep(DWORD(1000 * (note.m_gate - gate)));
             gate = note.m_gate;
+        }
+
+        // 音量設定
+        if (volume != note.m_volume) {
+            volume = note.m_volume;
+            send_midi_event(hMidiOut, 0xB0 + ch, 0x07, uint8_t(volume * 127.0f / 15.0f));
         }
 
         switch (note.m_key) {
