@@ -553,12 +553,14 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
         }
 
+#ifndef NDEBUG
         if (_wcsicmp(arg, L"-print-checksums") == 0 || _wcsicmp(arg, L"--print-checksums") == 0)
         {
             void vsk_print_timbre_checksums(void);
             vsk_print_timbre_checksums();
             continue;
         }
+#endif
 
         if (arg[0] == '-')
         {
