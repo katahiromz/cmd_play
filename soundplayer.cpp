@@ -434,7 +434,8 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::fm_realize(int ich, size_t *pdata_
             }
             ym.mix(&data[isample * 2], unit);
             isample += unit;
-            if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST) {
+            // @56 のLFO効果が非常におかしいので特別に回避策をすることにした
+            if (note.m_key != KEY_REST && note.m_key != KEY_SPECIAL_REST && m_setting.m_tone != 56) {
                 lc.increment();
                 int adj[4] = {
                     int(lc.m_adj_v[0]), int(lc.m_adj_v[1]),
