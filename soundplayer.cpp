@@ -704,12 +704,13 @@ void VskSoundPlayer::play_midi(VskScoreBlock& block)
     for (auto& phrase : block) {
         assert(phrase);
         send_midi_event(hMidiOut, 0xB0 + ch, 0x79, 0x00); // リセットオールコントローラ
+        send_midi_event(hMidiOut, 0xC0 + ch, phrase->m_setting.m_tone, 0); // プログラムチェンジ（音色）
         ++ch;
     }
 
     // 実際に音を出す
     float gate = 0, volume = 8.0f;
-;    const int max_quantity = 8, default_length = 24;
+    const int max_quantity = 8, default_length = 24;
     for (auto& note : notes) {
         int octave = note.m_octave;
         int quantity = note.m_quantity;
@@ -748,16 +749,13 @@ void VskSoundPlayer::play_midi(VskScoreBlock& block)
         }
     }
 
+    // 終わりまで待つ
     if (goal > gate) {
         Sleep(DWORD(1000 * (goal - gate)));
     }
 
-    ch = 0;
-    for (auto& phrase : block) {
-        assert(phrase);
-        send_midi_event(hMidiOut, 0xB0 + ch, 0x78, 0x00); // オールサウンドオフ
-        ++ch;
-    }
+    // 音が終わっていない？ もうちょっと待とうか？
+    Sleep(100);
 
     midiOutClose(hMidiOut); // MIDI出力を閉じる
 }
@@ -894,7 +892,7 @@ static void write_variable_length(std::vector<unsigned char> &trackData, uint32_
 bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
 {
     uint8_t num_tracks = uint8_t(1 + block.size());
-    uint16_t ticks_per_quarter_note = 120;
+    const uint16_t ticks_per_quarter_note = 240;
     const int max_quantity = 8, default_length = 24;
 
     // ヘッダーチャンク
@@ -904,9 +902,9 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
     write_u16(fout, num_tracks);
     write_u16(fout, ticks_per_quarter_note);
 
-    std::vector<unsigned char> trackData;
+    std::vector<uint8_t> trackData;
 
-    // トラック 1（テンポ情報）
+    // テンポ情報のトラック 1を書き込む
     {
         int tempo = 120, delta_time = 0;
         uint32_t microseconds_per_quarter_note = 60 * 1000 * 1000 / tempo;
@@ -959,6 +957,7 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
         trackData.clear();
     }
 
+    // 演奏内容を含むトラックを書き込む
     for (size_t ch = 0; ch < block.size(); ++ch) {
         int tempo = 120;
         float volume = 8.0f;
@@ -974,15 +973,13 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
         // プログラムチェンジ
         trackData.push_back(0x00);
         trackData.push_back(0xC0 + ch);
-        trackData.push_back(0);
+        trackData.push_back(phrase->m_setting.m_tone);
 
         // 音量設定
         trackData.push_back(0x00);
         trackData.push_back(0xB0 + ch);
         trackData.push_back(0x07);
         trackData.push_back(uint8_t(volume * 127.0f / 15.0f));
-
-        std::vector<int> notes = {0, 2, 4, 5, 7, 9, 11, 12}; // ドレミファソラシド
 
         for (auto& note : phrase->m_notes) {
             // テンポ設定
@@ -993,7 +990,7 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
 
             switch (note.m_key) {
             case KEY_REST: case KEY_SPECIAL_REST: // 休符
-                delta_time += ticks_per_quarter_note * default_length / note.m_length;
+                delta_time += ticks_per_quarter_note * note.m_length / default_length;
                 break;
             case KEY_TONE: // トーン変更
                 // プログラムチェンジ
@@ -1005,14 +1002,11 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
             case KEY_REG: // レジスタ書き込み
             case KEY_ENVELOP_INTERVAL: // エンベロープ周期
             case KEY_ENVELOP_TYPE: // エンベロープ形状
+            case KEY_OFF: // キーオフ
                 // 無視
                 break;
             default: // 普通の音符
                 {
-                    auto octave = note.m_octave;
-                    auto length = note.m_length;
-                    auto quantity = note.m_quantity;
-
                     // 音量設定
                     if (volume != note.m_volume) {
                         volume = note.m_volume;
@@ -1040,19 +1034,23 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
                         delta_time = 0;
                     }
 
+                    auto octave = note.m_octave;
+                    auto length = note.m_length;
+                    auto quantity = note.m_quantity;
+
                     // ノートオン
                     write_variable_length(trackData, delta_time);
                     trackData.push_back(0x90 + ch);
                     trackData.push_back(uint8_t(12 * octave + note.m_key));
                     trackData.push_back(127);
-                    delta_time = ticks_per_quarter_note * default_length * quantity / length / max_quantity;
+                    delta_time = ticks_per_quarter_note * length * quantity / default_length / max_quantity;
 
                     // ノートオフ
                     write_variable_length(trackData, delta_time);
                     trackData.push_back(0x80 + ch);
                     trackData.push_back(uint8_t(12 * octave + note.m_key));
                     trackData.push_back(127);
-                    delta_time = ticks_per_quarter_note * default_length * (max_quantity - quantity) / length / max_quantity;
+                    delta_time = ticks_per_quarter_note * length * (max_quantity - quantity) / default_length / max_quantity;
                 }
                 break;
             }

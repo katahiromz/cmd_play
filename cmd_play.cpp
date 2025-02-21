@@ -538,6 +538,9 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                             continue;
                         }
                         return false;
+                    default:
+                        assert(0);
+                        return false;
                     }
                 }
             } else if (item.m_subcommand == "@V") {
@@ -877,7 +880,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_midi_save(const std::vector<VskString>& strs, c
             return VSK_SOUND_ERR_ILLEGAL; // 失敗
 
         // create phrase
-        auto phrase = std::make_shared<VskPhrase>(vsk_fm_sound_settings[iChannel]);
+        auto phrase = std::make_shared<VskPhrase>(vsk_midi_sound_settings[iChannel]);
         phrase->m_setting.m_audio_type = AUDIO_TYPE_MIDI;
         if (!vsk_phrase_from_cmd_play_items(phrase, items))
             return VSK_SOUND_ERR_ILLEGAL; // 失敗
