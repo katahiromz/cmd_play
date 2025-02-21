@@ -55,6 +55,7 @@ enum SpecialKeys {
     KEY_REG = -5,              // レジスタ書き込み
     KEY_ENVELOP_INTERVAL = -6, // エンベロープ周期
     KEY_ENVELOP_TYPE = -7,     // エンベロープ形状
+    KEY_OFF = -8,              // キーオフ
 };
 
 struct VskNote {
@@ -72,6 +73,7 @@ struct VskNote {
     bool        m_and;              // タイか？
     int         m_reg;              // レジスタのアドレス
     int         m_data;             // 汎用データ
+    int         m_misc = 0;         // その他
 
     VskNote(int tempo, int octave, uint8_t LR, int note,
             bool dot = false, float length = 24.0f, char sign = 0,
@@ -254,6 +256,7 @@ struct VskPhrase {
     std::unique_ptr<VSK_PCM16_VALUE[]> ssg_realize(int ich, size_t *pdata_size);
     void rescan_notes();
     void calc_gate_and_goal();
+    void add_key_offs();
 }; // struct VskPhrase
 
 //////////////////////////////////////////////////////////////////////////////

@@ -5,6 +5,7 @@
 #include "fmgon/fmgon.h"
 #include "soundplayer.h"
 #include "sound.h"
+#include <mmsystem.h>
 #include <map>
 #include <cstdio>
 #include <limits>
@@ -613,11 +614,146 @@ void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
     wait_for_stop(-1);
 }
 
+// MIDIイベントを送信
+static MMRESULT
+send_midi_event(HMIDIOUT hmo, int status, int data1, int data2)
+{
+    union {
+        DWORD dwData;
+        BYTE bData[4];
+    } u;
+
+    u.bData[0] = (BYTE)status;  // MIDI status byte
+    u.bData[1] = (BYTE)data1;   // first MIDI data byte
+    u.bData[2] = (BYTE)data2;   // second MIDI data byte
+    u.bData[3] = 0;
+    return midiOutShortMsg(hmo, u.dwData);
+}
+
+void VskPhrase::add_key_offs()
+{
+    std::vector<VskNote> notes;
+    for (auto& note : m_notes) {
+        switch (note.m_key) {
+        case KEY_REST: case KEY_SPECIAL_REST: // 休符
+        case KEY_TONE: // トーン変更
+        case KEY_SPECIAL_ACTION: // スペシャルアクション
+        case KEY_REG: // レジスタ書き込み
+        case KEY_ENVELOP_INTERVAL: // エンベロープ周期
+        case KEY_ENVELOP_TYPE: // エンベロープ形状
+            notes.push_back(note);
+            break;
+        default: // 普通の音符
+            {
+                notes.push_back(note);
+
+                // 長さゼロのKEY_OFFを追加する
+                int key = note.m_key;
+                float sec = note.m_sec;
+                note.m_key = KEY_OFF;
+                note.m_sec = 0;
+                note.m_length = 0;
+                note.m_data = key;
+                note.m_gate += sec * note.m_quantity / 8;
+                notes.push_back(note);
+            }
+            break;
+        }
+    }
+    m_notes = std::move(notes);
+}
+
 // MIDIを演奏する
 void VskSoundPlayer::play_midi(VskScoreBlock& block)
 {
-    // FIXME
-    Sleep(1000);
+    // MIDI出力を開く
+    HMIDIOUT hMidiOut;
+    MMRESULT result = midiOutOpen(&hMidiOut, 0, 0, 0, CALLBACK_NULL);
+    if (result != MMSYSERR_NOERROR) {
+        printf("Error opening MIDI output\n");
+        return;
+    }
+
+    // 演奏する前の準備
+    int ch = 0;
+    std::vector<VskNote> notes;
+    float goal = 0;
+    for (auto& phrase : block) {
+        assert(phrase);
+        phrase->calc_gate_and_goal();
+        phrase->add_key_offs();
+        phrase->rescan_notes();
+        phrase->set_player(this);
+        assert(phrase->m_setting.m_audio_type == AUDIO_TYPE_MIDI);
+        for (auto& note : phrase->m_notes) {
+            note.m_misc = ch;
+            notes.push_back(note);
+        }
+        if (goal < phrase->m_goal)
+            goal = phrase->m_goal;
+        ++ch;
+    }
+
+    // 音符の開始時間でソート
+    std::sort(notes.begin(), notes.end(), [](const VskNote& x, const VskNote& y) {
+        return x.m_gate < y.m_gate;
+    });
+
+    // リセット
+    ch = 0;
+    for (auto& phrase : block) {
+        assert(phrase);
+        send_midi_event(hMidiOut, 0xB0 + ch, 0x79, 0x00); // リセットオールコントローラ
+        ++ch;
+    }
+
+    // 実際に音を出す
+    float gate = 0;
+    const int max_quantity = 8, default_length = 24;
+    for (auto& note : notes) {
+        int octave = note.m_octave;
+        int quantity = note.m_quantity;
+        int length = note.m_length;
+        int ch = note.m_misc;
+        int tempo = note.m_tempo;
+
+        if (note.m_gate > gate) {
+            Sleep(DWORD(1000 * (note.m_gate - gate)));
+            gate = note.m_gate;
+        }
+
+        switch (note.m_key) {
+        case KEY_TONE: // トーン変更
+            send_midi_event(hMidiOut, 0xC0 + ch, note.m_data, 0); // プログラムチェンジ（音色）
+            break;
+        case KEY_REST: case KEY_SPECIAL_REST: // 休符
+        case KEY_SPECIAL_ACTION: // スペシャルアクション
+        case KEY_REG: // レジスタ書き込み
+        case KEY_ENVELOP_INTERVAL: // エンベロープ周期
+        case KEY_ENVELOP_TYPE: // エンベロープ形状
+            // 無視
+            break;
+        case KEY_OFF: // キーオフ
+            send_midi_event(hMidiOut, 0x80 + ch, note.m_data + 12 * octave, 127); // ノートオフ（ベロシティ 127）
+            break;
+        default: // 普通の音符
+            send_midi_event(hMidiOut, 0x90 + ch, note.m_key + 12 * octave, 127); // ノートオン（ベロシティ 127）
+            break;
+        }
+    }
+
+    if (goal > gate) {
+        Sleep(DWORD(1000 * (goal - gate)));
+    }
+
+    ch = 0;
+    for (auto& phrase : block) {
+        assert(phrase);
+        send_midi_event(hMidiOut, 0xB0 + ch, 0x78, 0x00); // オールサウンドオフ
+        ++ch;
+    }
+
+    midiOutClose(hMidiOut); // MIDI出力を閉じる
 }
 
 // PCM波形を生成する
