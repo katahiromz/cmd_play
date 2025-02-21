@@ -714,6 +714,215 @@ bool VskSoundPlayer::save_wav(VskScoreBlock& block, const wchar_t *filename, boo
     return true;
 }
 
+static void write_u16(FILE *fout, uint16_t value)
+{
+    std::fputc(uint8_t(value >> 8), fout);
+    std::fputc(uint8_t(value), fout);
+}
+
+static void write_u32(FILE *fout, uint32_t value)
+{
+    std::fputc(uint8_t(value >> 24), fout);
+    std::fputc(uint8_t(value >> 16), fout);
+    std::fputc(uint8_t(value >> 8), fout);
+    std::fputc(uint8_t(value), fout);
+}
+
+static void write_variable_length(std::vector<unsigned char> &trackData, uint32_t value)
+{
+    unsigned char buffer[4];
+    int len = 0;
+    buffer[len++] = value & 0x7F;
+    while (value >>= 7) {
+        buffer[len++] = (value & 0x7F) | 0x80;
+    }
+    for (int i = len - 1; i >= 0; --i) {
+        trackData.push_back(buffer[i]);
+    }
+}
+
+// MIDIデータをファイルに書き込む
+bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
+{
+    uint8_t num_tracks = uint8_t(1 + block.size());
+    uint16_t ticks_per_quarter_note = 120;
+    const int max_quantity = 8, default_length = 24;
+
+    // ヘッダーチャンク
+    std::fwrite("MThd", 4, 1, fout);
+    write_u32(fout, 6);
+    write_u16(fout, 1);  // フォーマット 1
+    write_u16(fout, num_tracks);
+    write_u16(fout, ticks_per_quarter_note);
+
+    std::vector<unsigned char> trackData;
+
+    // トラック 1（テンポ情報）
+    {
+        int tempo = 120, delta_time = 0;
+        uint32_t microseconds_per_quarter_note = 60 * 1000 * 1000 / tempo;
+
+        std::fwrite("MTrk", 4, 1, fout);
+        size_t trackSizePos = ftell(fout);
+        write_u32(fout, 0);
+
+        // テンポ設定
+        trackData.push_back(0x00);
+        trackData.push_back(0xFF);
+        trackData.push_back(0x51);
+        trackData.push_back(0x03);
+        trackData.push_back(uint8_t(microseconds_per_quarter_note >> 16));
+        trackData.push_back(uint8_t(microseconds_per_quarter_note >> 8));
+        trackData.push_back(uint8_t(microseconds_per_quarter_note));
+
+        if (block.size()) {
+            auto ch = 0;
+            auto& phrase = block[ch];
+            for (auto& note : phrase->m_notes) {
+                if (tempo != note.m_tempo) {
+                    tempo = note.m_tempo;
+                    microseconds_per_quarter_note = 60 * 1000 * 1000 / tempo;
+                    write_variable_length(trackData, delta_time);
+                    trackData.push_back(0xFF);
+                    trackData.push_back(0x51);
+                    trackData.push_back(0x03);
+                    trackData.push_back(uint8_t(microseconds_per_quarter_note >> 16));
+                    trackData.push_back(uint8_t(microseconds_per_quarter_note >> 8));
+                    trackData.push_back(uint8_t(microseconds_per_quarter_note));
+                    delta_time = 0;
+                } else {
+                    delta_time += ticks_per_quarter_note * default_length / note.m_length;
+                }
+            }
+        }
+
+        // エンドオブトラック
+        write_variable_length(trackData, delta_time);
+        trackData.push_back(0xFF);
+        trackData.push_back(0x2F);
+        trackData.push_back(0x00);
+
+        // トラックサイズとトラックデータを書き込む
+        size_t trackSize = trackData.size();
+        fseek(fout, trackSizePos, SEEK_SET);
+        write_u32(fout, trackSize);
+        fseek(fout, 0, SEEK_END);
+        std::fwrite(trackData.data(), trackSize, 1, fout);
+        trackData.clear();
+    }
+
+    for (size_t ch = 0; ch < block.size(); ++ch) {
+        int tempo = 120;
+        uint32_t microseconds_per_quarter_note = 60 * 1000 * 1000 / tempo;
+
+        auto& phrase = block[ch];
+        std::fwrite("MTrk", 4, 1, fout);
+        size_t trackSizePos = ftell(fout);
+        write_u32(fout, 0);
+
+        int delta_time = 0, LR = 0x3;
+
+        // プログラムチェンジ
+        trackData.push_back(0x00);
+        trackData.push_back(0xC0 + ch);
+        trackData.push_back(0);
+
+        // 音量設定
+        trackData.push_back(0x00);
+        trackData.push_back(0xB0 + ch);
+        trackData.push_back(0x07);
+        trackData.push_back(106);
+
+        std::vector<int> notes = {0, 2, 4, 5, 7, 9, 11, 12}; // ドレミファソラシド
+
+        for (auto& note : phrase->m_notes) {
+            switch (note.m_key) {
+            case KEY_REST: case KEY_SPECIAL_REST: // 休符
+                delta_time += ticks_per_quarter_note * default_length / note.m_length;
+                break;
+            case KEY_TONE: // トーン変更
+                // プログラムチェンジ
+                trackData.push_back(0x00);
+                trackData.push_back(0xC0 + ch);
+                trackData.push_back(note.m_data);
+                break;
+            case KEY_SPECIAL_ACTION: // スペシャルアクション
+            case KEY_REG: // レジスタ書き込み
+            case KEY_ENVELOP_INTERVAL: // エンベロープ周期
+            case KEY_ENVELOP_TYPE: // エンベロープ形状
+                // 無視
+                break;
+            default: // 普通の音符
+                {
+                    auto octave = note.m_octave;
+                    auto length = note.m_length;
+                    auto quantity = note.m_quantity;
+
+                    // パン
+                    if (LR != note.m_LR) {
+                        LR = note.m_LR;
+                        write_variable_length(trackData, delta_time);
+                        trackData.push_back(0xB0 + ch);
+                        trackData.push_back(0x0A);
+                        if (LR == 0x3)
+                            trackData.push_back(64); // 127は右、64は中央、0は左
+                        else if (LR == 0x2)
+                            trackData.push_back(0); // 127は右、64は中央、0は左
+                        else
+                            trackData.push_back(127); // 127は右、64は中央、0は左
+                        delta_time = 0;
+                    }
+
+                    // ノートオン
+                    write_variable_length(trackData, delta_time);
+                    trackData.push_back(0x90 + ch);
+                    trackData.push_back(uint8_t(12 * octave + note.m_key));
+                    trackData.push_back(127);
+                    delta_time = ticks_per_quarter_note * default_length * quantity / length / max_quantity;
+
+                    // ノートオフ
+                    write_variable_length(trackData, delta_time);
+                    trackData.push_back(0x80 + ch);
+                    trackData.push_back(uint8_t(12 * octave + note.m_key));
+                    trackData.push_back(127);
+                    delta_time = ticks_per_quarter_note * default_length * (max_quantity - quantity) / length / max_quantity;
+                }
+                break;
+            }
+        }
+
+        // エンドオブトラック
+        write_variable_length(trackData, delta_time);
+        trackData.push_back(0xFF);
+        trackData.push_back(0x2F);
+        trackData.push_back(0x00);
+
+        // トラックサイズとトラックデータを書き込む
+        size_t trackSize = trackData.size();
+        fseek(fout, trackSizePos, SEEK_SET);
+        write_u32(fout, trackSize);
+        fseek(fout, 0, SEEK_END);
+        std::fwrite(trackData.data(), trackSize, 1, fout);
+        trackData.clear();
+    }
+
+    return true;
+}
+
+// MIDファイルとして保存
+bool VskSoundPlayer::save_mid(VskScoreBlock& block, const wchar_t *filename)
+{
+    // MIDファイルを書き込み用として開く
+    FILE *fout = _wfopen(filename, L"wb");
+    if (!fout)
+        return false;
+
+    bool ret = write_mid_file(fout, block);
+    std::fclose(fout);
+
+    return ret;
+}
+
 // 演奏を停止
 void VskSoundPlayer::stop()
 {

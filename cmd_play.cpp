@@ -801,3 +801,36 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, con
 
     return VSK_SOUND_ERR_SUCCESS;
 }
+
+// MIDI音源で音楽保存
+VSK_SOUND_ERR vsk_sound_cmd_play_midi_save(const std::vector<VskString>& strs, const wchar_t *filename)
+{
+    assert(strs.size() <= VSK_MAX_CHANNEL);
+    size_t iChannel = 0;
+
+    // add phrases to block
+    VskScoreBlock block;
+    // for each channel strings
+    for (auto& str : strs) {
+        // get play items
+        std::vector<VskPlayItem> items;
+        if (!vsk_eval_cmd_play_items(items, str))
+            return VSK_SOUND_ERR_ILLEGAL; // 失敗
+
+        // create phrase
+        auto phrase = std::make_shared<VskPhrase>(vsk_fm_sound_settings[iChannel]);
+        phrase->m_setting.m_audio_type = AUDIO_TYPE_MIDI;
+        if (!vsk_phrase_from_cmd_play_items(phrase, items))
+            return VSK_SOUND_ERR_ILLEGAL; // 失敗
+
+        // add phrase
+        block.push_back(phrase);
+        // next channel
+        ++iChannel;
+    }
+
+    if (!vsk_sound_player->save_mid(block, filename))
+        return VSK_SOUND_ERR_IO_ERROR; // 失敗
+
+    return VSK_SOUND_ERR_SUCCESS;
+}

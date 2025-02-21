@@ -85,7 +85,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case IDT_VERSION: return TEXT("cmd_play バージョン 1.9 by 片山博文MZ\n");
+        case IDT_VERSION: return TEXT("cmd_play バージョン 2.0 by 片山博文MZ\n");
         case IDT_HELP:
             return
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
@@ -93,6 +93,7 @@ LPCTSTR get_text(INT id)
                 TEXT("オプション:\n")
                 TEXT("  -D変数名=値                変数に代入。\n")
                 TEXT("  -save-wav 出力.wav         WAVファイルとして保存。\n")
+                TEXT("  -save-mid 出力.mid         MIDファイルとして保存。\n")
                 TEXT("  -stopm                     音楽を止めて設定をリセット。\n")
                 TEXT("  -stereo                    音をステレオにする（デフォルト）。\n")
                 TEXT("  -mono                      音をモノラルにする。\n")
@@ -121,7 +122,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case IDT_VERSION: return TEXT("cmd_play version 1.9 by katahiromz\n");
+        case IDT_VERSION: return TEXT("cmd_play version 2.0 by katahiromz\n");
         case IDT_HELP:
             return
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
@@ -129,6 +130,7 @@ LPCTSTR get_text(INT id)
                 TEXT("Options:\n")
                 TEXT("  -DVAR=VALUE                Assign to a variable.\n")
                 TEXT("  -save-wav output.wav       Save as WAV file.\n")
+                TEXT("  -save-mid output.mid       Save as MID file.\n")
                 TEXT("  -stopm                     Stop music and reset settings.\n")
                 TEXT("  -stereo                    Make sound stereo (default).\n")
                 TEXT("  -mono                      Make sound mono.\n")
@@ -182,6 +184,7 @@ struct CMD_PLAY
     std::vector<std::string> m_str_to_play;
     std::map<VskString, VskString> m_variables;
     std::wstring m_save_wav;
+    std::wstring m_save_mid;
     int m_audio_mode = 2;
     bool m_stopm = false;
     bool m_stereo = true;
@@ -199,6 +202,7 @@ struct CMD_PLAY
 
     std::wstring build_server_cmd_line(int argc, wchar_t **argv);
     VSK_SOUND_ERR save_wav();
+    VSK_SOUND_ERR save_mid();
     VSK_SOUND_ERR play_str(bool no_sound);
 };
 
@@ -431,6 +435,20 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
         }
 
+        if (_wcsicmp(arg, L"-save-mid") == 0 || _wcsicmp(arg, L"--save-mid") == 0)
+        {
+            if (iarg + 1 < argc)
+            {
+                m_save_mid = argv[++iarg];
+                continue;
+            }
+            else
+            {
+                my_printf(stderr, get_text(IDT_NEEDS_OPERAND), arg);
+                return RET_BAD_CMDLINE;
+            }
+        }
+
         if (_wcsicmp(arg, L"-stopm") == 0 || _wcsicmp(arg, L"--stopm") == 0)
         {
             m_stopm = true;
@@ -649,6 +667,14 @@ VSK_SOUND_ERR CMD_PLAY::save_wav()
     return VSK_SOUND_ERR_ILLEGAL;
 }
 
+VSK_SOUND_ERR CMD_PLAY::save_mid()
+{
+    if (m_audio_mode != 1)
+        return VSK_SOUND_ERR_ILLEGAL;
+
+    return vsk_sound_cmd_play_midi_save(m_str_to_play, m_save_mid.c_str());
+}
+
 RET CMD_PLAY::run(int argc, wchar_t **argv)
 {
     if (m_help)
@@ -684,7 +710,7 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         save_settings();
     }
 
-    if (m_bgm && m_save_wav.empty()) // 非同期に演奏か？
+    if (m_bgm && m_save_wav.empty() && m_save_mid.empty()) // 非同期に演奏か？
     {
         // 文法をチェックする
         auto err = play_str(true);
@@ -764,7 +790,31 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
             vsk_sound_exit();
             return RET_BAD_CALL;
         case VSK_SOUND_ERR_IO_ERROR:
-            my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
+            my_printf(stderr, get_text(IDT_CANT_OPEN_FILE), m_save_wav.c_str());
+            do_beep();
+            save_settings();
+            vsk_sound_exit();
+            return RET_CANT_OPEN_FILE;
+        }
+
+        return RET_SUCCESS;
+    }
+
+    if (m_save_mid.size())
+    {
+        auto err = save_mid();
+        switch (err)
+        {
+        case VSK_SOUND_ERR_SUCCESS:
+            break;
+        case VSK_SOUND_ERR_ILLEGAL:
+            my_puts(get_text(IDT_BAD_CALL), stderr);
+            do_beep();
+            save_settings();
+            vsk_sound_exit();
+            return RET_BAD_CALL;
+        case VSK_SOUND_ERR_IO_ERROR:
+            my_printf(stderr, get_text(IDT_CANT_OPEN_FILE), m_save_mid.c_str());
             do_beep();
             save_settings();
             vsk_sound_exit();
