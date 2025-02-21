@@ -284,6 +284,7 @@ struct VskSoundPlayer {
     virtual ~VskSoundPlayer() { }
 
     void play(VskScoreBlock& block, bool stereo);
+    void play_midi(VskScoreBlock& block);
     bool wait_for_stop(uint32_t milliseconds);
     void stop();
     bool save_wav(VskScoreBlock& block, const wchar_t *filename, bool stereo);

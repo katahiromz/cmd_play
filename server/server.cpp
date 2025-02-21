@@ -70,11 +70,12 @@ SERVER *Server_GetData(HWND hwndServer)
     return (SERVER *)GetWindowLongPtrW(hwndServer, GWLP_USERDATA);
 }
 
-#define NUM_SETTINGS 12
+#define NUM_SETTINGS 18
 
 static LPCWSTR s_setting_key[NUM_SETTINGS] = {
     L"setting0", L"setting1", L"setting2", L"setting3", L"setting4", L"setting5",
     L"setting6", L"setting7", L"setting8", L"setting9", L"setting10", L"setting11",
+    L"setting12", L"setting13", L"setting14", L"setting15", L"setting16", L"setting17",
 };
 
 // レジストリから設定を読み込む
@@ -330,6 +331,9 @@ VSK_SOUND_ERR SERVER::play_cmd(SERVER_CMD& cmd, bool no_sound)
     {
     case 0:
         err = vsk_sound_cmd_play_ssg(cmd.m_str_to_play, m_stereo, no_sound);
+        break;
+    case 1:
+        err = vsk_sound_cmd_play_midi(cmd.m_str_to_play, no_sound);
         break;
     case 2:
     case 3:

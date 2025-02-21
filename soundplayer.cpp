@@ -613,6 +613,13 @@ void VskSoundPlayer::play(VskScoreBlock& block, bool stereo) {
     wait_for_stop(-1);
 }
 
+// MIDIを演奏する
+void VskSoundPlayer::play_midi(VskScoreBlock& block)
+{
+    // FIXME
+    Sleep(1000);
+}
+
 // PCM波形を生成する
 bool VskSoundPlayer::generate_pcm_raw(VskScoreBlock& block, std::vector<VSK_PCM16_VALUE>& values, bool stereo) {
     std::vector<std::unique_ptr<VSK_PCM16_VALUE[]>> raw_data;
@@ -881,11 +888,13 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
                         trackData.push_back(0xB0 + ch);
                         trackData.push_back(0x0A);
                         if (LR == 0x3)
-                            trackData.push_back(64); // 127は右、64は中央、0は左
+                            trackData.push_back(64); // 中央
                         else if (LR == 0x2)
-                            trackData.push_back(0); // 127は右、64は中央、0は左
+                            trackData.push_back(0); // 左
+                        else if (LR == 0x1)
+                            trackData.push_back(127); // 右
                         else
-                            trackData.push_back(127); // 127は右、64は中央、0は左
+                            assert(0);
                         delta_time = 0;
                     }
 

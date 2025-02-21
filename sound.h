@@ -37,6 +37,7 @@ VskString vsk_replace_sing_placeholders(const VskString& str);
 VSK_SOUND_ERR vsk_sound_cmd_play_ssg(const std::vector<VskString>& strs, bool stereo, bool no_sound);
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg(const std::vector<VskString>& strs, bool stereo, bool no_sound);
 VSK_SOUND_ERR vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool stereo, bool no_sound);
+VSK_SOUND_ERR vsk_sound_cmd_play_midi(const std::vector<VskString>& strs, bool no_sound);
 VSK_SOUND_ERR vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo);

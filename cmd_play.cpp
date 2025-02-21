@@ -17,6 +17,7 @@ extern std::shared_ptr<VskSoundPlayer> vsk_sound_player;
 // CMD PLAYの現在の設定
 VskSoundSetting vsk_fm_sound_settings[VSK_MAX_CHANNEL];
 VskSoundSetting vsk_ssg_sound_settings[VSK_MAX_CHANNEL];
+VskSoundSetting vsk_midi_sound_settings[VSK_MAX_CHANNEL];
 
 // 設定のリセット
 void vsk_cmd_play_reset_settings(void)
@@ -24,6 +25,8 @@ void vsk_cmd_play_reset_settings(void)
     for (auto& item : vsk_fm_sound_settings)
         item = VskSoundSetting();
     for (auto& item : vsk_ssg_sound_settings)
+        item = VskSoundSetting();
+    for (auto& item : vsk_midi_sound_settings)
         item = VskSoundSetting();
 }
 
@@ -44,6 +47,9 @@ bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data)
         return true;
     case 6: case 7: case 8: case 9: case 10: case 11:
         std::memcpy(data.data(), &vsk_ssg_sound_settings[ch - 6], sizeof(VskSoundSetting));
+        return true;
+    case 12: case 13: case 14: case 15: case 16: case 17:
+        std::memcpy(data.data(), &vsk_midi_sound_settings[ch - 12], sizeof(VskSoundSetting));
         return true;
     default:
         return false;
@@ -83,6 +89,9 @@ bool vsk_cmd_play_set_setting(int ch, const std::vector<uint8_t>& data)
         return true;
     case 6: case 7: case 8: case 9: case 10: case 11:
         std::memcpy(&vsk_ssg_sound_settings[ch - 6], data.data(), sizeof(VskSoundSetting));
+        return true;
+    case 12: case 13: case 14: case 15: case 16: case 17:
+        std::memcpy(&vsk_midi_sound_settings[ch - 12], data.data(), sizeof(VskSoundSetting));
         return true;
     default:
         return false;
@@ -708,6 +717,42 @@ VSK_SOUND_ERR vsk_sound_cmd_play_fm(const std::vector<VskString>& strs, bool ste
     {
         // play now
         vsk_sound_player->play(block, stereo);
+    }
+
+    return VSK_SOUND_ERR_SUCCESS;
+}
+
+// MIDI音源で音楽再生
+VSK_SOUND_ERR vsk_sound_cmd_play_midi(const std::vector<VskString>& strs, bool no_sound)
+{
+    assert(strs.size() <= VSK_MAX_CHANNEL);
+    size_t iChannel = 0;
+
+    // add phrases to block
+    VskScoreBlock block;
+    // for each channel strings
+    for (auto& str : strs) {
+        // get play items
+        std::vector<VskPlayItem> items;
+        if (!vsk_eval_cmd_play_items(items, str))
+            return VSK_SOUND_ERR_ILLEGAL;
+
+        // create phrase
+        auto phrase = std::make_shared<VskPhrase>(vsk_midi_sound_settings[iChannel]);
+        phrase->m_setting.m_audio_type = AUDIO_TYPE_MIDI;
+        if (!vsk_phrase_from_cmd_play_items(phrase, items))
+            return VSK_SOUND_ERR_ILLEGAL;
+
+        // add phrase
+        block.push_back(phrase);
+        // next channel
+        ++iChannel;
+    }
+
+    if (!no_sound)
+    {
+        // play now
+        vsk_sound_player->play_midi(block);
     }
 
     return VSK_SOUND_ERR_SUCCESS;
