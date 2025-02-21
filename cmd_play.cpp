@@ -592,14 +592,18 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 if (ch == 'Y') {
                     if (auto ast = vsk_get_play_param(item)) {
                         r = ast->to_int();
-                        continue;
+                        if ((0 <= r) && (r <= 178))
+                            continue;
+                        return false;
                     }
                     return false;
                 } else {
                     if (auto ast = vsk_get_play_param(item)) {
                         int d = ast->to_int();
-                        phrase->add_reg('Y', r, d);
-                        continue;
+                        if ((0 <= d) && (d <= 255)) {
+                            phrase->add_reg('Y', r, d);
+                            continue;
+                        }
                     }
                     return false;
                 }
