@@ -511,7 +511,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             if (item.m_subcommand == "@") {
                 if (auto ast = vsk_get_play_param(item)) {
                     auto i0 = ast->to_int();
-                    switch (phrase->m_audio_type) {
+                    switch (phrase->m_setting.m_audio_type) {
                     case AUDIO_TYPE_SSG:
                         // SSG音源は音色を変えられない
                         continue;

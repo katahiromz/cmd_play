@@ -766,7 +766,6 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
         size_t trackSizePos = ftell(fout);
         write_u32(fout, 0);
 
-        // テンポ設定
         trackData.push_back(0x00);
         trackData.push_back(0xFF);
         trackData.push_back(0x51);
@@ -813,6 +812,7 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
 
     for (size_t ch = 0; ch < block.size(); ++ch) {
         int tempo = 120;
+        float volume = 8.0f;
         uint32_t microseconds_per_quarter_note = 60 * 1000 * 1000 / tempo;
 
         auto& phrase = block[ch];
@@ -831,11 +831,17 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
         trackData.push_back(0x00);
         trackData.push_back(0xB0 + ch);
         trackData.push_back(0x07);
-        trackData.push_back(106);
+        trackData.push_back(uint8_t(volume * 127.0f / 15.0f));
 
         std::vector<int> notes = {0, 2, 4, 5, 7, 9, 11, 12}; // ドレミファソラシド
 
         for (auto& note : phrase->m_notes) {
+            // テンポ設定
+            if (tempo != note.m_tempo) {
+                tempo = note.m_tempo;
+                microseconds_per_quarter_note = 60 * 1000 * 1000 / tempo;
+            }
+
             switch (note.m_key) {
             case KEY_REST: case KEY_SPECIAL_REST: // 休符
                 delta_time += ticks_per_quarter_note * default_length / note.m_length;
@@ -857,6 +863,16 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
                     auto octave = note.m_octave;
                     auto length = note.m_length;
                     auto quantity = note.m_quantity;
+
+                    // 音量設定
+                    if (volume != note.m_volume) {
+                        volume = note.m_volume;
+                        write_variable_length(trackData, delta_time);
+                        trackData.push_back(0xB0 + ch);
+                        trackData.push_back(0x07);
+                        trackData.push_back(uint8_t(volume * 127.0f / 15.0f));
+                        delta_time = 0;
+                    }
 
                     // パン
                     if (LR != note.m_LR) {
