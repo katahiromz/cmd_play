@@ -386,11 +386,15 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
     int key = 0;
     char ch = 0;
     static int s_r = -1; // コマンド'Y'チェック用
+    static int s_iZ = 0; // コマンド'Z'チェック用
     for (auto& item : items) {
         ch = item.m_subcommand[0];
 
         if (ch != ',')
             s_r = -1;
+
+        if (ch != 'Z')
+            s_iZ = 0;
 
         switch (ch) {
         case ' ': case '\t': // blank
@@ -611,8 +615,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 continue;
             }
             return false;
-        case 'Y':
-        case ',':
+        case 'Y': case ',': // OPNメッセージ
             if (ch == 'Y') {
                 if (auto ast = vsk_get_play_param(item)) {
                     s_r = ast->to_int();
@@ -630,13 +633,67 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 }
             }
             return false;
+        case 'Z': // MIDIメッセージ
+            {
+                static int s_status = 0;
+                static int s_data1 = 0, s_data2 = 0;
+                static bool s_has_data2 = false;
+                switch (s_iZ) {
+                case 0:
+                    if (auto ast = vsk_get_play_param(item)) {
+                        s_status = ast->to_int();
+                        switch (s_status & 0xF0) {
+                            case 0x80: case 0x90: case 0xA0: case 0xB0: case 0xE0:
+                                // 第２データバイトあり
+                                s_has_data2 = true;
+                                break;
+                            case 0xC0: case 0xD0:
+                                // 第２データバイトなし
+                                s_has_data2 = false;
+                                break;
+                            default:
+                                return false;
+                        }
+                        ++s_iZ;
+                        continue;
+                    }
+                    break;
+                case 1:
+                    if (auto ast = vsk_get_play_param(item)) {
+                        s_data1 = ast->to_int();
+                        if ((0 <= s_data1) && (s_data1 <= 256)) {
+                            if (s_has_data2) {
+                                ++s_iZ;
+                            } else {
+                                phrase->add_reg('Z', s_status, MAKEWORD(0, s_data1));
+                                s_iZ = 0;
+                            }
+                            continue;
+                        }
+                    }
+                    break;
+                case 2:
+                    if (auto ast = vsk_get_play_param(item)) {
+                        s_data2 = ast->to_int();
+                        assert(!s_has_data2);
+                        if ((0 <= s_data2) && (s_data2 <= 256)) {
+                            phrase->add_reg('Z', s_status, MAKEWORD(s_data2, s_data1));
+                            s_iZ = 0;
+                            continue;
+                        }
+                    }
+                    break;
+                }
+                return false;
+            }
+            break;
         default:
             assert(0);
             break;
         }
     }
 
-    return ch != 'Y';
+    return ch != 'Y' && s_iZ == 0;
 } // vsk_phrase_from_cmd_play_items
 
 //////////////////////////////////////////////////////////////////////////////

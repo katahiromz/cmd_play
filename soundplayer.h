@@ -56,6 +56,7 @@ enum SpecialKeys {
     KEY_ENVELOP_INTERVAL = -6, // エンベロープ周期
     KEY_ENVELOP_TYPE = -7,     // エンベロープ形状
     KEY_OFF = -8,              // キーオフ
+    KEY_MIDI = -9,             // MIDIメッセージ
 };
 
 struct VskNote {

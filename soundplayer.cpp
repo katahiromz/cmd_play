@@ -207,6 +207,8 @@ int VskNote::get_key_from_char(char ch, char sign) {
         return KEY_ENVELOP_TYPE;
     if (ch == 'X')
         return KEY_SPECIAL_ACTION;
+    if (ch == 'Z')
+        return KEY_MIDI;
 
     static const char keys[KEY_NUM + 1] = "C+D+EF+G+A+B";
 
@@ -403,6 +405,10 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::fm_realize(int ich, size_t *pdata_
             continue;
         }
 
+        if (note.m_key == KEY_OFF || note.m_key == KEY_MIDI) {
+            continue;
+        }
+
         // 左右を設定する
         auto LR = note.m_LR;
         auto pms = timbre.pms;
@@ -507,6 +513,10 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::ssg_realize(int ich, size_t *pdata
         if (note.m_key == KEY_ENVELOP_TYPE) {
             auto type = note.m_data;
             ym.write_reg(ADDR_SSG_ENV_TYPE, (type & 0x0F));
+            continue;
+        }
+
+        if (note.m_key == KEY_OFF || note.m_key == KEY_MIDI) {
             continue;
         }
 
@@ -744,6 +754,31 @@ void VskSoundPlayer::play_midi(VskScoreBlock& block)
         case KEY_OFF: // キーオフ
             send_midi_event(hMidiOut, 0x80 + ch, note.m_data + 12 * octave, 127); // ノートオフ（ベロシティ 127）
             break;
+        case KEY_MIDI: // MIDIメッセージ
+            switch (note.m_reg & 0xF0) {
+            case 0x80: case 0x90: case 0xA0: case 0xB0: case 0xE0:
+                // 第２データバイトあり
+                {
+                    auto status = note.m_reg;
+                    auto data1 = HIBYTE(note.m_data);
+                    auto data2 = LOBYTE(note.m_data);
+                    send_midi_event(hMidiOut, status, data1, data2);
+                }
+                break;
+            case 0xC0: case 0xD0:
+                // 第２データバイトなし
+                {
+                    auto status = note.m_reg;
+                    auto data1 = HIBYTE(note.m_data);
+                    send_midi_event(hMidiOut, status, data1, 0);
+                }
+                break;
+            case 0xF0:
+                // サポートしない。
+                assert(0);
+                break;
+            }
+            break;
         default: // 普通の音符
             send_midi_event(hMidiOut, 0x90 + ch, note.m_key + 12 * octave, 127); // ノートオン（ベロシティ 127）
             break;
@@ -893,7 +928,7 @@ static void write_variable_length(std::vector<unsigned char> &trackData, uint32_
 bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
 {
     uint8_t num_tracks = uint8_t(1 + block.size());
-    const uint16_t ticks_per_quarter_note = 240;
+    const uint16_t ticks_per_quarter_note = 480;
     const int max_quantity = 8, default_length = 24;
 
     // ヘッダーチャンク
@@ -995,9 +1030,10 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
                 break;
             case KEY_TONE: // トーン変更
                 // プログラムチェンジ
-                trackData.push_back(0x00);
+                write_variable_length(trackData, delta_time);
                 trackData.push_back(0xC0 + ch);
                 trackData.push_back(note.m_data);
+                delta_time = 0;
                 break;
             case KEY_SPECIAL_ACTION: // スペシャルアクション
             case KEY_REG: // レジスタ書き込み
@@ -1005,6 +1041,29 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
             case KEY_ENVELOP_TYPE: // エンベロープ形状
             case KEY_OFF: // キーオフ
                 // 無視
+                break;
+            case KEY_MIDI: // MIDIメッセージ
+                switch (note.m_reg & 0xF0) {
+                case 0x80: case 0x90: case 0xA0: case 0xB0: case 0xE0:
+                    // 第２データバイトあり
+                    write_variable_length(trackData, delta_time);
+                    trackData.push_back(note.m_reg);
+                    trackData.push_back(HIBYTE(note.m_data));
+                    trackData.push_back(LOBYTE(note.m_data));
+                    delta_time = 0;
+                    break;
+                case 0xC0: case 0xD0:
+                    // 第２データバイトなし
+                    write_variable_length(trackData, delta_time);
+                    trackData.push_back(note.m_reg);
+                    trackData.push_back(HIBYTE(note.m_data));
+                    delta_time = 0;
+                    break;
+                case 0xF0:
+                    // サポートしない。
+                    assert(0);
+                    break;
+                }
                 break;
             default: // 普通の音符
                 {
