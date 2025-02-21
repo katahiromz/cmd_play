@@ -588,7 +588,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
         case 'Y':
         case ',':
             {
-                static int r = 0;
+                static int r = -1;
                 if (ch == 'Y') {
                     if (auto ast = vsk_get_play_param(item)) {
                         r = ast->to_int();
@@ -600,11 +600,13 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 } else {
                     if (auto ast = vsk_get_play_param(item)) {
                         int d = ast->to_int();
-                        if ((0 <= d) && (d <= 255)) {
+                        if ((0 <= r) && (r <= 178) && (0 <= d) && (d <= 255)) {
                             phrase->add_reg('Y', r, d);
+                            r = -1;
                             continue;
                         }
                     }
+                    r = -1;
                     return false;
                 }
             }
