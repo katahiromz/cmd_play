@@ -4,7 +4,6 @@
     #include <crtdbg.h>
 #endif
 
-#include "sound.h"
 #include <cstdio>
 #include <cstring>
 #include <cassert>
@@ -15,6 +14,8 @@
 #include <tchar.h>
 #include <shlwapi.h>
 #include <strsafe.h>
+#include "sound.h"
+#include "mstr.h"
 #include "server/server.h" // 非同期演奏のためのサーバー
 
 enum RET { // exit code of this program
@@ -61,6 +62,27 @@ void my_printf(FILE *fout, LPCTSTR  fmt, ...)
     va_end(va);
 }
 
+bool vsk_get_int_array(std::vector<int16_t>& array, const std::wstring& str) {
+    auto s = str;
+
+    mstr_replace_all(s, L" ", L"");
+    mstr_replace_all(s, L"\t", L"");
+    mstr_replace_all(s, L"{", L"");
+    mstr_replace_all(s, L"}", L"");
+
+    std::vector<std::wstring> vec;
+    mstr_split(vec, s, L",");
+
+    for (auto& item : vec) {
+        wchar_t *endptr;
+        int value = wcstol(item.c_str(), &endptr, 10);
+        if (*endptr)
+            return false;
+        array.push_back(int16_t(value));
+    }
+    return true;
+}
+
 // Text ID
 enum TEXT_ID {
     IDT_VERSION,
@@ -75,6 +97,7 @@ enum TEXT_ID {
     IDT_CIRCULAR_REFERENCE,
     IDT_CANT_OPEN_FILE,
     IDT_CANT_COPY_TONE,
+    IDT_CH_OUT_OF_RANGE,
 };
 
 // localization
@@ -98,13 +121,15 @@ LPCTSTR get_text(INT id)
                 TEXT("  -stereo                    音をステレオにする（デフォルト）。\n")
                 TEXT("  -mono                      音をモノラルにする。\n")
                 TEXT("  -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む（FM音源）。\n")
+                TEXT("  -voice CH \"CSV\"            配列からチャンネルCHに音色を読み込む（FM音源）。\n")
                 TEXT("  -voice-copy TONE FILE.voi  音色をファイルにコピーする（FM音源）。\n")
                 TEXT("  -bgm 0                     演奏が終わるまで待つ。\n")
                 TEXT("  -bgm 1                     演奏が終わるまで待たない（デフォルト）。\n")
                 TEXT("  -help                      このメッセージを表示する。\n")
                 TEXT("  -version                   バージョン情報を表示する。\n")
                 TEXT("\n")
-                TEXT("文字列変数は [ ] で囲えば展開できます。\n");
+                TEXT("数値変数は、「L=数値変数名;」のように等号とセミコロンではさめば指定できます。\n")
+                TEXT("文字列変数は「[A$]」のように [ ] で囲えば展開できます。\n")
         case IDT_TOO_MANY_ARGS: return TEXT("エラー: 引数が多すぎます。\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case IDT_BAD_CALL: return TEXT("エラー: 不正な関数呼び出しです。\n");
@@ -115,6 +140,7 @@ LPCTSTR get_text(INT id)
         case IDT_CIRCULAR_REFERENCE: return TEXT("エラー: 変数の循環参照を検出しました。\n");
         case IDT_CANT_OPEN_FILE: return TEXT("エラー: ファイル「%s」が開けません。\n");
         case IDT_CANT_COPY_TONE: return TEXT("エラー: 音色をコピーできませんでした。\n");
+        case IDT_CH_OUT_OF_RANGE: return TEXT("エラー: チャンネルの値が範囲外です。\n");
         }
     }
     else // The others are Let's la English
@@ -135,12 +161,14 @@ LPCTSTR get_text(INT id)
                 TEXT("  -stereo                    Make sound stereo (default).\n")
                 TEXT("  -mono                      Make sound mono.\n")
                 TEXT("  -voice CH FILE.voi         Load a tone from a file to channel CH (FM sound).\n")
+                TEXT("  -voice CH \"CSV\"            Load a tone from an array to channel CH (FM sound).\n")
                 TEXT("  -voice-copy TONE FILE.voi  Copy the tone to a file (FM sound).\n")
                 TEXT("  -bgm 0                     Wait until the performance is over.\n")
                 TEXT("  -bgm 1                     Don't wait until the performance is over (default).\n")
                 TEXT("  -help                      Display this message.\n")
                 TEXT("  -version                   Display version info.\n")
                 TEXT("\n")
+                TEXT("Numeric variables can be specified by enclosing them between an equal sign and a semicolon: \"L=variable name;\".\n")
                 TEXT("String variables can be expanded by enclosing them in [ ].\n");
         case IDT_TOO_MANY_ARGS: return TEXT("ERROR: Too many arguments.\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("ERROR: The audio mode value (#n) is out of range.\n");
@@ -152,6 +180,7 @@ LPCTSTR get_text(INT id)
         case IDT_CIRCULAR_REFERENCE: return TEXT("ERROR: Circular variable reference detected.\n");
         case IDT_CANT_OPEN_FILE: return TEXT("ERROR: Unable to open file '%s'.\n");
         case IDT_CANT_COPY_TONE: return TEXT("ERROR: Unable to copy tone.\n");
+        case IDT_CH_OUT_OF_RANGE: return TEXT("ERROR: The channel value is out of range.\n");
         }
     }
 
@@ -174,7 +203,7 @@ void usage(void)
 struct VOICE_INFO
 {
     INT m_ch;
-    std::wstring m_file;
+    std::wstring m_data;
 };
 
 struct CMD_PLAY
@@ -507,15 +536,14 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             if (iarg + 2 < argc)
             {
                 int ch = _wtoi(argv[++iarg]);
-                std::wstring file = argv[++iarg];
+                std::wstring data = argv[++iarg];
 
-                if (!(1 <= ch && ch <= 6))
-                {
-                    my_printf(stderr, get_text(IDT_CANT_COPY_TONE));
+                if (!(1 <= ch && ch <= 6)) {
+                    my_printf(stderr, get_text(IDT_CH_OUT_OF_RANGE));
                     return RET_BAD_CALL;
                 }
 
-                m_voices.push_back({ ch, file });
+                m_voices.push_back({ ch, data });
                 continue;
             }
             else
@@ -769,22 +797,35 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
     // 音色を適用する
     for (auto& voice : m_voices)
     {
-        // ファイルから音色を読み込む
-        FILE *fin = _wfopen(voice.m_file.c_str(), L"rb");
-        if (!fin)
-        {
-            my_printf(stderr, get_text(IDT_CANT_OPEN_FILE), voice.m_file.c_str());
-            vsk_sound_exit();
-            return RET_BAD_CALL;
-        }
         size_t size = vsk_sound_voice_size();
         char buf[size];
-        size_t count = fread(buf, size, 1, fin);
-        fclose(fin);
+
+        std::vector<int16_t> array;
+        if (vsk_get_int_array(array, voice.m_data) && array.size() * sizeof(int16_t) == size)
+        {
+            // 配列から音色を読み込む
+            std::memcpy(buf, array.data(), size);
+        }
+        else
+        {
+            // ファイルから音色を読み込む
+            FILE *fin = _wfopen(voice.m_data.c_str(), L"rb");
+            if (!fin) {
+                my_printf(stderr, get_text(IDT_CANT_OPEN_FILE), voice.m_data.c_str());
+                vsk_sound_exit();
+                return RET_BAD_CALL;
+            }
+            size_t count = fread(buf, size, 1, fin);
+            fclose(fin);
+
+            if (!count) {
+                my_printf(stderr, get_text(IDT_CANT_COPY_TONE));
+                return RET_BAD_CALL;
+            }
+        }
 
         // 音色を適用
-        if (!count || !vsk_cmd_play_voice(voice.m_ch - 1, buf, size))
-        {
+        if (!vsk_cmd_play_voice(voice.m_ch - 1, buf, size)) {
             my_printf(stderr, get_text(IDT_CANT_COPY_TONE));
             return RET_BAD_CALL;
         }
