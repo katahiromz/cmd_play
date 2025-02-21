@@ -553,6 +553,13 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
         }
 
+        if (_wcsicmp(arg, L"-print-checksums") == 0 || _wcsicmp(arg, L"--print-checksums") == 0)
+        {
+            void vsk_print_timbre_checksums(void);
+            vsk_print_timbre_checksums();
+            continue;
+        }
+
         if (arg[0] == '-')
         {
             my_printf(stderr, get_text(IDT_INVALID_OPTION), arg);
