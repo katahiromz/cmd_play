@@ -116,9 +116,16 @@ void YM2203::ssg_set_pitch(int ssg_ich, int octave, int key, int adj) {
 
 static const uint8_t OP_OFFSET[] = {0x00, 0x08, 0x04, 0x0C};
 
-void YM2203::fm_set_volume(int fm_ich, int volume, int adj[4]) {
+void YM2203::fm_set_volume(int fm_ich, int volume, int volume_at, int adj[4]) {
     assert(0 <= fm_ich && fm_ich < FM_CH_NUM);
     assert((0 <= volume) && (volume <= 15));
+
+    if (volume_at != -1) {
+        if (volume_at < 85)
+            volume = 0;
+        else
+            volume = int((volume_at - 85.25) / 2.65);
+    }
 
     if (m_fm_timbres[fm_ich] == NULL) {
         assert(0);

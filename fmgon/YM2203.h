@@ -77,10 +77,10 @@ struct YM2203 {
     void fm_key_on(int fm_ich);
     void fm_key_off(int fm_ich);
     void fm_set_pitch(int fm_ich, int octave, int key, int adj = 0);
-    void fm_set_volume(int fm_ich, int volume, int adj[4]);
-    void fm_set_volume(int fm_ich, int volume) {
+    void fm_set_volume(int fm_ich, int volume, int volume_at, int adj[4]);
+    void fm_set_volume(int fm_ich, int volume, int volume_at) {
         int adj[4] = {0, 0, 0, 0};
-        fm_set_volume(fm_ich, volume, adj);
+        fm_set_volume(fm_ich, volume, volume_at, adj);
     }
     void fm_set_timbre(int fm_ich, YM2203_Timbre *timbre);
 

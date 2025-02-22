@@ -422,7 +422,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::fm_realize(int ich, size_t *pdata_
             // do key on
             if (note.m_key != KEY_REST) { // Has key?
                 ym.fm_set_pitch(ich, note.m_octave, note.m_key);
-                ym.fm_set_volume(ich, int(note.m_volume));
+                ym.fm_set_volume(ich, int(note.m_volume), int(note.m_volume_at));
                 ym.fm_key_on(ich);
             }
 
@@ -447,7 +447,7 @@ std::unique_ptr<VSK_PCM16_VALUE[]> VskPhrase::fm_realize(int ich, size_t *pdata_
                     int(lc.m_adj_v[0]), int(lc.m_adj_v[1]),
                     int(lc.m_adj_v[2]), int(lc.m_adj_v[3]),
                 };
-                ym.fm_set_volume(ich, int(note.m_volume), adj);
+                ym.fm_set_volume(ich, int(note.m_volume), int(note.m_volume_at), adj);
                 ym.fm_set_pitch(ich, note.m_octave, note.m_key, int(lc.m_adj_p));
             }
             nsamples -= unit;
@@ -720,7 +720,7 @@ void VskSoundPlayer::play_midi(VskScoreBlock& block)
     }
 
     // 実際に音を出す
-    float gate = 0, volume = 8.0f;
+    float gate = 0, volume = 8.0f, volume_at = -1;
     const int max_quantity = 8, default_length = 24;
     for (auto& note : notes) {
         int octave = note.m_octave;
@@ -735,7 +735,10 @@ void VskSoundPlayer::play_midi(VskScoreBlock& block)
         }
 
         // 音量設定
-        if (volume != note.m_volume) {
+        if (volume_at != note.m_volume_at && volume_at != -1) {
+            volume_at = note.m_volume_at;
+            send_midi_event(hMidiOut, 0xB0 + ch, 0x07, uint8_t(volume_at));
+        } else if (volume != note.m_volume) {
             volume = note.m_volume;
             send_midi_event(hMidiOut, 0xB0 + ch, 0x07, uint8_t(volume * 127.0f / 15.0f));
         }
@@ -996,7 +999,7 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
     // 演奏内容を含むトラックを書き込む
     for (size_t ch = 0; ch < block.size(); ++ch) {
         int tempo = 120;
-        float volume = 8.0f;
+        float volume = 8.0f, volume_at = -1;
         uint32_t microseconds_per_quarter_note = 60 * 1000 * 1000 / tempo;
 
         auto& phrase = block[ch];
@@ -1068,7 +1071,14 @@ bool VskSoundPlayer::write_mid_file(FILE *fout, VskScoreBlock& block)
             default: // 普通の音符
                 {
                     // 音量設定
-                    if (volume != note.m_volume) {
+                    if (volume_at != note.m_volume_at && volume_at != -1) {
+                        volume_at = note.m_volume_at;
+                        write_variable_length(trackData, delta_time);
+                        trackData.push_back(0xB0 + ch);
+                        trackData.push_back(0x07);
+                        trackData.push_back(uint8_t(volume_at));
+                        delta_time = 0;
+                    } else if (volume != note.m_volume) {
                         volume = note.m_volume;
                         write_variable_length(trackData, delta_time);
                         trackData.push_back(0xB0 + ch);

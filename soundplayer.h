@@ -70,6 +70,7 @@ struct VskNote {
     float       m_sec;              // 秒数
     float       m_gate;             // 開始時刻
     float       m_volume;           // 音量 (0～15)
+    float       m_volume_at;        // 細かい音量 (-1 or 0～127)
     int         m_quantity;         // 音符の長さの割合 (0～8)
     bool        m_and;              // タイか？
     int         m_reg;              // レジスタのアドレス
@@ -78,7 +79,7 @@ struct VskNote {
 
     VskNote(int tempo, int octave, uint8_t LR, int note,
             bool dot = false, float length = 24.0f, char sign = 0,
-            float volume = 8.0f, int quantity = 8,
+            float volume = 8.0f, float volume_at = -1, int quantity = 8,
             bool and_ = false, int reg = -1, int data = -1)
     {
         m_tempo = tempo;
@@ -90,6 +91,7 @@ struct VskNote {
         m_sec = get_sec(tempo, length, dot);
         m_key = get_key_from_char(note, sign);
         m_volume = volume;
+        m_volume_at = volume_at;
         m_quantity = quantity;
         m_and = and_;
         m_reg = reg;
@@ -112,6 +114,7 @@ struct VskSoundSetting {
     float               m_length;       // 音符の長さ (24は四分音符の長さ)
     AUDIO_TYPE          m_audio_type;   // 音源の種類
     float               m_volume;       // 音量 (0～15)
+    float               m_volume_at;    // 細かい音量 (-1 or 0～127)
     int                 m_quantity;     // 音符の長さの割合 (0～8)
     int                 m_tone;         // 音色
     uint8_t             m_LR;           // 左右 (left/right)
@@ -123,6 +126,7 @@ struct VskSoundSetting {
         m_audio_type(audio_type)
     {
         m_volume = 8;
+        m_volume_at = -1;
         m_quantity = 8;
         m_tone = tone;
         m_LR = 0x3;
@@ -134,6 +138,7 @@ struct VskSoundSetting {
         m_length = 24;
         m_audio_type = AUDIO_TYPE_SSG;
         m_volume = 8;
+        m_volume_at = -1;
         m_quantity = 8;
         m_tone = 0;
         m_LR = 0x3;
@@ -184,7 +189,7 @@ struct VskPhrase {
     void add_note(char note, bool dot, float length, char sign, int quantity, bool and_) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
-            note, dot, length, sign, m_setting.m_volume,
+            note, dot, length, sign, m_setting.m_volume, m_setting.m_volume_at,
             quantity, and_);
     }
 
@@ -192,7 +197,7 @@ struct VskPhrase {
     void add_action_node(char note, int action_no) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
-            note, false, 0.0f, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume, m_setting.m_volume_at,
             m_setting.m_quantity, false, -1, action_no);
     }
 
@@ -200,7 +205,7 @@ struct VskPhrase {
     void add_tone(char note, int tone_no) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
-            note, false, 0.0f, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume, m_setting.m_volume_at,
             m_setting.m_quantity, false, -1, tone_no);
     }
 
@@ -208,7 +213,7 @@ struct VskPhrase {
     void add_reg(char note, int reg, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
-            note, false, 0.0f, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume, m_setting.m_volume_at,
             m_setting.m_quantity, false, reg, data);
     }
 
@@ -216,7 +221,7 @@ struct VskPhrase {
     void add_envelop_interval(char note, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
-            note, false, 0.0f, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume, m_setting.m_volume_at,
             m_setting.m_quantity, false, -1, data);
     }
 
@@ -224,7 +229,7 @@ struct VskPhrase {
     void add_envelop_type(char note, int data) {
         m_notes.emplace_back(
             m_setting.m_tempo, m_setting.m_octave, m_setting.m_LR,
-            note, false, 0.0f, 0, m_setting.m_volume,
+            note, false, 0.0f, 0, m_setting.m_volume, m_setting.m_volume_at,
             m_setting.m_quantity, false, -1, data);
     }
 
@@ -247,7 +252,7 @@ struct VskPhrase {
         }
         int octave = key / 12;
         VskNote note(m_setting.m_tempo, octave, m_setting.m_LR, 'N', dot, length, sign,
-                     m_setting.m_volume, quantity);
+                     m_setting.m_volume, m_setting.m_volume_at, quantity);
         note.m_key = key % 12;
         m_notes.push_back(note);
     }

@@ -576,7 +576,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 if (auto ast = vsk_get_play_param(item)) {
                     auto i0 = ast->to_int();
                     if ((0 <= i0) && (i0 <= 127)) {
-                        phrase->m_setting.m_volume = i0 * (15.0f / 127.0f);
+                        phrase->m_setting.m_volume_at = i0;
                         continue;
                     }
                 }
