@@ -62,9 +62,8 @@ void my_printf(FILE *fout, LPCTSTR  fmt, ...)
     va_end(va);
 }
 
-bool vsk_get_int_array(std::vector<int16_t>& array, const std::wstring& str) {
+bool vsk_get_int_array(std::vector<int16_t>& array, const std::wstring& str, std::vector<int16_t> *pdefault_values = nullptr) {
     auto s = str;
-
     mstr_replace_all(s, L" ", L"");
     mstr_replace_all(s, L"\t", L"");
     mstr_replace_all(s, L"{", L"");
@@ -73,12 +72,24 @@ bool vsk_get_int_array(std::vector<int16_t>& array, const std::wstring& str) {
     std::vector<std::wstring> vec;
     mstr_split(vec, s, L",");
 
+    size_t i = 0;
     for (auto& item : vec) {
-        wchar_t *endptr;
-        int value = wcstol(item.c_str(), &endptr, 10);
-        if (*endptr)
-            return false;
+        int value;
+        if (item.empty()) {
+            if (!pdefault_values)
+                return false;
+            if (i < pdefault_values->size())
+                value = (*pdefault_values)[i];
+            else
+                return false;
+        } else {
+            wchar_t *endptr;
+            value = wcstol(item.c_str(), &endptr, 10);
+            if (*endptr)
+                return false;
+        }
         array.push_back(int16_t(value));
+        ++i;
     }
     return true;
 }

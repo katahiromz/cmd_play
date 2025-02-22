@@ -10,6 +10,7 @@
 #include <string>
 #include <stack>
 #include "../sound.h"
+#include "../mstr.h"
 #include "server.h"
 
 HINSTANCE g_hInst = NULL;
@@ -27,7 +28,7 @@ HANDLE g_hStackMutex = NULL;
 struct VOICE_INFO
 {
     INT m_ch;
-    std::wstring m_file;
+    std::wstring m_data;
 };
 
 struct SERVER_CMD
@@ -238,14 +239,14 @@ int SERVER_CMD::parse_cmd_line(INT argc, LPWSTR *argv)
             if (iarg + 2 < argc)
             {
                 int ch = _wtoi(argv[++iarg]);
-                std::wstring file = argv[++iarg];
+                std::wstring data = argv[++iarg];
 
                 if (!(1 <= ch && ch <= 6))
                 {
                     return 1;
                 }
 
-                m_voices.push_back({ ch, file });
+                m_voices.push_back({ ch, data });
                 continue;
             }
             else
@@ -302,24 +303,71 @@ int SERVER_CMD::parse_cmd_line(INT argc, LPWSTR *argv)
     return 0;
 }
 
+bool vsk_get_int_array(std::vector<int16_t>& array, const std::wstring& str, std::vector<int16_t> *pdefault_values = nullptr) {
+    auto s = str;
+    mstr_replace_all(s, L" ", L"");
+    mstr_replace_all(s, L"\t", L"");
+    mstr_replace_all(s, L"{", L"");
+    mstr_replace_all(s, L"}", L"");
+
+    std::vector<std::wstring> vec;
+    mstr_split(vec, s, L",");
+
+    size_t i = 0;
+    for (auto& item : vec) {
+        int value;
+        if (item.empty()) {
+            if (!pdefault_values)
+                return false;
+            if (i < pdefault_values->size())
+                value = (*pdefault_values)[i];
+            else
+                return false;
+        } else {
+            wchar_t *endptr;
+            value = wcstol(item.c_str(), &endptr, 10);
+            if (*endptr)
+                return false;
+        }
+        array.push_back(int16_t(value));
+        ++i;
+    }
+    return true;
+}
+
 // 音色を適用する
 void SERVER::apply_voice(SERVER_CMD& cmd)
 {
     for (auto& voice : cmd.m_voices)
     {
-        // ファイルから音色を読み込む
-        FILE *fin = _wfopen(voice.m_file.c_str(), L"rb");
-        if (!fin)
-            return;
-
         size_t size = vsk_sound_voice_size();
         char buf[size];
-        size_t count = fread(buf, size, 1, fin);
-        fclose(fin);
+
+        std::vector<int16_t> array;
+        if (vsk_get_int_array(array, voice.m_data) && array.size() * sizeof(int16_t) == size)
+        {
+            // 配列から音色を読み込む
+            std::memcpy(buf, array.data(), size);
+        }
+        else
+        {
+            // ファイルから音色を読み込む
+            FILE *fin = _wfopen(voice.m_data.c_str(), L"rb");
+            if (!fin) {
+                return;
+            }
+            size_t count = fread(buf, size, 1, fin);
+            fclose(fin);
+
+            if (!count) {
+                return;
+            }
+        }
 
         // 音色を適用
-        if (!count || !vsk_cmd_play_voice(voice.m_ch - 1, buf, size))
+        if (!vsk_cmd_play_voice(voice.m_ch - 1, buf, size)) {
             return;
+        }
     }
     cmd.m_voices.clear();
 }
