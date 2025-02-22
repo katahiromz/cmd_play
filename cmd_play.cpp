@@ -560,17 +560,16 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                             phrase->m_setting.m_tone = i0;
                             continue;
                         }
-                        return false;
+                        break;
                     case AUDIO_TYPE_MIDI:
                         if ((0 <= i0) && (i0 <= 127)) {
                             phrase->add_tone(ch, i0);
                             phrase->m_setting.m_tone = i0;
                             continue;
                         }
-                        return false;
+                        break;
                     default:
                         assert(0);
-                        return false;
                     }
                 }
             } else if (item.m_subcommand == "@V") {

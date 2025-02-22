@@ -129,7 +129,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -version                   バージョン情報を表示する。\n")
                 TEXT("\n")
                 TEXT("数値変数は、「L=数値変数名;」のように等号とセミコロンではさめば指定できます。\n")
-                TEXT("文字列変数は「[A$]」のように [ ] で囲えば展開できます。\n")
+                TEXT("文字列変数は「[A$]」のように [ ] で囲えば展開できます。\n");
         case IDT_TOO_MANY_ARGS: return TEXT("エラー: 引数が多すぎます。\n");
         case IDT_MODE_OUT_OF_RANGE: return TEXT("エラー: 音源モード (#n) の値が範囲外です。\n");
         case IDT_BAD_CALL: return TEXT("エラー: 不正な関数呼び出しです。\n");

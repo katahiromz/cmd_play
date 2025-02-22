@@ -245,9 +245,10 @@ struct VskPhrase {
         if (key == 96) {
             key = 0;
         }
-        VskNote note(m_setting.m_tempo, 0, m_setting.m_LR, 0, dot, length, sign,
+        int octave = key / 12;
+        VskNote note(m_setting.m_tempo, octave, m_setting.m_LR, 'N', dot, length, sign,
                      m_setting.m_volume, quantity);
-        note.m_key = key;
+        note.m_key = key % 12;
         m_notes.push_back(note);
     }
 
