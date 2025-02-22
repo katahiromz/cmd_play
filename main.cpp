@@ -128,7 +128,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -D変数名=値                変数に代入。\n")
                 TEXT("  -save-wav 出力.wav         WAVファイルとして保存（MIDI音源を除く）。\n")
                 TEXT("  -save-mid 出力.mid         MIDファイルとして保存（MIDI音源のみ）。\n")
-                TEXT("  -stopm                     音楽を止めて設定をリセット。\n")
+                TEXT("  -reset                     音楽を止めて設定をリセット。\n")
                 TEXT("  -stereo                    音をステレオにする（デフォルト）。\n")
                 TEXT("  -mono                      音をモノラルにする。\n")
                 TEXT("  -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む（FM音源）。\n")
@@ -168,7 +168,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -DVAR=VALUE                Assign to a variable.\n")
                 TEXT("  -save-wav output.wav       Save as WAV file (except MIDI sound).\n")
                 TEXT("  -save-mid output.mid       Save as MID file (MIDI sound only).\n")
-                TEXT("  -stopm                     Stop music and reset settings.\n")
+                TEXT("  -reset                     Stop music and reset settings.\n")
                 TEXT("  -stereo                    Make sound stereo (default).\n")
                 TEXT("  -mono                      Make sound mono.\n")
                 TEXT("  -voice CH FILE.voi         Load a tone from a file to channel CH (FM sound).\n")
@@ -226,7 +226,7 @@ struct CMD_PLAY
     std::wstring m_save_wav;
     std::wstring m_save_mid;
     int m_audio_mode = 2;
-    bool m_stopm = false;
+    bool m_reset = false;
     bool m_stereo = true;
     bool m_no_reg = false;
     bool m_bgm = true;
@@ -490,9 +490,9 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             }
         }
 
-        if (_wcsicmp(arg, L"-stopm") == 0 || _wcsicmp(arg, L"--stopm") == 0)
+        if (_wcsicmp(arg, L"-reset") == 0 || _wcsicmp(arg, L"--reset") == 0)
         {
-            m_stopm = true;
+            m_reset = true;
             continue;
         }
 
@@ -748,7 +748,7 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         return RET_BAD_SOUND_INIT;
     }
 
-    if (m_stopm) // 音楽を止めて設定をリセットする
+    if (m_reset) // 音楽を止めて設定をリセットする
     {
         // コマンドラインの -bgm 設定を優先する
         m_bgm = m_bgm2;

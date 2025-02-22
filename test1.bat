@@ -1,1 +1,1 @@
-cmd_play.exe -stopm "@23L8CDE4.DC8R8CDEDCD2" "@30L4CEECCECD"
+cmd_play.exe -reset "@23L8CDE4.DC8R8CDEDCD2" "@30L4CEECCECD"

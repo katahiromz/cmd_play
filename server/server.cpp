@@ -205,7 +205,7 @@ int SERVER_CMD::parse_cmd_line(INT argc, LPWSTR *argv)
             continue;
         }
 
-        if (_wcsicmp(arg, L"-stopm") == 0 || _wcsicmp(arg, L"--stopm") == 0)
+        if (_wcsicmp(arg, L"-reset") == 0 || _wcsicmp(arg, L"--reset") == 0)
         {
             continue;
         }
