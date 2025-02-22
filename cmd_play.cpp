@@ -444,7 +444,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 }
                 return false;
             } else {
-                phrase->m_setting.m_length = (24.0f * 4.0f);
+                phrase->m_setting.m_length = (24.0f * 4.0f) / 4;
             }
             continue;
         case 'Q':
