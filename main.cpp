@@ -234,6 +234,7 @@ struct CMD_PLAY
     bool m_no_reg = false;
     bool m_bgm = true;
     bool m_bgm2 = true;
+    HWND m_hwndServer = nullptr;
     std::vector<VOICE_INFO> m_voices;
 
     RET parse_cmd_line(int argc, wchar_t **argv);
@@ -250,12 +251,6 @@ struct CMD_PLAY
 };
 
 #define NUM_SETTINGS 18
-
-static LPCWSTR s_setting_key[NUM_SETTINGS] = {
-    L"setting0", L"setting1", L"setting2", L"setting3", L"setting4", L"setting5",
-    L"setting6", L"setting7", L"setting8", L"setting9", L"setting10", L"setting11",
-    L"setting12", L"setting13", L"setting14", L"setting15", L"setting16", L"setting17",
-};
 
 // レジストリから設定を読み込む
 bool CMD_PLAY::load_settings()
@@ -291,12 +286,14 @@ bool CMD_PLAY::load_settings()
 
     // 設定項目を読み込む
     std::vector<uint8_t> setting;
+    setting.resize(size);
     for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
-        setting.resize(size);
+        WCHAR szValueName[64];
+        StringCchPrintfW(szValueName, _countof(szValueName), L"setting%u", ch);
 
         DWORD cbValue = size;
-        error = RegQueryValueExW(hKey, s_setting_key[ch], NULL, NULL, setting.data(), &cbValue);
+        error = RegQueryValueExW(hKey, szValueName, NULL, NULL, setting.data(), &cbValue);
         if (!error && cbValue == size)
             vsk_cmd_play_set_setting(ch, setting);
     }
@@ -408,7 +405,11 @@ bool CMD_PLAY::save_settings()
     {
         std::vector<uint8_t> setting;
         vsk_cmd_play_get_setting(ch, setting);
-        RegSetValueExW(hKey, s_setting_key[ch], 0, REG_BINARY, setting.data(), (DWORD)setting.size());
+
+        WCHAR szValueName[64];
+        StringCchPrintfW(szValueName, _countof(szValueName), L"setting%u", ch);
+
+        RegSetValueExW(hKey, szValueName, 0, REG_BINARY, setting.data(), (DWORD)setting.size());
     }
 
     // レジストリの変数項目を消す
@@ -844,12 +845,13 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         }
 
         // サイバーが起動してなければ起動
-        HWND hwndServer = find_server_window();
-        if (!hwndServer) {
+        if (!m_hwndServer || !::IsWindow(m_hwndServer))
+            m_hwndServer = find_server_window();
+        if (!m_hwndServer) {
             if (auto ret = start_server()) {
                 return ret;
             }
-            hwndServer = find_server_window();
+            m_hwndServer = find_server_window();
         }
 
         // サーバー側のコマンドラインを構築
@@ -860,7 +862,7 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         cds.dwData = 0xDEADFACE;
         cds.cbData = (cmd_line.size() + 1) * sizeof(WCHAR);
         cds.lpData = (PVOID)cmd_line.c_str();
-        SendMessageW(hwndServer, WM_COPYDATA, 0, (LPARAM)&cds);
+        SendMessageW(m_hwndServer, WM_COPYDATA, 0, (LPARAM)&cds);
 
         return RET_SUCCESS;
     }

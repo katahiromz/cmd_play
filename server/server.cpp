@@ -9,6 +9,7 @@
 #include <cstring>
 #include <string>
 #include <deque>
+#include <strsafe.h>
 #include "../sound.h"
 #include "../mstr.h"
 #include "server.h"
@@ -49,6 +50,7 @@ struct SERVER
     bool m_no_reg = false;
     HANDLE m_hThread = NULL;
     std::deque<SERVER_CMD> m_deque;
+    SERVER_CMD m_cmd;
 
     SERVER()
     {
@@ -62,7 +64,7 @@ struct SERVER
 
     bool start();
     DWORD thread_proc();
-    VSK_SOUND_ERR play_cmd(SERVER_CMD& cmd, bool no_sound);
+    VSK_SOUND_ERR play_cmd(SERVER_CMD& cmd);
     void apply_voice(SERVER_CMD& cmd);
 };
 
@@ -72,12 +74,6 @@ SERVER *Server_GetData(HWND hwndServer)
 }
 
 #define NUM_SETTINGS 18
-
-static LPCWSTR s_setting_key[NUM_SETTINGS] = {
-    L"setting0", L"setting1", L"setting2", L"setting3", L"setting4", L"setting5",
-    L"setting6", L"setting7", L"setting8", L"setting9", L"setting10", L"setting11",
-    L"setting12", L"setting13", L"setting14", L"setting15", L"setting16", L"setting17",
-};
 
 // レジストリから設定を読み込む
 bool SERVER_CMD::load_settings()
@@ -94,12 +90,14 @@ bool SERVER_CMD::load_settings()
 
     // 設定項目を読み込む
     std::vector<uint8_t> setting;
+    setting.resize(size);
     for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
-        setting.resize(size);
+        WCHAR szValueName[64];
+        StringCchPrintfW(szValueName, _countof(szValueName), L"setting%u", ch);
 
         DWORD cbValue = size;
-        error = RegQueryValueExW(hKey, s_setting_key[ch], NULL, NULL, setting.data(), &cbValue);
+        error = RegQueryValueExW(hKey, szValueName, NULL, NULL, setting.data(), &cbValue);
         if (!error && cbValue == size)
             vsk_cmd_play_set_setting(ch, setting);
     }
@@ -143,9 +141,12 @@ bool SERVER_CMD::save_settings()
     // 音声の設定を書き込む
     for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
+        WCHAR szValueName[64];
+        StringCchPrintfW(szValueName, _countof(szValueName), L"setting%u", ch);
+
         std::vector<uint8_t> setting;
         vsk_cmd_play_get_setting(ch, setting);
-        RegSetValueExW(hKey, s_setting_key[ch], 0, REG_BINARY, setting.data(), (DWORD)setting.size());
+        RegSetValueExW(hKey, szValueName, 0, REG_BINARY, setting.data(), (DWORD)setting.size());
     }
 
     // レジストリの変数項目を消す
@@ -183,6 +184,9 @@ retry:
 
 int SERVER_CMD::parse_cmd_line(INT argc, LPWSTR *argv)
 {
+    m_str_to_play.clear();
+    m_voices.clear();
+
     if (argc <= 1)
         return 0;
 
@@ -374,27 +378,28 @@ void SERVER::apply_voice(SERVER_CMD& cmd)
             return;
         }
     }
+
     cmd.m_voices.clear();
 }
 
-VSK_SOUND_ERR SERVER::play_cmd(SERVER_CMD& cmd, bool no_sound)
+VSK_SOUND_ERR SERVER::play_cmd(SERVER_CMD& cmd)
 {
     VSK_SOUND_ERR err = VSK_SOUND_ERR_ILLEGAL;
     switch (cmd.m_audio_mode)
     {
     case 0:
-        err = vsk_sound_cmd_play_ssg(cmd.m_str_to_play, m_stereo, no_sound);
+        err = vsk_sound_cmd_play_ssg(cmd.m_str_to_play, m_stereo, false);
         break;
     case 1:
-        err = vsk_sound_cmd_play_midi(cmd.m_str_to_play, no_sound);
+        err = vsk_sound_cmd_play_midi(cmd.m_str_to_play, false);
         break;
     case 2:
     case 3:
     case 4:
-        err = vsk_sound_cmd_play_fm_and_ssg(cmd.m_str_to_play, m_stereo, no_sound);
+        err = vsk_sound_cmd_play_fm_and_ssg(cmd.m_str_to_play, m_stereo, false);
         break;
     case 5:
-        err = vsk_sound_cmd_play_fm(cmd.m_str_to_play, m_stereo, no_sound);
+        err = vsk_sound_cmd_play_fm(cmd.m_str_to_play, m_stereo, false);
         break;
     }
     return err;
@@ -428,7 +433,7 @@ DWORD SERVER::thread_proc()
             else
             {
                 // やることないんだから、あんまりCPU時間を食うな。ビジーループを回避
-                Sleep(100);
+                Sleep(50);
             }
         }
         else
@@ -437,10 +442,11 @@ DWORD SERVER::thread_proc()
             PostMessageW(g_hMainWnd, WM_COMMAND, ID_KILL_TIMER, 0);
 
             // 実際に演奏する
-            play_cmd(cmd, false);
+            play_cmd(cmd);
 
             // 設定を保存する
             cmd.save_settings();
+            m_cmd = cmd;
         }
 
         prev_size = size;
@@ -506,18 +512,12 @@ BOOL OnCopyData(HWND hwnd, HWND hwndFrom, PCOPYDATASTRUCT pcds)
     INT argc;
     LPWSTR *argv = CommandLineToArgvW(cmd_line.c_str(), &argc);
     do {
-        // 設定を読み込む
-        SERVER_CMD cmd;
-        cmd.load_settings();
         // コマンドラインをパースする
+        auto& cmd = pServer->m_cmd;
         cmd.parse_cmd_line(argc, argv);
         // 音色を適用
         pServer->apply_voice(cmd);
-        // 演奏しないで設定のみを更新する
-        pServer->play_cmd(cmd, true);
-        // 設定を保存する
-        cmd.save_settings();
-
+        // 排他制御付きでコマンドをFIFOに追加
         DWORD wait = WaitForSingleObject(g_hStackMutex, INFINITE);
         if (wait != WAIT_OBJECT_0)
             break;
@@ -580,11 +580,6 @@ Server_Main(HINSTANCE hInstance, INT argc, LPWSTR *argv, INT nCmdShow)
         return 0;
     }
 
-    // 設定を読み込み、コマンドラインをパースする
-    SERVER_CMD cmd;
-    cmd.load_settings();
-    cmd.parse_cmd_line(argc, argv);
-
     g_hInst = hInstance;
     InitCommonControls();
 
@@ -611,6 +606,7 @@ Server_Main(HINSTANCE hInstance, INT argc, LPWSTR *argv, INT nCmdShow)
     AdjustWindowRectEx(&rc, style, FALSE, exstyle);
 
     SERVER server;
+    server.m_cmd.load_settings();
     HWND hwnd = CreateWindowExW(exstyle, SERVER_CLASSNAME, SERVER_TITLE, style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top,
         NULL, NULL, hInstance, &server);
