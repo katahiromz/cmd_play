@@ -1,5 +1,7 @@
 ﻿(Japanese, UTF-8)
 
+English is [here](README_en.md)
+
 # cmd_play by 片山博文MZ
 
 ## 概要
