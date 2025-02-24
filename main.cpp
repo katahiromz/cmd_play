@@ -119,7 +119,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case IDT_VERSION: return TEXT("cmd_play バージョン 2.2 by 片山博文MZ\n");
+        case IDT_VERSION: return TEXT("cmd_play バージョン 2.3 by 片山博文MZ\n");
         case IDT_HELP:
             return
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
@@ -160,7 +160,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case IDT_VERSION: return TEXT("cmd_play version 2.2 by katahiromz\n");
+        case IDT_VERSION: return TEXT("cmd_play version 2.3 by katahiromz\n");
         case IDT_HELP:
             return
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
@@ -241,7 +241,7 @@ struct CMD_PLAY
     RET start_server();
     bool load_settings();
     bool save_settings();
-    bool save_bgm_only();
+    bool save_bgm_and_vars_only();
 
     std::wstring build_server_cmd_line(int argc, wchar_t **argv);
     VSK_SOUND_ERR save_wav();
@@ -328,7 +328,7 @@ bool CMD_PLAY::load_settings()
 }
 
 // レジストリへ設定を書き込む
-bool CMD_PLAY::save_bgm_only()
+bool CMD_PLAY::save_bgm_and_vars_only()
 {
     if (m_no_reg)
         return false;
@@ -344,6 +344,33 @@ bool CMD_PLAY::save_bgm_only()
     {
         DWORD dwValue = !!m_bgm, cbValue = sizeof(dwValue);
         RegSetValueExW(hKey, L"BGM", 0, REG_DWORD, (BYTE *)&dwValue, cbValue);
+    }
+
+    // レジストリの変数項目を消す
+retry:
+    for (DWORD dwIndex = 0; ; ++dwIndex)
+    {
+        CHAR szName[MAX_PATH];
+        DWORD cchName = _countof(szName);
+        error = RegEnumValueA(hKey, dwIndex, szName, &cchName, NULL, NULL, NULL, NULL);
+        szName[_countof(szName) - 1] = 0; // Avoid buffer overrun
+        if (error)
+            break;
+
+        if (std::memcmp(szName, "VAR_", 4 * sizeof(CHAR)) != 0)
+            continue;
+
+        RegDeleteValueA(hKey, szName);
+        goto retry;
+    }
+
+    // 新しい変数項目群を書き込む
+    for (auto& pair : g_variables)
+    {
+        std::string name = "VAR_";
+        name += pair.first;
+        DWORD cbValue = (pair.second.size() + 1) * sizeof(CHAR);
+        RegSetValueExA(hKey, name.c_str(), 0, REG_SZ, (BYTE *)pair.second.c_str(), cbValue);
     }
 
     // レジストリを閉じる
@@ -793,10 +820,15 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
     {
         // 文法をチェックする
         auto err = play_str(true);
-
-        save_bgm_only();
+        // g_variablesをm_variablesで上書き
+        for (auto& pair : m_variables)
+            g_variables[pair.first] = pair.second;
+        // 設定を保存
+        save_bgm_and_vars_only();
+        // 音声モジュールを解放
         vsk_sound_exit();
 
+        // エラーチェック
         switch (err)
         {
         case VSK_SOUND_ERR_ILLEGAL:
@@ -811,27 +843,24 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
             break;
         }
 
-        HANDLE hMutex = CreateMutexW(NULL, TRUE, L"cmd_play_server_mutex");
-
-        auto cmd_line = build_server_cmd_line(argc, argv);
+        // サイバーが起動してなければ起動
         HWND hwndServer = find_server_window();
         if (!hwndServer) {
             if (auto ret = start_server()) {
-                ReleaseMutex(hMutex);
-                CloseHandle(hMutex);
                 return ret;
             }
             hwndServer = find_server_window();
         }
 
+        // サーバー側のコマンドラインを構築
+        auto cmd_line = build_server_cmd_line(argc, argv);
+
+        // サーバーにメッセージを送信
         COPYDATASTRUCT cds;
         cds.dwData = 0xDEADFACE;
         cds.cbData = (cmd_line.size() + 1) * sizeof(WCHAR);
         cds.lpData = (PVOID)cmd_line.c_str();
         SendMessageW(hwndServer, WM_COPYDATA, 0, (LPARAM)&cds);
-
-        ReleaseMutex(hMutex);
-        CloseHandle(hMutex);
 
         return RET_SUCCESS;
     }
