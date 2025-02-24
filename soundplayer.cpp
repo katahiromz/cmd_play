@@ -310,12 +310,18 @@ void VskPhrase::execute_special_actions() {
 void VskPhrase::rescan_notes() {
     std::vector<VskNote> new_notes;
     for (size_t i = 0; i < m_notes.size(); ++i) {
-        if (!m_notes[i].m_and) {
+        // 有効な"&"か？
+        if (!m_notes[i].m_and || !(i < m_notes.size()) ||
+            !(KEY_C <= m_notes[i].m_key && m_notes[i].m_key <= KEY_B) ||
+            m_notes[i].m_octave != m_notes[i + 1].m_octave ||
+            m_notes[i].m_key != m_notes[i + 1].m_key)
+        {
+            // 有効な"&"ではなかった
             new_notes.push_back(m_notes[i]);
             continue;
         }
 
-        // タイがあった。長さと秒数を再計算
+        // 有効な"&"があった。長さと秒数を再計算
         size_t k = 0;
         float length = 0, sec = 0;
         do {
