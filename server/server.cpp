@@ -418,6 +418,9 @@ DWORD SERVER::thread_proc()
         size_t size = m_deque.size();
         if (size)
         {
+            // 急げ！ 音が遅れてはいけない。
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+
             cmd = m_deque.front();
             m_deque.pop_front();
         }
@@ -443,6 +446,9 @@ DWORD SERVER::thread_proc()
 
             // 実際に演奏する
             play_cmd(cmd);
+
+            // もう急がなくてもいいぞ
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 
             // 設定を保存する
             cmd.save_settings();
