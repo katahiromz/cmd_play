@@ -119,7 +119,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case IDT_VERSION: return TEXT("cmd_play バージョン 2.3 by 片山博文MZ\n");
+        case IDT_VERSION: return TEXT("cmd_play バージョン 2.4 by 片山博文MZ\n");
         case IDT_HELP:
             return
                 TEXT("使い方: cmd_play [オプション] [#n] [文字列1] [文字列2] [文字列3] [文字列4] [文字列5] [文字列6]\n")
@@ -160,7 +160,7 @@ LPCTSTR get_text(INT id)
     {
         switch (id)
         {
-        case IDT_VERSION: return TEXT("cmd_play version 2.3 by katahiromz\n");
+        case IDT_VERSION: return TEXT("cmd_play version 2.4 by katahiromz\n");
         case IDT_HELP:
             return
                 TEXT("Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]\n")
