@@ -1,5 +1,5 @@
 cmd_play.exe -reset -bgm 1 "L4CCCC" "L4EEEE" "L4GGGG"
 cmd_play.exe -bgm 1 "L4EEEE" "L4GGGG" "L4BBBB"
 cmd_play.exe -bgm 1 "L4DDDD" "L4FFFF" "L4AAAA"
-cmd_play.exe -bgm 1 "@2O4C4D4E4F4G4A4B4O5C2"
+cmd_play.exe -bgm 1 "@2O4L4CDEFGABO5C2"
 cmd_play.exe -bgm 1 "C1" "E1" "G1"

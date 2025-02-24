@@ -401,12 +401,12 @@ bool CMD_PLAY::save_settings()
     }
 
     // 音声の設定を書き込む
+    std::vector<uint8_t> setting;
+    WCHAR szValueName[64];
     for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
-        std::vector<uint8_t> setting;
         vsk_cmd_play_get_setting(ch, setting);
 
-        WCHAR szValueName[64];
         StringCchPrintfW(szValueName, _countof(szValueName), L"setting%u", ch);
 
         RegSetValueExW(hKey, szValueName, 0, REG_BINARY, setting.data(), (DWORD)setting.size());

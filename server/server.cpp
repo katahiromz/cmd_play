@@ -91,12 +91,12 @@ bool SERVER_CMD::load_settings()
     // 設定項目を読み込む
     std::vector<uint8_t> setting;
     setting.resize(size);
+    WCHAR szValueName[64];
+    DWORD cbValue;
     for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
-        WCHAR szValueName[64];
         StringCchPrintfW(szValueName, _countof(szValueName), L"setting%u", ch);
-
-        DWORD cbValue = size;
+        cbValue = size;
         error = RegQueryValueExW(hKey, szValueName, NULL, NULL, setting.data(), &cbValue);
         if (!error && cbValue == size)
             vsk_cmd_play_set_setting(ch, setting);
@@ -106,8 +106,7 @@ bool SERVER_CMD::load_settings()
     for (DWORD dwIndex = 0; ; ++dwIndex)
     {
         CHAR szName[MAX_PATH], szValue[512];
-        DWORD cchName = _countof(szName);
-        DWORD cbValue = sizeof(szValue);
+        DWORD cchName = _countof(szName), cbValue = sizeof(szValue);
         error = RegEnumValueA(hKey, dwIndex, szName, &cchName, NULL, NULL, (BYTE *)szValue, &cbValue);
         szName[_countof(szName) - 1] = 0; // Avoid buffer overrun
         szValue[_countof(szValue) - 1] = 0; // Avoid buffer overrun
@@ -139,22 +138,22 @@ bool SERVER_CMD::save_settings()
         return false;
 
     // 音声の設定を書き込む
+    std::vector<uint8_t> setting;
+    WCHAR szValueName[64];
     for (int ch = 0; ch < NUM_SETTINGS; ++ch)
     {
-        WCHAR szValueName[64];
         StringCchPrintfW(szValueName, _countof(szValueName), L"setting%u", ch);
-
-        std::vector<uint8_t> setting;
         vsk_cmd_play_get_setting(ch, setting);
         RegSetValueExW(hKey, szValueName, 0, REG_BINARY, setting.data(), (DWORD)setting.size());
     }
 
     // レジストリの変数項目を消す
 retry:
+    CHAR szName[MAX_PATH];
+    DWORD cchName;
     for (DWORD dwIndex = 0; ; ++dwIndex)
     {
-        CHAR szName[MAX_PATH];
-        DWORD cchName = _countof(szName);
+        cchName = _countof(szName);
         error = RegEnumValueA(hKey, dwIndex, szName, &cchName, NULL, NULL, NULL, NULL);
         szName[_countof(szName) - 1] = 0; // Avoid buffer overrun
         if (error)
@@ -168,11 +167,12 @@ retry:
     }
 
     // 新しい変数項目群を書き込む
+    std::string name;
+    DWORD cbValue;
     for (auto& pair : g_variables)
     {
-        std::string name = "VAR_";
-        name += pair.first;
-        DWORD cbValue = (pair.second.size() + 1) * sizeof(CHAR);
+        name = "VAR_" + pair.first;
+        cbValue = (pair.second.size() + 1) * sizeof(CHAR);
         RegSetValueExA(hKey, name.c_str(), 0, REG_SZ, (BYTE *)pair.second.c_str(), cbValue);
     }
 
@@ -411,7 +411,6 @@ DWORD SERVER::thread_proc()
     while (g_hMainWnd)
     {
         // 次に演奏するデータを取り出す
-        SERVER_CMD cmd;
         DWORD wait = WaitForSingleObject(g_hStackMutex, INFINITE);
         if (wait != WAIT_OBJECT_0)
             break;
@@ -421,13 +420,16 @@ DWORD SERVER::thread_proc()
             // 急げ！ 音が遅れてはいけない。
             SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 
-            cmd = m_deque.front();
+            m_cmd = m_deque.front();
             m_deque.pop_front();
         }
         ReleaseMutex(g_hStackMutex);
 
         if (!size) // データがない？
         {
+            // もう急がなくてもいいぞ
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+
             if (prev_size != size) // 前とサイズが違う
             {
                 // タイマーを再開する
@@ -445,14 +447,10 @@ DWORD SERVER::thread_proc()
             PostMessageW(g_hMainWnd, WM_COMMAND, ID_KILL_TIMER, 0);
 
             // 実際に演奏する
-            play_cmd(cmd);
-
-            // もう急がなくてもいいぞ
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+            play_cmd(m_cmd);
 
             // 設定を保存する
-            cmd.save_settings();
-            m_cmd = cmd;
+            m_cmd.save_settings();
         }
 
         prev_size = size;
