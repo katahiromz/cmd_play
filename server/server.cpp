@@ -210,6 +210,11 @@ int SERVER_CMD::parse_cmd_line(INT argc, LPWSTR *argv)
             continue;
         }
 
+        if (_wcsicmp(arg, L"-stopm") == 0 || _wcsicmp(arg, L"--stopm") == 0)
+        {
+            continue;
+        }
+
         if (_wcsicmp(arg, L"-mono") == 0 || _wcsicmp(arg, L"--mono") == 0)
         {
             continue;

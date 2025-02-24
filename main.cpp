@@ -129,6 +129,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -save-wav 出力.wav         WAVファイルとして保存（MIDI音源を除く）。\n")
                 TEXT("  -save-mid 出力.mid         MIDファイルとして保存（MIDI音源のみ）。\n")
                 TEXT("  -reset                     音楽を止めて設定をリセット。\n")
+                TEXT("  -stopm                     音色を変えない以外は -reset と同じ。\n")
                 TEXT("  -stereo                    音をステレオにする（デフォルト）。\n")
                 TEXT("  -mono                      音をモノラルにする。\n")
                 TEXT("  -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む（FM音源）。\n")
@@ -169,6 +170,7 @@ LPCTSTR get_text(INT id)
                 TEXT("  -save-wav output.wav       Save as WAV file (except MIDI sound).\n")
                 TEXT("  -save-mid output.mid       Save as MID file (MIDI sound only).\n")
                 TEXT("  -reset                     Stop music and reset settings.\n")
+                TEXT("  -stopm                     Same as -reset except that the tone is not changed.\n")
                 TEXT("  -stereo                    Make sound stereo (default).\n")
                 TEXT("  -mono                      Make sound mono.\n")
                 TEXT("  -voice CH FILE.voi         Load a tone from a file to channel CH (FM sound).\n")
@@ -227,6 +229,7 @@ struct CMD_PLAY
     std::wstring m_save_mid;
     int m_audio_mode = 2;
     bool m_reset = false;
+    bool m_stopm = false;
     bool m_stereo = true;
     bool m_no_reg = false;
     bool m_bgm = true;
@@ -496,6 +499,12 @@ RET CMD_PLAY::parse_cmd_line(int argc, wchar_t **argv)
             continue;
         }
 
+        if (_wcsicmp(arg, L"-stopm") == 0 || _wcsicmp(arg, L"--stopm") == 0)
+        {
+            m_stopm = true;
+            continue;
+        }
+
         if (_wcsicmp(arg, L"-mono") == 0 || _wcsicmp(arg, L"--mono") == 0)
         {
             m_stereo = false;
@@ -746,6 +755,21 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
     {
         my_puts(get_text(IDT_SOUND_INIT_FAILED), stderr);
         return RET_BAD_SOUND_INIT;
+    }
+
+    if (m_stopm) // 音色を変えない以外は -reset と同じ
+    {
+        // コマンドラインの -bgm 設定を優先する
+        m_bgm = m_bgm2;
+        // サーバーを停止
+        if (HWND hwndServer = find_server_window())
+            SendMessageW(hwndServer, WM_CLOSE, 0, 0);
+        // 変数をクリア
+        g_variables.clear();
+        // 音色以外の設定をクリア
+        vsk_cmd_play_stopm();
+        // 設定を保存
+        save_settings();
     }
 
     if (m_reset) // 音楽を止めて設定をリセットする

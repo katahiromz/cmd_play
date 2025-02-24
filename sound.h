@@ -42,6 +42,7 @@ VSK_SOUND_ERR vsk_sound_cmd_play_ssg_save(const std::vector<VskString>& strs, co
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_and_ssg_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_play_fm_save(const std::vector<VskString>& strs, const wchar_t *filename, bool stereo);
 VSK_SOUND_ERR vsk_sound_cmd_play_midi_save(const std::vector<VskString>& strs, const wchar_t *filename);
+void vsk_cmd_play_stopm(void);
 void vsk_cmd_play_reset_settings(void);
 size_t vsk_cmd_play_get_setting_size(void);
 bool vsk_cmd_play_get_setting(int ch, std::vector<uint8_t>& data);

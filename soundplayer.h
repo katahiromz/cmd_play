@@ -132,7 +132,7 @@ struct VskSoundSetting {
         m_LR = 0x3;
     }
 
-    void reset() {
+    void stopm() {
         m_tempo = 120;
         m_octave = 4 - 1;
         m_length = 24;
@@ -140,8 +140,12 @@ struct VskSoundSetting {
         m_volume = 8;
         m_volume_at = -1;
         m_quantity = 8;
-        m_tone = 0;
         m_LR = 0x3;
+    }
+
+    void reset() {
+        stopm();
+        m_tone = 0;
         m_timbre.set(ym2203_tone_table[0]);
     }
 };

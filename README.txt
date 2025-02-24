@@ -15,6 +15,7 @@
       -save-wav 出力.wav         WAVファイルとして保存（MIDI音源を除く）。
       -save-mid 出力.mid         MIDファイルとして保存（MIDI音源のみ）。
       -reset                     音楽を止めて設定をリセット。
+      -stopm                     音色を変えない以外は -reset と同じ。
       -stereo                    音をステレオにする（デフォルト）。
       -mono                      音をモノラルにする。
       -voice CH FILE.voi         ファイルからチャンネルCHに音色を読み込む（FM音源）。

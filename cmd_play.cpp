@@ -19,7 +19,18 @@ VskSoundSetting vsk_fm_sound_settings[VSK_MAX_CHANNEL];
 VskSoundSetting vsk_ssg_sound_settings[VSK_MAX_CHANNEL];
 VskSoundSetting vsk_midi_sound_settings[VSK_MAX_CHANNEL];
 
-// 設定のリセット
+// 設定のリセット１
+void vsk_cmd_play_stopm(void)
+{
+    for (auto& item : vsk_fm_sound_settings)
+        item.stopm();
+    for (auto& item : vsk_ssg_sound_settings)
+        item.stopm();
+    for (auto& item : vsk_midi_sound_settings)
+        item.stopm();
+}
+
+// 設定のリセット２
 void vsk_cmd_play_reset_settings(void)
 {
     for (auto& item : vsk_fm_sound_settings)
