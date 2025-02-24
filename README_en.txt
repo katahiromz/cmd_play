@@ -8,28 +8,26 @@ This is a program that emulates (reproduces) the `CMD PLAY` statement of the N88
 
 ## Usage
 
-```txt
-Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]
+    Usage: cmd_play [Options] [#n] [string1] [string2] [string3] [string4] [string5] [string6]
 
-Options:
-  -DVAR=VALUE                Assign to a variable.
-  -save-wav output.wav       Save as WAV file (except MIDI sound).
-  -save-mid output.mid       Save as MID file (MIDI sound only).
-  -reset                     Stop music and reset settings.
-  -stopm                     Same as -reset except that the tone is not changed.
-  -stereo                    Make sound stereo (default).
-  -mono                      Make sound mono.
-  -voice CH FILE.voi         Load a tone from a file to channel CH (FM sound).
-  -voice CH "CSV"            Load a tone from an array to channel CH (FM sound).
-  -voice-copy TONE FILE.voi  Copy the tone to a file (FM sound).
-  -bgm 0                     Wait until the performance is over.
-  -bgm 1                     Don't wait until the performance is over (default).
-  -help                      Display this message.
-  -version                   Display version info.
+    Options:
+      -DVAR=VALUE                Assign to a variable.
+      -save-wav output.wav       Save as WAV file (except MIDI sound).
+      -save-mid output.mid       Save as MID file (MIDI sound only).
+      -reset                     Stop music and reset settings.
+      -stopm                     Same as -reset except that the tone is not changed.
+      -stereo                    Make sound stereo (default).
+      -mono                      Make sound mono.
+      -voice CH FILE.voi         Load a tone from a file to channel CH (FM sound).
+      -voice CH "CSV"            Load a tone from an array to channel CH (FM sound).
+      -voice-copy TONE FILE.voi  Copy the tone to a file (FM sound).
+      -bgm 0                     Wait until the performance is over.
+      -bgm 1                     Don't wait until the performance is over (default).
+      -help                      Display this message.
+      -version                   Display version info.
 
-Numeric variables can be specified by enclosing them between an equal sign and a semicolon: "L=variable name;".
-String variables can be expanded by enclosing them in [ ].
-```
+    Numeric variables can be specified by enclosing them between an equal sign and a semicolon: "L=variable name;".
+    String variables can be expanded by enclosing them in [ ].
 
 ## `CMD PLAY` statement (8801 only) (CMD extension)
 
