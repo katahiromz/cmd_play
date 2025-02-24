@@ -144,14 +144,14 @@ std::string vsk_replace_play_placeholders(const std::string& str)
 
 struct VskPlayItem
 {
-    VskString               m_subcommand;
-    VskString               m_param;
-    VskString               m_param2;
-    char                    m_sign;     // +, -, #
-    bool                    m_dot;      // .
-    bool                    m_and;      // &
-    int                     m_plet_count;
-    int                     m_plet_L;
+    VskString               m_subcommand;   // コマンド
+    VskString               m_param;        // 引数1
+    VskString               m_param2;       // 引数2
+    char                    m_sign;         // +, -, #
+    bool                    m_dot;          // .
+    bool                    m_and;          // &
+    int                     m_plet_count;   // 連符のカウント
+    int                     m_plet_L;       // 連符の長さ
 
     VskPlayItem() { clear(); }
 
@@ -170,25 +170,46 @@ struct VskPlayItem
 // 演奏項目を再スキャン (Pass 2)
 bool vsk_rescan_play_items(std::vector<VskPlayItem>& items)
 {
+    // 連符の設定
     size_t k = VskString::npos;
-    int level = 0;
+    int level = 0, real_note_count = 0;
     for (size_t i = 0; i < items.size(); ++i) {
-        if (items[i].m_subcommand == "{") {
+        if (items[i].m_subcommand == "{") { // 連符の始まり
             k = i;
+            if (level == 0)
+                real_note_count = 0;
             ++level;
-        }
-        if (items[i].m_subcommand == "}") {
+        } else if (items[i].m_subcommand == "}") {
             --level;
-            if (level == 0) {
-                int plet_count = int(i - (k + 1));
-                int plet_L = atoi(items[i].m_param.c_str());
-                for (size_t m = k + 1; m < i; ++m) {
-                    items[m].m_plet_count = plet_count;
-                    items[m].m_plet_L = plet_L;
+            if (level < 0)
+                return false;
+            if (level == 0) { // 連符の終わり
+                if (items[i].m_param.empty()) {
+                    for (size_t m = k + 1; m < i; ++m) {
+                        items[m].m_plet_count = real_note_count;
+                        items[m].m_plet_L = 0;
+                    }
+                } else {
+                    int plet_L = atoi(items[i].m_param.c_str());
+                    for (size_t m = k + 1; m < i; ++m) {
+                        items[m].m_plet_count = real_note_count;
+                        items[m].m_plet_L = plet_L;
+                    }
                 }
                 items.erase(items.begin() + i);
                 items.erase(items.begin() + k);
-                --i;
+                i -= 2;
+            }
+        } else { // 連符の中の本当の音符の数を数える
+            char ch = items[i].m_subcommand[0];
+            switch (ch) {
+            case 'C': case 'D': case 'E': case 'F': case 'G': case 'A': case 'B':
+            case 'R': case 'N':
+                ++real_note_count;
+                break;
+            default:
+                if (items[i].m_subcommand == "@W")
+                    ++real_note_count;
             }
         }
     }
@@ -396,6 +417,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
         if (ch != 'Z')
             s_iZ = 0;
 
+        bool length_set;
         switch (ch) {
         case ' ': case '\t': // blank
             continue;
@@ -485,6 +507,8 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
             return false;
         case 'N':
             length = phrase->m_setting.m_length;
+
+            length_set = false;
             if (auto ast = vsk_get_play_param(item)) {
                 auto i0 = ast->to_int();
                 if ((0 <= i0) && (i0 <= 96)) {
@@ -492,21 +516,27 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                     if (key >= 96) {
                         key = 0;
                     }
+                    length_set = true;
                 } else {
                     return false;
                 }
             } else {
                 return false;
             }
-            if ((item.m_plet_count > 1) && (item.m_plet_L != 0)) {
+
+            // 連符ならば、連符の長さを調整
+            if (!length_set && item.m_plet_count > 1) {
                 auto L = item.m_plet_L;
-                if ((1 <= L) && (L <= 64)) {
+                if (L == 0) {
+                    length = phrase->m_setting.m_length;
+                } else if ((1 <= L) && (L <= 64)) {
                     length = 24.0f * 4 / L;
                 } else {
                     return false;
                 }
                 length /= item.m_plet_count;
             }
+
             phrase->add_key(key, item.m_dot, length, item.m_sign);
             phrase->m_notes.back().m_and = item.m_and;
             continue;
@@ -525,24 +555,31 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
         case 'C': case 'D': case 'E': case 'F': case 'G':
         case 'A': case 'B': case 'R':
             length = phrase->m_setting.m_length;
+            length_set = false;
             if (auto ast = vsk_get_play_param(item)) {
                 auto L = ast->to_int();
                 // NOTE: 24 is the length of a quarter note
                 if ((1 <= L) && (L <= 64)) {
                     length = float(24 * 4 / L);
+                    length_set = true;
                 } else {
                     return false;
                 }
             }
-            if ((item.m_plet_count > 1) && (item.m_plet_L != 0)) {
+
+            // 連符ならば連符の長さを調整
+            if (!length_set && item.m_plet_count > 1) {
                 auto L = item.m_plet_L;
-                if ((1 <= L) && (L <= 64)) {
+                if (L == 0) {
+                    length = phrase->m_setting.m_length;
+                } else if ((1 <= L) && (L <= 64)) {
                     length = 24.0f * 4 / L;
                 } else {
                     return false;
                 }
                 length /= item.m_plet_count;
             }
+
             phrase->add_note(ch, item.m_dot, length, item.m_sign);
             phrase->m_notes.back().m_and = item.m_and;
             continue;
@@ -582,24 +619,31 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                 }
             } else if (item.m_subcommand == "@W") { // 特殊な休符
                 length = phrase->m_setting.m_length;
+                length_set = false;
                 if (auto ast = vsk_get_play_param(item)) {
                     auto L = ast->to_int();
                     // NOTE: 24 is the length of a quarter note
                     if ((1 <= L) && (L <= 64)) {
                         length = float(24 * 4 / L);
+                        length_set = true;
                     } else {
                         return false;
                     }
                 }
-                if ((item.m_plet_count > 1) && (item.m_plet_L != 0)) {
+
+                // 連符ならば、連符の長さを調整
+                if (!length_set && item.m_plet_count > 1) {
                     auto L = item.m_plet_L;
-                    if ((1 <= L) && (L <= 64)) {
+                    if (L == 0) {
+                        length = phrase->m_setting.m_length;
+                    } else if ((1 <= L) && (L <= 64)) {
                         length = 24.0f * 4 / L;
                     } else {
                         return false;
                     }
                     length /= item.m_plet_count;
                 }
+
                 phrase->add_note('W', item.m_dot, length, item.m_sign);
                 phrase->m_notes.back().m_and = item.m_and;
                 continue;
