@@ -238,7 +238,7 @@ struct CMD_PLAY
 
     RET parse_cmd_line(int argc, wchar_t **argv);
     RET run(int argc, wchar_t **argv);
-    RET start_server(const std::wstring& cmd_line);
+    RET start_server();
     bool load_settings();
     bool save_settings();
     bool save_bgm_only();
@@ -669,7 +669,7 @@ std::wstring CMD_PLAY::build_server_cmd_line(int argc, wchar_t **argv)
 }
 
 // サーバーを起動する
-RET CMD_PLAY::start_server(const std::wstring& cmd_line)
+RET CMD_PLAY::start_server()
 {
     // サーバーへのパスファイル名を構築する
     WCHAR szPath[MAX_PATH];
@@ -679,15 +679,17 @@ RET CMD_PLAY::start_server(const std::wstring& cmd_line)
 
     // シェルでサーバーを起動する
     SHELLEXECUTEINFOW info = { sizeof(info) };
-    info.fMask = SEE_MASK_FLAG_NO_UI;
+    info.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NOCLOSEPROCESS;
     info.lpFile = szPath;
-    info.lpParameters = cmd_line.c_str();
     info.nShow = SW_HIDE;
     if (!ShellExecuteExW(&info))
     {
         my_printf(stderr, get_text(IDT_BAD_CALL));
         return RET_BAD_CALL;
     }
+
+    WaitForInputIdle(info.hProcess, INFINITE);
+    CloseHandle(info.hProcess);
 
     return RET_SUCCESS;
 }
@@ -811,8 +813,11 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
 
         auto cmd_line = build_server_cmd_line(argc, argv);
         HWND hwndServer = find_server_window();
-        if (!hwndServer)
-            return start_server(cmd_line);
+        if (!hwndServer) {
+            if (auto ret = start_server()) {
+                return ret;
+            }
+        }
 
         COPYDATASTRUCT cds;
         cds.dwData = 0xDEADFACE;
