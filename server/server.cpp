@@ -8,7 +8,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
-#include <stack>
+#include <deque>
 #include "../sound.h"
 #include "../mstr.h"
 #include "server.h"
@@ -48,7 +48,7 @@ struct SERVER
     bool m_stereo = true;
     bool m_no_reg = false;
     HANDLE m_hThread = NULL;
-    std::stack<SERVER_CMD> m_stack;
+    std::deque<SERVER_CMD> m_deque;
 
     SERVER()
     {
@@ -410,11 +410,11 @@ DWORD SERVER::thread_proc()
         DWORD wait = WaitForSingleObject(g_hStackMutex, INFINITE);
         if (wait != WAIT_OBJECT_0)
             break;
-        size_t size = m_stack.size();
+        size_t size = m_deque.size();
         if (size)
         {
-            cmd = m_stack.top();
-            m_stack.pop();
+            cmd = m_deque.front();
+            m_deque.pop_front();
         }
         ReleaseMutex(g_hStackMutex);
 
@@ -521,7 +521,7 @@ BOOL OnCopyData(HWND hwnd, HWND hwndFrom, PCOPYDATASTRUCT pcds)
         DWORD wait = WaitForSingleObject(g_hStackMutex, INFINITE);
         if (wait != WAIT_OBJECT_0)
             break;
-        pServer->m_stack.push(cmd);
+        pServer->m_deque.push_back(cmd);
         ReleaseMutex(g_hStackMutex);
     } while (0);
     LocalFree(argv);
@@ -585,10 +585,6 @@ Server_Main(HINSTANCE hInstance, INT argc, LPWSTR *argv, INT nCmdShow)
     cmd.load_settings();
     cmd.parse_cmd_line(argc, argv);
 
-    // コマンドを積む
-    SERVER server;
-    server.m_stack.push(cmd);
-
     g_hInst = hInstance;
     InitCommonControls();
 
@@ -614,6 +610,7 @@ Server_Main(HINSTANCE hInstance, INT argc, LPWSTR *argv, INT nCmdShow)
     RECT rc = { 0, 0, 320, 200 };
     AdjustWindowRectEx(&rc, style, FALSE, exstyle);
 
+    SERVER server;
     HWND hwnd = CreateWindowExW(exstyle, SERVER_CLASSNAME, SERVER_TITLE, style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top,
         NULL, NULL, hInstance, &server);

@@ -811,12 +811,17 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
             break;
         }
 
+        HANDLE hMutex = CreateMutexW(NULL, TRUE, L"cmd_play_server_mutex");
+
         auto cmd_line = build_server_cmd_line(argc, argv);
         HWND hwndServer = find_server_window();
         if (!hwndServer) {
             if (auto ret = start_server()) {
+                ReleaseMutex(hMutex);
+                CloseHandle(hMutex);
                 return ret;
             }
+            hwndServer = find_server_window();
         }
 
         COPYDATASTRUCT cds;
@@ -824,6 +829,9 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         cds.cbData = (cmd_line.size() + 1) * sizeof(WCHAR);
         cds.lpData = (PVOID)cmd_line.c_str();
         SendMessageW(hwndServer, WM_COPYDATA, 0, (LPARAM)&cds);
+
+        ReleaseMutex(hMutex);
+        CloseHandle(hMutex);
 
         return RET_SUCCESS;
     }
