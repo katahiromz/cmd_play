@@ -239,7 +239,7 @@ struct CMD_PLAY
 
     RET parse_cmd_line(int argc, wchar_t **argv);
     RET run(int argc, wchar_t **argv);
-    RET start_server();
+    bool start_server();
     bool load_settings();
     bool save_settings();
     bool save_bgm_and_vars_only();
@@ -690,7 +690,7 @@ std::wstring CMD_PLAY::build_server_cmd_line(int argc, wchar_t **argv)
 }
 
 // サーバーを起動する
-RET CMD_PLAY::start_server()
+bool CMD_PLAY::start_server()
 {
     // サーバーへのパスファイル名を構築する
     WCHAR szPath[MAX_PATH];
@@ -704,15 +704,12 @@ RET CMD_PLAY::start_server()
     info.lpFile = szPath;
     info.nShow = SW_HIDE;
     if (!ShellExecuteExW(&info))
-    {
-        my_printf(stderr, get_text(IDT_BAD_CALL));
-        return RET_BAD_CALL;
-    }
+        return false;
 
     WaitForInputIdle(info.hProcess, INFINITE);
     CloseHandle(info.hProcess);
 
-    return RET_SUCCESS;
+    return true;
 }
 
 VSK_SOUND_ERR CMD_PLAY::play_str(bool no_sound)
