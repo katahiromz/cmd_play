@@ -438,7 +438,7 @@ DWORD SERVER::thread_proc()
             else
             {
                 // やることないんだから、あんまりCPU時間を食うな。ビジーループを回避
-                Sleep(50);
+                Sleep(30);
             }
         }
         else
