@@ -418,7 +418,7 @@ DWORD SERVER::thread_proc()
         if (size)
         {
             // 急げ！ 音が遅れてはいけない。
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
             m_cmd = m_deque.front();
             m_deque.pop_front();

@@ -345,10 +345,11 @@ bool CMD_PLAY::save_bgm_and_vars_only()
 
     // レジストリの変数項目を消す
 retry:
+    CHAR szName[MAX_PATH];
+    DWORD cchName;
     for (DWORD dwIndex = 0; ; ++dwIndex)
     {
-        CHAR szName[MAX_PATH];
-        DWORD cchName = _countof(szName);
+        cchName = _countof(szName);
         error = RegEnumValueA(hKey, dwIndex, szName, &cchName, NULL, NULL, NULL, NULL);
         szName[_countof(szName) - 1] = 0; // Avoid buffer overrun
         if (error)
@@ -362,10 +363,10 @@ retry:
     }
 
     // 新しい変数項目群を書き込む
+    std::string name;
     for (auto& pair : g_variables)
     {
-        std::string name = "VAR_";
-        name += pair.first;
+        name = "VAR_" + pair.first;
         DWORD cbValue = (pair.second.size() + 1) * sizeof(CHAR);
         RegSetValueExA(hKey, name.c_str(), 0, REG_SZ, (BYTE *)pair.second.c_str(), cbValue);
     }
@@ -672,25 +673,17 @@ std::wstring CMD_PLAY::build_server_cmd_line(int argc, wchar_t **argv)
 {
     std::wstring ret;
 
-    bool first = true;
     for (int iarg = 1; iarg < argc; ++iarg)
     {
-        if (!first)
-            ret += L' ';
-        else
-            first = false;
-
-        std::wstring arg = argv[iarg];
-        if (arg.find(L' ') != arg.npos || arg.find(L'\t') != arg.npos)
-        {
+        auto arg = argv[iarg];
+        if (wcschr(arg, L' ')) {
             ret += L'"';
             ret += arg;
             ret += L'"';
-        }
-        else
-        {
+        } else {
             ret += arg;
         }
+        ret += L' ';
     }
 
     return ret;
@@ -819,26 +812,32 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
 
     if (m_bgm && m_save_wav.empty() && m_save_mid.empty()) // 非同期に演奏か？
     {
+        // 急げ！ 音が遅れてはいけない。
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+
         // 文法をチェックする
         auto err = play_str(true);
         // g_variablesをm_variablesで上書き
         for (auto& pair : m_variables)
             g_variables[pair.first] = pair.second;
-        // 設定を保存
+        // BGMと変数だけ設定を保存
         save_bgm_and_vars_only();
-        // 音声モジュールを解放
-        vsk_sound_exit();
 
         // エラーチェック
-        switch (err)
-        {
+        switch (err) {
         case VSK_SOUND_ERR_ILLEGAL:
+            // エラーメッセージを出力
             my_puts(get_text(IDT_BAD_CALL), stderr);
-            do_beep();
+            do_beep(); // BEEP音
+            // 音声モジュールを解放
+            vsk_sound_exit();
             return RET_BAD_CALL;
         case VSK_SOUND_ERR_IO_ERROR:
+            // エラーメッセージを出力
             my_puts(get_text(IDT_CANT_OPEN_FILE), stderr);
-            do_beep();
+            do_beep(); // BEEP音
+            // 音声モジュールを解放
+            vsk_sound_exit();
             return RET_CANT_OPEN_FILE;
         default:
             break;
@@ -848,28 +847,28 @@ RET CMD_PLAY::run(int argc, wchar_t **argv)
         if (!m_hwndServer || !::IsWindow(m_hwndServer))
             m_hwndServer = find_server_window();
         if (!m_hwndServer) {
-            if (auto ret = start_server()) {
-                return ret;
-            }
+            start_server();
             m_hwndServer = find_server_window();
         }
 
         if (m_hwndServer) { // サーバーを起動できた？
-            // 急げ！ 音が遅れてはいけない。
-            SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
-
             // サーバー側のコマンドラインを構築
             auto cmd_line = build_server_cmd_line(argc, argv);
 
-            // サーバーにメッセージを送信
-            COPYDATASTRUCT cds;
-            cds.dwData = 0xDEADFACE;
-            cds.cbData = (cmd_line.size() + 1) * sizeof(WCHAR);
-            cds.lpData = (PVOID)cmd_line.c_str();
-            SendMessageW(m_hwndServer, WM_COPYDATA, 0, (LPARAM)&cds);
+            // サーバーにWM_COPYDATAメッセージを送信
+            COPYDATASTRUCT copyData;
+            copyData.dwData = 0xDEADFACE;
+            copyData.cbData = (cmd_line.size() + 1) * sizeof(WCHAR);
+            copyData.lpData = (PVOID)cmd_line.c_str();
+            SendMessageW(m_hwndServer, WM_COPYDATA, 0, (LPARAM)&copyData);
+
+            // 音声モジュールを解放
+            vsk_sound_exit();
 
             return RET_SUCCESS;
         }
+
+        // サーバーが起動できないときは、同期的に演奏
     }
 
     // g_variablesをm_variablesで上書き
