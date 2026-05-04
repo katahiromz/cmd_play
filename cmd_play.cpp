@@ -603,7 +603,7 @@ bool vsk_phrase_from_cmd_play_items(std::shared_ptr<VskPhrase> phrase, const std
                         // SSG音源は音色を変えられない
                         continue;
                     case AUDIO_TYPE_FM:
-                        if ((0 <= i0) && (i0 <= 61)) {
+                        if ((0 <= i0) && (i0 <= 81)) {
                             phrase->add_tone(ch, i0);
                             phrase->m_setting.m_tone = i0;
                             continue;

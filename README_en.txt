@@ -159,6 +159,26 @@ The character strings for each channel are called MML (Music Macro Language), an
 | `59`        | `COW BELL`       | Cowbell                                       |
 | `60`        | `PERC 1`         | Percussion sounds                             |
 | `61`        | `PERC 2`         | Percussion sounds                             |
+| `62`        | `PERC 3"         | Sound like wind chimes                        |
+| `63`        | `MUSIC BOX"      | Sound like a music box                        |
+| `64`        | `CELLO"          | Cello                                         |
+| `65`        | `LOW BRASS"      | Low brass instruments                         |
+| `66`        | `WW ENSMBL"      | Woodwind ensemble                             |
+| `67`        | `AC GUITAR"      | Acoustic guitar                               |
+| `68`        | `FLUTE/HARP"     | Flute and harp unison                         |
+| `69`        | `FUNK PLUC"      | Struck string instrument sounds               |
+| `70`        | `FUNK BASS"      | Funky bass sound                              |
+| `71`        | `SYN LEAD"       | Reed sound                                    |
+| `72`        | `METAL CLES"     | Metallic sound 1                              |
+| `73`        | `STAIN"          | Metallic sound 2                              |
+| `74`        | `CUBIN GLASS"    | Sound like ice rolling in a glass             |
+| `75`        | `HUMAN"          | Sound like a human voice                      |
+| `76`        | `WOOD BASS"      | Double bass                                   |
+| `77`        | `CHIMES"         | Chimes                                        |
+| `78`        | `SPACY"          | Metallic whistling sound                      |
+| `79`        | `OBOE/BCLAR"     | Oboe and bass clarinet unison                 |
+| `80`        | `OLD STRING"     | Sound like a violin on an old record          |
+| `81`        | `STEEL'S CRY"    | Metallic cry-like sound                       |
 
 ## List of MIDI tone generator tones
 

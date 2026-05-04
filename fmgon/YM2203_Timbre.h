@@ -85,7 +85,7 @@ struct YM2203_Timbre {
 //////////////////////////////////////////////////////////////////////////////
 
 // the number of the tones
-#define NUM_TONES   62
+#define NUM_TONES   82
 
 // tone data
 extern const timbre_array_t ym2203_tone_table[NUM_TONES];
